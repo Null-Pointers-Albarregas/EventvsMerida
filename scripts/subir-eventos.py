@@ -6,6 +6,9 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
+"""
+
+"""
 def obtener_imagen_grande(event_url: str, timeout: int = 20) -> str | None:
     """Devuelve la imagen principal del evento si existe."""
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -73,7 +76,7 @@ def main():
     eventos_saneados = []
     num_eventos_almacenados = 0
     num_eventos_fallo = 0
-    data = load_json_auto("eventos-marzo-saneados.json")
+    data = load_json_auto("eventos_abril_saneados.json")
     for evento in data["events"]:
         print(evento["summary"])
 
@@ -106,7 +109,8 @@ def main():
         eventos_saneados.append({
             "titulo": evento["summary"],
             "descripcion": evento["description"],
-            "fecha": evento["dtstart"],
+            "fechaInicio": evento["dtstart"],
+            "fechaFin": evento["dtend"],
             "localizacion": evento["location"],
             "foto": obtener_imagen_grande(event_url=evento["url"], timeout=20),
             "idUsuario": id_usuario,
