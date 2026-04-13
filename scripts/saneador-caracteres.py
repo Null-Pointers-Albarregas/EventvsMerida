@@ -8,7 +8,7 @@ Sanitiza el JSON de eventos:
     * Si no hay hora -> T00:00:00.000Z
     * Si hay offset (ej: +01:00) -> convierte a UTC
 Uso:
-  python sanitize_eventos_marzo.py eventos-marzo.json eventos-marzo.sanitizado.json
+  python saneador-caracteres.py input.json output.json
 """
 
 from __future__ import annotations
