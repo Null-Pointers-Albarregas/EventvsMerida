@@ -40,17 +40,16 @@ def sanitize_text(s: str) -> str:
 
 def to_iso_utc_z(value: str) -> str:
     """
-    Convierte:
+    Normaliza fechas ISO-8601 preservando zona horaria original:
       - YYYY-MM-DD -> YYYY-MM-DDT00:00:00.000Z
-      - YYYY-MM-DDTHH:MM:SS+01:00 -> UTC con .mmmZ
+      - YYYY-MM-DDTHH:MM:SS+01:00 -> mantiene +01:00
       - YYYY-MM-DDTHH:MM:SSZ -> normaliza a .mmmZ
-      - YYYY-MM-DDTHH:MM:SS.sssZ -> se respeta (pero normaliza formato)
     """
     v = value.strip()
 
     # Solo fecha
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
-        return f"{v}T00:00:00.000Z"
+        return f"{v}T00:00:00.000"
 
     # Intentos con fromisoformat (acepta +01:00, y también sin Z si tiene offset)
     # Normalizamos Z -> +00:00 para parsear.
@@ -61,15 +60,13 @@ def to_iso_utc_z(value: str) -> str:
     except ValueError as e:
         raise ValueError(f"Formato de fecha/hora no soportado: {value!r}") from e
 
-    # Si viene naive (sin tzinfo), asumimos UTC (pero este feed normalmente trae offset)
+    # Si viene naive (sin tzinfo), asumimos UTC
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
 
-    dt_utc = dt.astimezone(timezone.utc)
-
-    # ISO con milisegundos exactos y Z
-    # datetime.isoformat(timespec="milliseconds") -> '2026-03-16T17:30:00.000+00:00'
-    out = dt_utc.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    # Mantener zona horaria original, sin convertir a UTC
+    # ISO con milisegundos exactos
+    out = dt.isoformat(timespec="milliseconds")
     return out
 
 
