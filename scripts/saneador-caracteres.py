@@ -1,17 +1,6 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Sanitiza el JSON de eventos:
-- NO modifica fetched_at
-- Limpia textos (\\n, \\, \\,) en campos string (incluido raw.*)
-- Normaliza dtstart y dtend a ISO-8601 UTC con sufijo Z:
-    * Si no hay hora -> T00:00:00.000Z
-    * Si hay offset (ej: +01:00) -> convierte a UTC
-Uso:
-  python saneador-caracteres.py input.json output.json
-"""
-
-from __future__ import annotations
+"""Limpia el JSON de eventos y normaliza texto y fechas.
+    python saneador-caracteres.py input.json output.json """
 
 import json
 import re
@@ -24,35 +13,23 @@ _WS_RE = re.compile(r"[ \t]+")
 
 
 def sanitize_text(s: str) -> str:
-    # Primero normalizamos escapes típicos del iCal/JSON de origen
-    s = s.replace("\\n", " ")   # literal backslash+n -> espacio
-    s = s.replace("\\,", ",")   # literal backslash+comma -> comma
-    s = s.replace("\\\\", "\\") # doble backslash -> backslash simple
-
-    # Si aún quedan backslashes sueltos (muy típicos en este feed), los quitamos
-    # Nota: no afecta a URLs normales (no suelen llevar '\').
+    """Limpia escapes comunes y espacios sobrantes en texto plano."""
+    s = s.replace("\\n", " ")
+    s = s.replace("\\,", ",")
+    s = s.replace("\\\\", "\\")
     s = s.replace("\\", "")
-
-    # Compacta espacios
     s = _WS_RE.sub(" ", s).strip()
     return s
 
 
 def to_iso_utc_z(value: str) -> str:
-    """
-    Normaliza fechas ISO-8601 preservando zona horaria original:
-      - YYYY-MM-DD -> YYYY-MM-DDT00:00:00.000Z
-      - YYYY-MM-DDTHH:MM:SS+01:00 -> mantiene +01:00
-      - YYYY-MM-DDTHH:MM:SSZ -> normaliza a .mmmZ
-    """
+    """Normaliza fechas ISO manteniendo el offset original."""
     v = value.strip()
 
-    # Solo fecha
+    # Fechas sin hora.
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
         return f"{v}T00:00:00.000"
 
-    # Intentos con fromisoformat (acepta +01:00, y también sin Z si tiene offset)
-    # Normalizamos Z -> +00:00 para parsear.
     v_norm = v.replace("Z", "+00:00") if v.endswith("Z") else v
 
     try:
@@ -60,22 +37,16 @@ def to_iso_utc_z(value: str) -> str:
     except ValueError as e:
         raise ValueError(f"Formato de fecha/hora no soportado: {value!r}") from e
 
-    # Si viene naive (sin tzinfo), asumimos UTC
+    # Si no trae zona, asumimos UTC.
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
 
-    # Mantener zona horaria original, sin convertir a UTC
-    # ISO con milisegundos exactos
     out = dt.isoformat(timespec="milliseconds")
     return out
 
 
 def walk_and_sanitize(obj: Any, *, skip_keys: set[str] | None = None) -> Any:
-    """
-    Recorre recursivamente dict/list y sanitiza:
-      - str -> sanitize_text
-      - pero respeta keys que queramos excluir (ej: fetched_at)
-    """
+    """Recorre dict/list y limpia strings, salvo claves excluidas."""
     if skip_keys is None:
         skip_keys = set()
 
@@ -103,8 +74,9 @@ def walk_and_sanitize(obj: Any, *, skip_keys: set[str] | None = None) -> Any:
 
 
 def main() -> int:
+    """Lee un JSON, lo sanea y escribe el resultado en otro archivo."""
     if len(sys.argv) != 3:
-        print("Uso: python sanitize_eventos_marzo.py <input.json> <output.json>", file=sys.stderr)
+        print("Uso: python saneador-caracteres.py <input.json> <output.json>", file=sys.stderr)
         return 2
 
     in_path, out_path = sys.argv[1], sys.argv[2]
@@ -112,7 +84,6 @@ def main() -> int:
     with open(in_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    # NO tocar fetched_at
     sanitized = walk_and_sanitize(data, skip_keys={"fetched_at"})
 
     with open(out_path, "w", encoding="utf-8") as f:

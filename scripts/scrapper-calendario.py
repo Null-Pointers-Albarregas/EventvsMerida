@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Descarga el feed iCal (ICS) de The Events Calendar y lo convierte a JSON.
+Descarga un feed iCal (ICS) y lo convierte a JSON.
 
-The Events Calendar suele exponer iCal en URLs como:
+El calendario suele exponer iCal en URLs como:
   https://TU_DOMINIO/events/?ical=1
   https://TU_DOMINIO/events/list/?ical=1
 
@@ -11,8 +11,6 @@ Este script:
 - Parsear VEVENT (DTSTART/DTEND/SUMMARY/DESCRIPTION/LOCATION/URL/UID)
 - Convierte fechas a ISO 8601
 - Exporta a JSON
-- Incluye rate limit simple (una descarga)
-
 Requisitos:
   pip install requests python-dateutil
 
@@ -32,7 +30,6 @@ from typing import Dict, List, Optional, Tuple
 
 import requests
 from dateutil import tz
-from dateutil.parser import isoparse
 
 
 @dataclass
@@ -49,10 +46,7 @@ class Event:
 
 
 def unfold_ical_lines(text: str) -> List[str]:
-    """
-    iCal permite "line folding": si una línea continúa, empieza con espacio/tab.
-    Esto lo "despliega" en líneas completas.
-    """
+    """Une líneas plegadas del formato iCal."""
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     lines = text.split("\n")
     out: List[str] = []
@@ -68,12 +62,7 @@ def unfold_ical_lines(text: str) -> List[str]:
 
 
 def parse_ical_datetime(value: str, params: Dict[str, str], default_tz: Optional[str]) -> Tuple[Optional[datetime], Optional[str]]:
-    """
-    Convierte formatos típicos:
-      - 20260120T190000Z  (UTC)
-      - 20260120T190000   (local; se asume TZID si viene)
-      - 20260120          (all-day)
-    """
+    """Convierte fechas iCal a datetime con o sin zona horaria."""
     value = value.strip()
     tzid = params.get("TZID") or default_tz
 
@@ -95,12 +84,7 @@ def parse_ical_datetime(value: str, params: Dict[str, str], default_tz: Optional
             dt = dt.replace(tzinfo=tz.gettz(tzid))
         return dt, tzid
 
-    # Fallback: intentar ISO parse si viniera raro
-    try:
-        dt = isoparse(value)
-        return dt, tzid
-    except Exception:
-        return None, tzid
+    return None, tzid
 
 
 def parse_ics(text: str) -> List[Event]:
@@ -119,8 +103,7 @@ def parse_ics(text: str) -> List[Event]:
         def get(key: str) -> Optional[str]:
             return current.get(key)
 
-        # Timezone global (si el calendar define algo tipo X-WR-TIMEZONE)
-        # The Events Calendar a veces incluye X-WR-TIMEZONE
+        # Usa la zona horaria global del calendario si existe.
         tz_guess = calendar_tz
 
         dtstart_raw = get("DTSTART")
@@ -130,12 +113,14 @@ def parse_ics(text: str) -> List[Event]:
         dtend_dt = None
         tz_used = None
 
+        # Lee DTSTART y DTEND del evento.
         if dtstart_raw:
             dtstart_dt, tz_used = parse_ical_datetime(dtstart_raw, current_params.get("DTSTART", {}), tz_guess)
         if dtend_raw:
             dtend_dt, _ = parse_ical_datetime(dtend_raw, current_params.get("DTEND", {}), tz_guess)
 
         def to_iso(dt: Optional[datetime]) -> Optional[str]:
+            """Devuelve fecha simple o ISO con zona horaria."""
             if dt is None:
                 return None
             # All-day -> YYYY-MM-DD
@@ -202,6 +187,7 @@ def parse_ics(text: str) -> List[Event]:
 
 
 def main() -> int:
+    """Descarga el ICS y lo guarda convertido a JSON."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--ics-url",
