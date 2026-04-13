@@ -1,0 +1,30 @@
+{
+  "source": "https://merida.es/agenda/lista/?tribe-bar-date=2026-03-01&ical=1",
+  "fetched_at": "2026-01-20T16:56:44.493459+00:00",
+  "count": 30,
+  "events": [
+    {
+      "uid": "145303-1772384400-1772384400@merida.es",
+      "summary": "Evento de prueba desde el script con imagen grande",
+      "description": "Descripción de evento de prueba desde script de Python con imagen grande",
+      "location": "Recorrido Urbano\\, Mérida",
+      "url": "https://merida.es/agenda/xx-media-maraton-merida-patrimonio-de-la-humanidad/",
+      "dtstart": "2026-04-11T19:00:00+02:00",
+      "dtend": "2026-04-11T19:00:00+02:00",
+      "timezone": "Europe/Madrid",
+      "raw": {
+        "DTSTART": "20260411T190000",
+        "DTEND": "20260411T190000",
+        "DTSTAMP": "20260222T203839",
+        "CREATED": "20251114T100712Z",
+        "LAST-MODIFIED": "20260110T174937Z",
+        "UID": "144782-1775934000-1775934000@merida.es",
+        "SUMMARY": "XX Media Maratón Mérida Patrimonio de la Humanidad",
+        "DESCRIPTION": "El sábado 11 de abril de 2026 tendrá lugar la XX edición de la Media Maratón Mérida Patrimonio de la Humanidad\\, organizada el club Atletas Populares de Mérida\\, una de las carreras más significativas de Extremadura por lo especial de su recorrido. Y es que esta carrera\\, de 21 km\\, discurre por un trazado íntegramente urbano\\, pasando por los lugares y monumentos más emblemáticos de la ciudad romana. Además\\, en esta edición se celebrará el Campeonato de España de Media Maratón Absoluto y Máster. \\nLas inscripciones se abrirán el jueves 20 de noviembre\\, a las 10:00 horas\\, en: https://www.mediamaratonmerida.com/ \\nLa prueba vuelve a tener como patrocinador al Banco Santander\\, además del Ayuntamiento de Mérida y también cuenta con la colaboración de la Fundación Jóvenes y Deporte de la Junta de Extremadura\\, la Federación Extremeña de Atletismo y de diferentes clubes y empresas.",
+        "URL": "https://merida.es/agenda/xx-media-maraton-merida-patrimonio-de-la-humanidad/",
+        "LOCATION": "Recorrido Urbano\\, Mérida",
+        "CATEGORIES": "Deporte",
+        "ATTACH": "https://merida.es/wp-content/uploads/2025/11/media-maraton-merida-peq.jpg"
+      }
+    }]
+}
