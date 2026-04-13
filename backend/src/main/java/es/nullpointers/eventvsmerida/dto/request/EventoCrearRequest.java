@@ -20,7 +20,10 @@ public record EventoCrearRequest(
         String descripcion,
 
         @NotNull
-        LocalDateTime fecha,
+        LocalDateTime fechaInicio,
+
+        @NotNull
+        LocalDateTime fechaFin,
 
         @NotBlank
         String localizacion,

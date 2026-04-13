@@ -18,6 +18,6 @@ import java.util.Optional;
  */
 @Repository
 public interface EventoRepository extends JpaRepository<Evento, Long> {
-    boolean existsByTituloAndFechaHora(String titulo, LocalDateTime fechaHora);
-    Optional<Evento> findByTituloAndFechaHora(String titulo, LocalDateTime fechaHora);
+    boolean existsByTituloAndFechaInicioAndFechaFin(String titulo, LocalDateTime fechaInicio, LocalDateTime fechaFin);
+    Optional<Evento> findByTituloAndFechaInicioAndFechaFin(String titulo, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 }

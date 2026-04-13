@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 public record EventoResponse(
         String titulo,
         String descripcion,
-        LocalDateTime fechaHora,
+        LocalDateTime fechaInicio,
+        LocalDateTime fechaFin,
         String localizacion,
         String foto,
         String emailUsuario,

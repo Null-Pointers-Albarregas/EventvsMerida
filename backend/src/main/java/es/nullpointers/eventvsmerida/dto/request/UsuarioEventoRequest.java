@@ -25,6 +25,8 @@ public record UsuarioEventoRequest(
         String tituloEvento,
 
         @NotNull
-        //@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-        LocalDateTime fechaHoraEvento
+        LocalDateTime fechaInicioEvento,
+
+        @NotNull
+        LocalDateTime fechaFinEvento
 ) {}

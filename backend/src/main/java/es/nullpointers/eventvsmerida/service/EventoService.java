@@ -76,7 +76,7 @@ public class EventoService {
      */
     public EventoResponse crearEvento(EventoCrearRequest eventoRequest) {
         // Se hacen las comprobaciones necesarias para evitar errores de integridad de datos
-        if (eventoRepository.existsByTituloAndFechaHora(eventoRequest.titulo(), eventoRequest.fecha())) {
+        if (eventoRepository.existsByTituloAndFechaInicioAndFechaFin(eventoRequest.titulo(), eventoRequest.fechaInicio(), eventoRequest.fechaFin())) {
             throw new DataIntegrityViolationException("Ya existe un evento con el título y fecha indicados");
         }
 
@@ -124,8 +124,12 @@ public class EventoService {
             eventoExistente.setDescripcion(eventoRequest.descripcion());
         }
 
-        if (eventoRequest.fechaHora() != null) {
-            eventoExistente.setFechaHora(eventoRequest.fechaHora());
+        if (eventoRequest.fechaInicio() != null) {
+            eventoExistente.setFechaInicio(eventoRequest.fechaInicio());
+        }
+
+        if  (eventoRequest.fechaFin() != null) {
+            eventoExistente.setFechaFin(eventoRequest.fechaFin());
         }
 
         if (eventoRequest.localizacion() != null) {

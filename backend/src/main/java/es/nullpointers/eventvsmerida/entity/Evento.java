@@ -8,7 +8,9 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -29,8 +31,12 @@ public class Evento {
     private String descripcion;
 
     @NotNull
-    @Column(name = "fecha_hora", nullable = false)
-    private LocalDateTime fechaHora;
+    @Column(name = "fecha_inicio", nullable = false)
+    private LocalDateTime fechaInicio;
+
+    @NotNull
+    @Column(name = "fecha_fin", nullable = false)
+    private LocalDateTime fechaFin;
 
     @NotNull
     @Column(name = "localizacion", nullable = false, length = Integer.MAX_VALUE)

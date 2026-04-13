@@ -39,9 +39,9 @@ public class UsuarioEventoService {
         Usuario usuario = usuarioRepository.findByEmail(request.emailUsuario())
                 .orElseThrow(() -> new NoSuchElementException("Error en UsuarioEventoService.guardarUsuarioEvento: No se encontró el usuario con email " + request.emailUsuario()));
 
-        Evento evento = eventoRepository.findByTituloAndFechaHora(request.tituloEvento(), request.fechaHoraEvento())
+        Evento evento = eventoRepository.findByTituloAndFechaInicioAndFechaFin(request.tituloEvento(), request.fechaInicioEvento(), request.fechaFinEvento())
                 .orElseThrow(() -> new NoSuchElementException("Error en UsuarioEventoService.guardarUsuarioEvento: No se encontró el evento con título '" + request.tituloEvento()
-                        + "' y fechaHora " + request.fechaHoraEvento()));
+                        + "' y fechaInicio " + request.fechaInicioEvento() + " y fechaFin " + request.fechaFinEvento()));
 
         // Verificar si la relación ya existe antes de guardarla, lanzando una excepción si es así
         UsuarioEventoId id = new UsuarioEventoId();
@@ -66,9 +66,9 @@ public class UsuarioEventoService {
         Usuario usuario = usuarioRepository.findByEmail(request.emailUsuario())
                 .orElseThrow(() -> new NoSuchElementException("Error en UsuarioEventoService.eliminarUsuarioEvento: No se encontró el usuario con email " + request.emailUsuario()));
 
-        Evento evento = eventoRepository.findByTituloAndFechaHora(request.tituloEvento(), request.fechaHoraEvento())
+        Evento evento = eventoRepository.findByTituloAndFechaInicioAndFechaFin(request.tituloEvento(), request.fechaInicioEvento(),  request.fechaFinEvento())
                 .orElseThrow(() -> new NoSuchElementException("Error en UsuarioEventoService.eliminarUsuarioEvento: No se encontró el evento con título '" + request.tituloEvento()
-                        + "' y fechaHora " + request.fechaHoraEvento()));
+                        + "' y fechaInicio " + request.fechaInicioEvento() + " y fechaFin " + request.fechaFinEvento()));
 
         // Verificar si la relación existe antes de eliminarla, lanzando una excepción si no es así
         UsuarioEventoId id = new UsuarioEventoId();
