@@ -138,26 +138,11 @@ def parse_ics(text: str) -> List[Event]:
         def to_iso(dt: Optional[datetime]) -> Optional[str]:
             if dt is None:
                 return None
+            # All-day -> YYYY-MM-DD
             if dt.tzinfo is None:
                 return dt.strftime("%Y-%m-%d")
-
-            # Preferir la zona del evento (tz_used), si no, la del calendario, si no, la local
-            target_tz = None
-            if tz_used:
-                if tz_used.upper() == "UTC":
-                    target_tz = timezone.utc
-                else:
-                    target_tz = tz.gettz(tz_used)
-            if target_tz is None and calendar_tz:
-                target_tz = tz.gettz(calendar_tz)
-            if target_tz is None:
-                target_tz = tz.tzlocal()
-
-            try:
-                dt_local = dt.astimezone(target_tz)
-            except Exception:
-                dt_local = dt
-            return dt_local.isoformat()
+            # Mantener zona horaria original sin convertir a UTC
+            return dt.isoformat()
 
         events.append(
             Event(
