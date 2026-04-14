@@ -129,7 +129,7 @@ class ApiService {
       final respuesta = await http.delete(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'emailUsuario': emailUsuario, 'tituloEvento': tituloEvento, 'fechaHoraEvento': fechaInicio.toIso8601String(), 'fechaFinEvento': fechaFin.toIso8601String()}),
+        body: jsonEncode({'emailUsuario': emailUsuario, 'tituloEvento': tituloEvento, 'fechaInicioEvento': fechaInicio.toIso8601String(), 'fechaFinEvento': fechaFin.toIso8601String()}),
       );
 
       if (respuesta.statusCode == 204) {

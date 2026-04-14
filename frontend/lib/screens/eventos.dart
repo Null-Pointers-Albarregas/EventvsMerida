@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../core/router/app_routes.dart';
 import '../models/usuario.dart';
 import '../services/api_service.dart';
 import '../services/shared_preferences_service.dart';
@@ -613,7 +614,7 @@ class _EventosState extends State<Eventos> {
                             ),
                           ),
                           onPressed: () {
-                            context.go('/registro');
+                            context.go(AppRoutes.registro);
                             Navigator.of(ctx).pop();
                           },
                           child: const Text('Registrarse'),
@@ -630,7 +631,7 @@ class _EventosState extends State<Eventos> {
                           ),
                           onPressed: () {
                             Navigator.of(ctx).pop();
-                            context.go('/login');
+                            context.go(AppRoutes.login);
                             Navigator.of(ctx).pop();
                           },
                           child: const Text(

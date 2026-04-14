@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../core/router/app_routes.dart';
 
 class Navegador extends StatefulWidget {
   final Widget child;
@@ -15,13 +16,13 @@ class _NavegadorState extends State<Navegador> {
 
   int _calcularIndice(String localizacion) {
     switch (localizacion) {
-      case '/eventos':
+      case AppRoutes.eventos:
         return 0;
-      case '/mapa':
+      case AppRoutes.mapa:
         return 1;
-      case '/calendario':
+      case AppRoutes.calendario:
         return 2;
-      case '/perfil':
+      case AppRoutes.perfil:
         return 3;
     }
     return 0;
@@ -30,16 +31,16 @@ class _NavegadorState extends State<Navegador> {
   void _cambiarRuta(int indice) {
     switch (indice) {
       case 0:
-        context.go('/eventos');
+        context.go(AppRoutes.eventos);
         break;
       case 1:
-        context.go('/mapa');
+        context.go(AppRoutes.mapa);
         break;
       case 2:
-        context.go('/calendario');
+        context.go(AppRoutes.calendario);
         break;
       case 3:
-        context.go('/perfil');
+        context.go(AppRoutes.perfil);
         break;
     }
   }

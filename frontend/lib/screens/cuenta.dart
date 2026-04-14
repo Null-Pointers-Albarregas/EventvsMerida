@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../core/router/app_routes.dart';
 import '../services/shared_preferences_service.dart';
 import '../models/usuario.dart';
 
@@ -119,7 +120,7 @@ class _CuentaState extends State<Cuenta> {
                   SharedPreferencesService.usuarioSesionActual = null;
                   await SharedPreferencesService.borrarAutoLoginKey();
                   await SharedPreferencesService.borrarUsuarioKey();
-                  context.go('/eventos');
+                  context.go(AppRoutes.eventos);
                 },
               ),
             ),
