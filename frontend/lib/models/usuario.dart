@@ -25,11 +25,11 @@ class Usuario {
   };
 
   factory Usuario.fromJson(Map<String, dynamic> json) => Usuario(
-    nombre: json['nombre'] as String,
-    apellidos: json['apellidos'] as String,
+    nombre: json['nombre'] ?? '',
+    apellidos: json['apellidos'] ?? '',
     fechaNacimiento: DateTime.parse(json['fechaNacimiento']),
-    email: json['email'] as String,
-    telefono: json['telefono'] as String,
-    rol: json['rol'] as String,
+    email: json['email'] ?? '',
+    telefono: json['telefono'] ?? '',
+    rol: json['rol'] ?? '',
   );
 }

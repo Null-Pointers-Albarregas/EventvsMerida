@@ -56,15 +56,44 @@ class _CalendarioState extends State<Calendario> {
   }
 
   Future<void> _cargarEventos() async {
-    try {
-      final mapa = await ApiService.obtenerEventosParaCalendario();
-      setState(() {
-        _eventosMap = mapa;
-      });
-    } catch (e, stack) {
-      debugPrint("Error cargando eventos: $e");
-      debugPrintStack(stackTrace: stack);
+    final respuesta = await ApiService.obtenerEventos();
+    if (!mounted) return;
+
+    if (!respuesta.exito) {
+      _mostrarMensaje(respuesta.mensaje);
+      return;
     }
+
+    final eventos = respuesta.datos ?? [];
+    setState(() {
+      _eventosMap = _crearMapaPorDia(eventos);
+    });
+  }
+
+  Map<DateTime, List<Evento>> _crearMapaPorDia(List<Evento> eventos) {
+    final mapa = <DateTime, List<Evento>>{};
+
+    for (final evento in eventos) {
+      var dia = DateTime(
+        evento.fechaInicio.year,
+        evento.fechaInicio.month,
+        evento.fechaInicio.day,
+      );
+
+      final fin = DateTime(
+        evento.fechaFin.year,
+        evento.fechaFin.month,
+        evento.fechaFin.day,
+      );
+
+      while (!dia.isAfter(fin)) {
+        mapa.putIfAbsent(dia, () => []);
+        mapa[dia]!.add(evento);
+        dia = dia.add(const Duration(days: 1));
+      }
+    }
+
+    return mapa;
   }
 
   bool _esAntesDelPrimerMes(DateTime fecha) {

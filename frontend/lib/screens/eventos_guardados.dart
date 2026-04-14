@@ -53,27 +53,33 @@ class _EventosGuardadosState extends State<EventosGuardados> {
       return;
     }
 
-    final eventos = await ApiService.obtenerEventosGuardados(usuario.email);
+    final respuesta = await ApiService.obtenerEventosGuardados(usuario.email);
 
     if (!mounted) return;
     setState(() {
       _usuario = usuario;
-      _eventos = eventos;
+      _eventos = respuesta.exito ? (respuesta.datos ?? []) : [];
       _cargando = false;
     });
+
+    if (!respuesta.exito) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(respuesta.mensaje)),
+      );
+    }
   }
 
   Future<void> _borrarEvento(Evento evento) async {
     if (_usuario == null) return;
 
-    final mensaje = await ApiService.eliminarEventoUsuario(
+    final respuesta = await ApiService.eliminarEventoUsuario(
       _usuario!.email,
       evento.titulo,
       evento.fechaInicio,
       evento.fechaFin,
     );
 
-    if (mensaje == 'Evento eliminado correctamente') {
+    if (respuesta.exito) {
       setState(() {
         _eventos.removeWhere((e) =>
         e.titulo == evento.titulo &&
@@ -89,10 +95,15 @@ class _EventosGuardadosState extends State<EventosGuardados> {
           children: [
             const Icon(Icons.delete, size: 20, color: Colors.white),
             const SizedBox(width: 8),
-            Text(mensaje, style: const TextStyle(color: Colors.white)),
+            Expanded(
+              child: Text(
+                respuesta.mensaje,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           ],
         ),
-        backgroundColor: Colors.red,
+        backgroundColor: respuesta.exito ? Colors.red : Colors.orange,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.only(
           left: 16,

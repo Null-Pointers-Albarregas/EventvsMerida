@@ -1,61 +1,82 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/usuario.dart';
 
 class SharedPreferencesService {
-  static const String usuarioKey = 'usuario_data';
-  static const String autoLoginKey = 'autologin_data';
+  SharedPreferencesService._();
+
+  static const String _usuarioKey = 'usuario_data';
+  static const String _autoLoginKey = 'autologin_data';
+
+  // Sesion en memoria para la ejecucion actual de la app.
   static Usuario? usuarioSesionActual;
 
-  // Guardar un usuario
-  static Future<void> guardarUsuarioKey(Usuario usuario) async {
-    final prefs = await SharedPreferences.getInstance();
-    final json = jsonEncode(usuario.toJson());
-    await prefs.setString(usuarioKey, json);
+  static Future<SharedPreferences> get _prefs async {
+    return SharedPreferences.getInstance();
   }
 
-  // Cargar usuario (o null si no hay datos)
-  static Future<Usuario?> cargarUsuarioKey() async {
-    final prefs = await SharedPreferences.getInstance();
-    final json = prefs.getString(usuarioKey);
-    if (json == null) return null;
-    final Map<String, dynamic> data = jsonDecode(json);
-    return Usuario.fromJson(data);
+  // ===========================
+  // API principal de sesion
+  // ===========================
+
+  static Future<void> iniciarSesion({
+    required Usuario usuario,
+    required bool autoLogin,
+  }) async {
+    usuarioSesionActual = usuario;
+
+    final prefs = await _prefs;
+    await prefs.setBool(_autoLoginKey, autoLogin);
+
+    if (autoLogin) {
+      await prefs.setString(_usuarioKey, jsonEncode(usuario.toJson()));
+    } else {
+      await prefs.remove(_usuarioKey);
+    }
   }
 
-  // Eliminar los datos de usuario (logout)
-  static Future<void> borrarUsuarioKey() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(usuarioKey);
-  }
+  static Future<void> cerrarSesion() async {
+    usuarioSesionActual = null;
 
-  // Guarda el valor de autoLogin
-  static Future<void> guardarAutoLoginKey(bool autoLogin) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(autoLoginKey, autoLogin);
-  }
-
-  // Cargar autoLogin (o false si no hay datos)
-  static Future<bool> cargarAutoLoginKey() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(autoLoginKey) ?? false;
-  }
-
-  // Eliminar los datos de usuario (logout)
-  static Future<void> borrarAutoLoginKey() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(autoLoginKey);
+    final prefs = await _prefs;
+    await prefs.remove(_usuarioKey);
+    await prefs.remove(_autoLoginKey);
   }
 
   static Future<Usuario?> cargarUsuario() async {
-    final autoLogin = await SharedPreferencesService.cargarAutoLoginKey();
+    final prefs = await _prefs;
+    final autoLogin = prefs.getBool(_autoLoginKey) ?? false;
 
     if (autoLogin) {
-      final usuario = await SharedPreferencesService.cargarUsuarioKey();
+      return await _cargarUsuarioPersistido(prefs);
+    }
+
+    return usuarioSesionActual;
+  }
+
+  // ===========================
+  // Internos
+  // ===========================
+
+  static Future<Usuario?> _cargarUsuarioPersistido(SharedPreferences prefs) async {
+    final json = prefs.getString(_usuarioKey);
+
+    if (json == null || json.isEmpty) {
+      await prefs.remove(_usuarioKey);
+      await prefs.remove(_autoLoginKey);
+      return null;
+    }
+
+    try {
+      final data = jsonDecode(json) as Map<String, dynamic>;
+      final usuario = Usuario.fromJson(data);
+      usuarioSesionActual = usuario;
       return usuario;
-    } else if (usuarioSesionActual != null){
-        return usuarioSesionActual;
-    } else {
+    } catch (_) {
+      await prefs.remove(_usuarioKey);
+      await prefs.remove(_autoLoginKey);
       return null;
     }
   }

@@ -117,9 +117,7 @@ class _CuentaState extends State<Cuenta> {
                   minimumSize: const Size.fromHeight(48),
                 ),
                 onPressed: () async {
-                  SharedPreferencesService.usuarioSesionActual = null;
-                  await SharedPreferencesService.borrarAutoLoginKey();
-                  await SharedPreferencesService.borrarUsuarioKey();
+                  await SharedPreferencesService.cerrarSesion();
                   context.go(AppRoutes.eventos);
                 },
               ),

@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/router/app_routes.dart';
+import '../models/api_response.dart';
 import '../models/usuario.dart';
 import '../services/api_service.dart';
 import '../services/shared_preferences_service.dart';
@@ -19,7 +20,7 @@ class Eventos extends StatefulWidget {
 }
 
 class _EventosState extends State<Eventos> {
-  late Future<List<Evento>> _eventos;
+  late Future<ApiResponse<List<Evento>>> _eventos;
   Usuario? _usuario;
   List<Evento> _eventosGuardados = [];
 
@@ -31,8 +32,12 @@ class _EventosState extends State<Eventos> {
   }
 
   Future<void> _cargarEventosGuardados(Usuario usuario) async {
-    final eventos = await ApiService.obtenerEventosGuardados(usuario.email);
-    _eventosGuardados = eventos;
+    final respuesta = await ApiService.obtenerEventosGuardados(usuario.email);
+    if (respuesta.exito) {
+      _eventosGuardados = respuesta.datos ?? [];
+    } else {
+      _eventosGuardados = [];
+    }
   }
 
   Future<void> _cargarDatos() async {
@@ -158,7 +163,7 @@ class _EventosState extends State<Eventos> {
         ],
       ),
       body: Center(
-        child: FutureBuilder<List<Evento>>(
+        child: FutureBuilder<ApiResponse<List<Evento>>>(
           future: _eventos,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -167,7 +172,15 @@ class _EventosState extends State<Eventos> {
               return Text('Error: ${snapshot.error}');
             }
 
-            final eventos = snapshot.data ?? [];
+            final respuesta = snapshot.data;
+            if (respuesta == null) {
+              return const Text('No se han podido cargar los eventos');
+            }
+            if (!respuesta.exito) {
+              return Text(respuesta.mensaje);
+            }
+
+            final eventos = respuesta.datos ?? [];
 
             return ListView.builder(
               itemCount: eventos.length,
@@ -516,17 +529,17 @@ class _EventosState extends State<Eventos> {
       evento.fechaFin,
     );
 
-    if (respuesta == 'Evento guardado correctamente') {
+    if (respuesta.exito) {
       setState(() {
         final yaEsta = _eventosGuardados.any((e) => _esMismoEvento(e, evento));
         if (!yaEsta) {
           _eventosGuardados.add(evento);
         }
       });
-      return respuesta;
+      return respuesta.mensaje;
     }
 
-    return 'Ha ocurrido un problema al guardar el evento';
+    return respuesta.mensaje;
   }
 
   Future<String> _eliminarEvento(Evento evento, Usuario usuario) async {
@@ -537,14 +550,14 @@ class _EventosState extends State<Eventos> {
       evento.fechaFin,
     );
 
-    if (respuesta == 'Evento eliminado correctamente') {
+    if (respuesta.exito) {
       setState(() {
         _eventosGuardados.removeWhere((e) => _esMismoEvento(e, evento));
       });
-      return respuesta;
+      return respuesta.mensaje;
     }
 
-    return 'Ha ocurrido un problema al eliminar el evento';
+    return respuesta.mensaje;
   }
 
   void _mostrarModalNoLogeado(BuildContext context) {

@@ -330,11 +330,7 @@ class _RegistroState extends State<Registro> {
                               "idRol": 1,
                             };
 
-                            // Llamada al API para registrar: espera un mapa con 'mensaje' y 'usuario'
-                            final result = await ApiService.registrar(userData);
-
-                            final mensaje = result['mensaje'];
-                            final usuario = result['usuario']; // Este será null si falla el registro
+                            final respuesta = await ApiService.registrarUsuario(userData);
 
                             // Mostrar feedback al usuario SIEMPRE
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -349,14 +345,14 @@ class _RegistroState extends State<Registro> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      mensaje,
+                                      respuesta.mensaje,
                                       style: const TextStyle(
                                         color: Colors.white,
                                       ),
                                     ),
                                   ],
                                 ),
-                                backgroundColor: Colors.green,
+                                backgroundColor: respuesta.exito ? Colors.green : Colors.red,
                                 behavior:
                                 SnackBarBehavior.floating,
                                 margin: const EdgeInsets.only(
@@ -371,9 +367,12 @@ class _RegistroState extends State<Registro> {
                               ),
                             );
 
-                            // Si el registro es correcto, guarda el usuario y navega
-                            if (usuario != null) {
-                              SharedPreferencesService.usuarioSesionActual = usuario;
+                            if (respuesta.exito && respuesta.datos != null) {
+                              await SharedPreferencesService.iniciarSesion(
+                                usuario: respuesta.datos!,
+                                autoLogin: false,
+                              );
+                              if (!mounted) return;
                               context.go(AppRoutes.eventos);
                             }
                           },

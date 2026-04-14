@@ -159,12 +159,10 @@ class _LoginState extends State<Login> {
                                 ),
                               ),
                               onPressed: () async {
-                                final result = await ApiService.login(
+                                final respuesta = await ApiService.iniciarSesion(
                                   emailController.text.trim(),
                                   passwordController.text,
                                 );
-                                final mensaje = result['mensaje'];
-                                final usuario = result['usuario'];
 
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -177,15 +175,16 @@ class _LoginState extends State<Login> {
                                           color: Colors.white,
                                         ),
                                         const SizedBox(width: 8),
-                                        Text(
-                                          mensaje,
+                                          Text(
+                                            respuesta.mensaje,
                                           style: const TextStyle(
                                             color: Colors.white,
                                           ),
                                         ),
                                       ],
                                     ),
-                                    backgroundColor: Colors.green,
+                                    backgroundColor:
+                                        respuesta.exito ? Colors.green : Colors.red,
                                     behavior:
                                     SnackBarBehavior.floating,
                                     margin: const EdgeInsets.only(
@@ -200,15 +199,13 @@ class _LoginState extends State<Login> {
                                   ),
                                 );
 
-                                if (usuario != null) {
-                                  SharedPreferencesService.usuarioSesionActual = usuario;
+                                if (respuesta.exito && respuesta.datos != null) {
+                                  await SharedPreferencesService.iniciarSesion(
+                                    usuario: respuesta.datos!,
+                                    autoLogin: _autoLogin,
+                                  );
 
-                                  await SharedPreferencesService.guardarAutoLoginKey(_autoLogin);
-
-                                  if (_autoLogin) {
-                                    await SharedPreferencesService.guardarUsuarioKey(usuario);
-                                  }
-
+                                  if (!mounted) return;
                                   context.go(AppRoutes.eventos);
                                 }
                               },
