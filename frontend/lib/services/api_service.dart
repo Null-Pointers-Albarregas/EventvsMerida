@@ -73,32 +73,43 @@ class ApiService {
   }
 
   static Future<Map<DateTime, List<Evento>>> obtenerEventosParaCalendario() async {
-    List<Evento> datos = await obtenerEventos();
-    Map<DateTime, List<Evento>> mapa = {};
+    final datos = await obtenerEventos();
+    final Map<DateTime, List<Evento>> mapa = {};
 
-    for (var evento in datos) {
-      DateTime fecha = DateTime(
-          evento.fechaHora.year,
-          evento.fechaHora.month,
-          evento.fechaHora.day
+    for (final evento in datos) {
+      final inicio = DateTime(
+        evento.fechaInicio.year,
+        evento.fechaInicio.month,
+        evento.fechaInicio.day,
       );
 
-      if (mapa[fecha] == null) {
-        mapa[fecha] = [];
+      final fin = DateTime(
+        evento.fechaFin.year,
+        evento.fechaFin.month,
+        evento.fechaFin.day,
+      );
+
+      var dia = inicio;
+      while (!dia.isAfter(fin)) {
+        mapa.putIfAbsent(dia, () => []);
+        mapa[dia]!.add(evento);
+
+        dia = dia.add(const Duration(days: 1));
+        dia = DateTime(dia.year, dia.month, dia.day);
       }
-      mapa[fecha]!.add(evento);
     }
+
     return mapa;
   }
 
-  static Future<String> guardarEventoUsuario(String emailUsuario, String tituloEvento, DateTime fechaHora) async {
+  static Future<String> guardarEventoUsuario(String emailUsuario, String tituloEvento, DateTime fechaInicio, DateTime fechaFin) async {
     final url = Uri.parse("$baseUrl/usuario-eventos/guardar");
 
     try {
       final respuesta = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'emailUsuario': emailUsuario, 'tituloEvento': tituloEvento, 'fechaHoraEvento': fechaHora.toIso8601String()}),
+        body: jsonEncode({'emailUsuario': emailUsuario, 'tituloEvento': tituloEvento, 'fechaInicioEvento': fechaInicio.toIso8601String(), 'fechaFinEvento': fechaFin.toIso8601String()}),
       );
 
       if (respuesta.statusCode == 200) {
@@ -111,14 +122,14 @@ class ApiService {
     }
   }
 
-  static Future<String> eliminarEventoUsuario(String emailUsuario, String tituloEvento, DateTime fechaHora) async {
+  static Future<String> eliminarEventoUsuario(String emailUsuario, String tituloEvento, DateTime fechaInicio, DateTime fechaFin) async {
     final url = Uri.parse("$baseUrl/usuario-eventos/eliminar");
 
     try {
       final respuesta = await http.delete(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'emailUsuario': emailUsuario, 'tituloEvento': tituloEvento, 'fechaHoraEvento': fechaHora.toIso8601String()}),
+        body: jsonEncode({'emailUsuario': emailUsuario, 'tituloEvento': tituloEvento, 'fechaHoraEvento': fechaInicio.toIso8601String(), 'fechaFinEvento': fechaFin.toIso8601String()}),
       );
 
       if (respuesta.statusCode == 204) {

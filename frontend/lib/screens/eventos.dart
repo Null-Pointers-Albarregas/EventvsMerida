@@ -1,11 +1,13 @@
+import 'dart:ui';
+
 import 'package:eventvsmerida/models/evento.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../models/usuario.dart';
 import '../services/api_service.dart';
-import 'dart:ui';
-
 import '../services/shared_preferences_service.dart';
 
 class Eventos extends StatefulWidget {
@@ -17,9 +19,15 @@ class Eventos extends StatefulWidget {
 
 class _EventosState extends State<Eventos> {
   late Future<List<Evento>> _eventos;
-  String fechaHora = "";
   Usuario? _usuario;
   List<Evento> _eventosGuardados = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _eventos = ApiService.obtenerEventos();
+    _cargarDatos();
+  }
 
   Future<void> _cargarEventosGuardados(Usuario usuario) async {
     final eventos = await ApiService.obtenerEventosGuardados(usuario.email);
@@ -29,21 +37,81 @@ class _EventosState extends State<Eventos> {
   Future<void> _cargarDatos() async {
     final usuario = await SharedPreferencesService.cargarUsuario();
     if (!mounted) return;
+
     setState(() {
       _usuario = usuario;
     });
+
     if (_usuario != null) {
       await _cargarEventosGuardados(_usuario!);
       if (!mounted) return;
-      setState(() {}); // para que se reconstruya con la lista cargada
+      setState(() {});
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _eventos = ApiService.obtenerEventos();
-    _cargarDatos();
+  bool _esMismoDia(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  bool _esMismoEvento(Evento a, Evento b) {
+    return a.titulo == b.titulo &&
+        a.fechaInicio == b.fechaInicio &&
+        a.fechaFin == b.fechaFin;
+  }
+
+  String _formatearFecha(DateTime fecha) => DateFormat('dd/MM/yyyy').format(fecha);
+  String _formatearHora(DateTime fecha) => DateFormat('HH:mm').format(fecha);
+
+  String _textoFechaHoraCard(Evento evento) {
+    final esMismoDia = _esMismoDia(evento.fechaInicio, evento.fechaFin);
+    final inicioFecha = _formatearFecha(evento.fechaInicio);
+    final finFecha = _formatearFecha(evento.fechaFin);
+    final inicioHora = _formatearHora(evento.fechaInicio);
+    final finHora = _formatearHora(evento.fechaFin);
+
+    if (esMismoDia) {
+      if (inicioHora == finHora && inicioHora == '00:00') {
+        return 'Fecha: $inicioFecha';
+      }
+      if (inicioHora == finHora) {
+        return 'Fecha: $inicioFecha · $inicioHora';
+      }
+      return 'Fecha: $inicioFecha · $inicioHora - $finHora';
+    } else {
+      if (inicioHora == finHora && inicioHora == '00:00') {
+        return 'Fecha: $inicioFecha - $finFecha';
+      }
+      if (inicioHora == finHora) {
+        return 'Fecha: $inicioFecha - $finFecha · $inicioHora';
+      }
+      return 'Fecha: $inicioFecha - $finFecha · $inicioHora - $finHora';
+    }
+  }
+
+  String _textoFechaHoraDetalle(Evento evento) {
+    final esMismoDia = _esMismoDia(evento.fechaInicio, evento.fechaFin);
+    final inicioFecha = _formatearFecha(evento.fechaInicio);
+    final finFecha = _formatearFecha(evento.fechaFin);
+    final inicioHora = _formatearHora(evento.fechaInicio);
+    final finHora = _formatearHora(evento.fechaFin);
+
+    if (esMismoDia) {
+      if (inicioHora == finHora && inicioHora == '00:00') {
+        return 'Fecha: $inicioFecha';
+      }
+      if (inicioHora == finHora) {
+        return 'Fecha: $inicioFecha\nHora: $inicioHora';
+      }
+      return 'Fecha: $inicioFecha\nHora: $inicioHora - $finHora';
+    } else {
+      if (inicioHora == finHora && inicioHora == '00:00') {
+        return 'Desde: $inicioFecha\nHasta: $finFecha';
+      }
+      if (inicioHora == finHora) {
+        return 'Desde: $inicioFecha $inicioHora\nHasta: $finFecha $finHora';
+      }
+      return 'Desde: $inicioFecha $inicioHora\nHasta: $finFecha $finHora';
+    }
   }
 
   @override
@@ -70,10 +138,10 @@ class _EventosState extends State<Eventos> {
                 IconButton(
                   onPressed: null,
                   icon: Icon(
-                      Icons.search,
-                      color: colorScheme.primary.withValues(alpha: 0.5),
+                    Icons.search,
+                    color: colorScheme.primary.withValues(alpha: 0.5),
                   ),
-                  tooltip: "Buscar - Próximamente",
+                  tooltip: 'Buscar - Proximamente',
                 ),
                 IconButton(
                   onPressed: null,
@@ -81,7 +149,7 @@ class _EventosState extends State<Eventos> {
                     Icons.filter_alt_rounded,
                     color: colorScheme.primary.withValues(alpha: 0.5),
                   ),
-                  tooltip: "Filtrar - Próximamente",
+                  tooltip: 'Filtrar - Proximamente',
                 ),
               ],
             ),
@@ -93,12 +161,13 @@ class _EventosState extends State<Eventos> {
           future: _eventos,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
+              return const CircularProgressIndicator();
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             }
 
-            final eventos = snapshot.data!;
+            final eventos = snapshot.data ?? [];
+
             return ListView.builder(
               itemCount: eventos.length,
               itemBuilder: (context, indice) {
@@ -114,20 +183,18 @@ class _EventosState extends State<Eventos> {
                   ),
                   color: colorScheme.secondary,
                   child: InkWell(
+                    onTap: () => _abrirModal(context, evento, _usuario),
                     child: Column(
-                      crossAxisAlignment: .start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(16),
-                          ),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                           child: AspectRatio(
                             aspectRatio: 16 / 9,
                             child: Image.network(
                               evento.foto,
                               fit: BoxFit.cover,
-                              alignment:
-                                  .topCenter,
+                              alignment: Alignment.topCenter,
                             ),
                           ),
                         ),
@@ -136,10 +203,9 @@ class _EventosState extends State<Eventos> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Título
                               Text(
                                 evento.titulo,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                   color: Colors.black,
@@ -148,10 +214,9 @@ class _EventosState extends State<Eventos> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 6),
-                              // Categoría
                               Text(
                                 evento.nombreCategoria,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.black,
                                   fontSize: 14,
                                 ),
@@ -159,60 +224,31 @@ class _EventosState extends State<Eventos> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 6),
-
-                              // Localización
                               Text(
                                 evento.localizacion,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.black,
-                                  fontSize: 14
+                                  fontSize: 14,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 12),
-
-                              // Fecha y hora
-                              Row(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      'Fecha: ${evento.fechaHora.day.toString().padLeft(2, '0')}/${evento.fechaHora.month.toString().padLeft(2, '0')}/${evento.fechaHora.year}',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 14,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Text(
-                                      'Hora: ${evento.fechaHora.hour.toString().padLeft(2, '0')}:${evento.fechaHora.minute.toString().padLeft(2, '0')}',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 14,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                _textoFechaHoraCard(evento),
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14,
+                                  height: 1.25,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
                         ),
                       ],
-                    ),
-                    onTap: () => _abrirModal(
-                      context,
-                      evento,
-                      _usuario,
                     ),
                   ),
                 );
@@ -224,11 +260,7 @@ class _EventosState extends State<Eventos> {
     );
   }
 
-  void _abrirModal(
-    BuildContext context,
-    Evento evento,
-    Usuario? usuario
-  ) {
+  void _abrirModal(BuildContext context, Evento evento, Usuario? usuario) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -241,15 +273,11 @@ class _EventosState extends State<Eventos> {
       builder: (ctx) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: StatefulBuilder(
             builder: (dialogContext, setStateDialog) {
               return Stack(
                 children: [
-                  // Blur de fondo dentro del área del diálogo
                   Positioned.fill(
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
@@ -272,12 +300,7 @@ class _EventosState extends State<Eventos> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  12,
-                                  10,
-                                  4,
-                                  0,
-                                ),
+                                padding: const EdgeInsets.fromLTRB(12, 10, 4, 0),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
@@ -300,11 +323,8 @@ class _EventosState extends State<Eventos> {
                                 ),
                               ),
                               const SizedBox(height: 8),
-
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
                                   child: LayoutBuilder(
@@ -324,81 +344,51 @@ class _EventosState extends State<Eventos> {
                                   ),
                                 ),
                               ),
-
                               const SizedBox(height: 12),
-
                               Expanded(
                                 child: SingleChildScrollView(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    16,
-                                    0,
-                                    16,
-                                    8,
-                                  ),
+                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: .start,
-                                              children: [
-                                                TextButton.icon(
-                                                  onPressed: () => _abrirEnGoogleMaps(evento.localizacion),
-                                                  icon: const Icon(
-                                                    Icons.place_outlined,
-                                                    size: 18,
-                                                    color: Colors.white,
-                                                  ),
-                                                  label: Text(
-                                                    evento.localizacion,
-                                                    style: textTheme.bodyMedium?.copyWith(
-                                                      decoration: .underline
-                                                    ),
-                                                  ),
-                                                  style: TextButton.styleFrom(
-                                                    alignment: Alignment.centerLeft,
-                                                    padding: EdgeInsets.zero,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                      TextButton.icon(
+                                        onPressed: () => _abrirEnGoogleMaps(evento.localizacion),
+                                        icon: const Icon(
+                                          Icons.place_outlined,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                        label: Text(
+                                          evento.localizacion,
+                                          style: textTheme.bodyMedium?.copyWith(
+                                            decoration: TextDecoration.underline,
                                           ),
-                                        ],
+                                        ),
+                                        style: TextButton.styleFrom(
+                                          alignment: Alignment.centerLeft,
+                                          padding: EdgeInsets.zero,
+                                        ),
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 10),
                                       Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          const Icon(
-                                            Icons.calendar_today_outlined,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            '${evento.fechaHora.day.toString().padLeft(2, '0')}/${evento.fechaHora.month.toString().padLeft(2, '0')}/${evento.fechaHora.year}',
-                                            style: textTheme.bodyMedium
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          const Icon(
-                                            Icons.access_time,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${evento.fechaHora.hour.toString().padLeft(2, '0')}:${evento.fechaHora.minute.toString().padLeft(2, '0')}',
-                                            style: textTheme.bodyMedium,
+                                          const Icon(Icons.event_note, size: 18),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              _textoFechaHoraDetalle(evento),
+                                              style: textTheme.bodyMedium?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                height: 1.35,
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       ),
                                       const SizedBox(height: 16),
                                       Text(
-                                        'Descripción',
+                                        'Descripcion',
                                         style: textTheme.titleSmall?.copyWith(
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -412,15 +402,8 @@ class _EventosState extends State<Eventos> {
                                   ),
                                 ),
                               ),
-
-                              // -------- BOTÓN ABAJO --------
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  8,
-                                  16,
-                                  16,
-                                ),
+                                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                                 child: Row(
                                   children: [
                                     Expanded(
@@ -437,55 +420,37 @@ class _EventosState extends State<Eventos> {
 
                                           String respuesta;
                                           if (estaGuardado) {
-                                            respuesta = await _guardarEvento(
-                                              evento,
-                                              usuario,
-                                            );
+                                            respuesta = await _guardarEvento(evento, usuario);
                                           } else {
-                                            respuesta = await _eliminarEvento(
-                                              evento,
-                                              usuario,
-                                            );
+                                            respuesta = await _eliminarEvento(evento, usuario);
                                           }
 
-                                          // SnackBar SOBRE la modal
-                                          ScaffoldMessenger.of(
-                                            dialogContext,
-                                          ).showSnackBar(
+                                          ScaffoldMessenger.of(dialogContext).showSnackBar(
                                             SnackBar(
                                               content: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Icon(
-                                                    estaGuardado
-                                                        ? Icons.check
-                                                        : Icons
-                                                              .delete,
+                                                    estaGuardado ? Icons.check : Icons.delete,
                                                     size: 20,
                                                     color: Colors.white,
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
                                                     respuesta,
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                    ),
+                                                    style: const TextStyle(color: Colors.white),
                                                   ),
                                                 ],
                                               ),
-                                              backgroundColor: estaGuardado
-                                                  ? Colors.green
-                                                  : Colors.red,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
+                                              backgroundColor: estaGuardado ? Colors.green : Colors.red,
+                                              behavior: SnackBarBehavior.floating,
                                               margin: const EdgeInsets.only(
                                                 left: 16,
                                                 right: 16,
                                                 bottom: 16,
                                               ),
                                               shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
+                                                borderRadius: BorderRadius.circular(12),
                                               ),
                                             ),
                                           );
@@ -496,9 +461,7 @@ class _EventosState extends State<Eventos> {
                                               : Icons.bookmark_border_outlined,
                                         ),
                                         label: Text(
-                                          estaGuardado
-                                              ? 'Evento guardado'
-                                              : 'Guardar evento',
+                                          estaGuardado ? 'Evento guardado' : 'Guardar evento',
                                         ),
                                       ),
                                     ),
@@ -523,22 +486,16 @@ class _EventosState extends State<Eventos> {
   Future<void> _abrirEnGoogleMaps(String direccion) async {
     final limpia = direccion.trim();
     final query = Uri.encodeComponent(limpia);
-    final uri = Uri.parse(
-      'https://www.google.com/maps/search/?api=1&query=$query',
-    );
+    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
 
     try {
-      final ok = await launchUrl(
-        uri,
-        mode: LaunchMode.platformDefault,
-      );
-
+      final ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
       if (!ok && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No se pudo abrir Google Maps')),
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo abrir Google Maps')),
@@ -547,24 +504,20 @@ class _EventosState extends State<Eventos> {
   }
 
   bool comprobarEstadoEvento(Evento evento) {
-    // si Evento tiene id, usa ese campo; si no, comparar por título + fechaHora
-    return _eventosGuardados.any((e) =>
-    e.titulo == evento.titulo &&
-    e.fechaHora == evento.fechaHora);
+    return _eventosGuardados.any((e) => _esMismoEvento(e, evento));
   }
 
   Future<String> _guardarEvento(Evento evento, Usuario usuario) async {
     final respuesta = await ApiService.guardarEventoUsuario(
       usuario.email,
       evento.titulo,
-      evento.fechaHora,
+      evento.fechaInicio,
+      evento.fechaFin,
     );
 
     if (respuesta == 'Evento guardado correctamente') {
       setState(() {
-        // Comprobar si ya existe el evento en la lista
-        final yaEsta = _eventosGuardados.any((e) =>
-        e.titulo == evento.titulo && e.fechaHora == evento.fechaHora);
+        final yaEsta = _eventosGuardados.any((e) => _esMismoEvento(e, evento));
         if (!yaEsta) {
           _eventosGuardados.add(evento);
         }
@@ -579,13 +532,13 @@ class _EventosState extends State<Eventos> {
     final respuesta = await ApiService.eliminarEventoUsuario(
       usuario.email,
       evento.titulo,
-      evento.fechaHora,
+      evento.fechaInicio,
+      evento.fechaFin,
     );
 
     if (respuesta == 'Evento eliminado correctamente') {
       setState(() {
-        _eventosGuardados.removeWhere((e) =>
-        e.titulo == evento.titulo && e.fechaHora == evento.fechaHora);
+        _eventosGuardados.removeWhere((e) => _esMismoEvento(e, evento));
       });
       return respuesta;
     }
@@ -620,7 +573,6 @@ class _EventosState extends State<Eventos> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Icono + título + botón cerrar
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -628,7 +580,7 @@ class _EventosState extends State<Eventos> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Inicia sesión o regístrate',
+                            'Inicia sesion o registrate',
                             style: textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -644,7 +596,7 @@ class _EventosState extends State<Eventos> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Para poder guardar un evento, tienes que iniciar sesión o registrarte.',
+                      'Para poder guardar un evento, tienes que iniciar sesion o registrarte.',
                       style: textTheme.bodyMedium,
                     ),
                   ],
@@ -655,7 +607,7 @@ class _EventosState extends State<Eventos> {
                       Expanded(
                         child: FilledButton(
                           style: FilledButton.styleFrom(
-                            backgroundColor: colorScheme.primary, // naranja
+                            backgroundColor: colorScheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -682,7 +634,7 @@ class _EventosState extends State<Eventos> {
                             Navigator.of(ctx).pop();
                           },
                           child: const Text(
-                            'Iniciar sesión',
+                            'Iniciar sesion',
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
