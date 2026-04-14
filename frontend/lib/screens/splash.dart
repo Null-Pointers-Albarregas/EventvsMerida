@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../core/router/app_routes.dart';
 
 class Splash extends StatefulWidget {
   const Splash({super.key});
@@ -13,7 +14,7 @@ class _SplashState extends State<Splash> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(seconds: 2), () {
-      context.go('/eventos');
+      context.go(AppRoutes.eventos);
     });
   }
 

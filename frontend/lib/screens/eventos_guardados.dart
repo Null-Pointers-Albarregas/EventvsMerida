@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 import '../models/evento.dart';
+import '../models/usuario.dart';
 import '../services/api_service.dart';
 import '../services/shared_preferences_service.dart';
-import '../models/usuario.dart';
 
 class EventosGuardados extends StatefulWidget {
   const EventosGuardados({super.key});
@@ -22,10 +24,38 @@ class _EventosGuardadosState extends State<EventosGuardados> {
     _cargarDatos();
   }
 
+  bool _esMismoDia(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  String _fecha(DateTime fecha) => DateFormat('dd/MM/yyyy').format(fecha);
+  String _hora(DateTime fecha) => DateFormat('HH:mm').format(fecha);
+
+  String _textoFechaEvento(Evento evento) {
+    if (_esMismoDia(evento.fechaInicio, evento.fechaFin)) {
+      return 'Fecha: ${_fecha(evento.fechaInicio)} · ${_hora(evento.fechaInicio)} - ${_hora(evento.fechaFin)}';
+    }
+
+    return 'Desde: ${_fecha(evento.fechaInicio)} ${_hora(evento.fechaInicio)}\n'
+        'Hasta: ${_fecha(evento.fechaFin)} ${_hora(evento.fechaFin)}';
+  }
+
   Future<void> _cargarDatos() async {
     final usuario = await SharedPreferencesService.cargarUsuario();
-    final eventos = await ApiService.obtenerEventosGuardados(usuario!.email);
 
+    if (usuario == null) {
+      if (!mounted) return;
+      setState(() {
+        _usuario = null;
+        _eventos = [];
+        _cargando = false;
+      });
+      return;
+    }
+
+    final eventos = await ApiService.obtenerEventosGuardados(usuario.email);
+
+    if (!mounted) return;
     setState(() {
       _usuario = usuario;
       _eventos = eventos;
@@ -34,15 +64,21 @@ class _EventosGuardadosState extends State<EventosGuardados> {
   }
 
   Future<void> _borrarEvento(Evento evento) async {
-    String mensaje = await ApiService.eliminarEventoUsuario(
+    if (_usuario == null) return;
+
+    final mensaje = await ApiService.eliminarEventoUsuario(
       _usuario!.email,
       evento.titulo,
-      evento.fechaHora,
+      evento.fechaInicio,
+      evento.fechaFin,
     );
 
-    if (mensaje == "Evento eliminado correctamente") {
+    if (mensaje == 'Evento eliminado correctamente') {
       setState(() {
-        _eventos.remove(evento);
+        _eventos.removeWhere((e) =>
+        e.titulo == evento.titulo &&
+            e.fechaInicio == evento.fechaInicio &&
+            e.fechaFin == evento.fechaFin);
       });
     }
 
@@ -51,28 +87,25 @@ class _EventosGuardadosState extends State<EventosGuardados> {
         content: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.delete, size: 20, color: Colors.white),
+            const Icon(Icons.delete, size: 20, color: Colors.white),
             const SizedBox(width: 8),
             Text(mensaje, style: const TextStyle(color: Colors.white)),
           ],
         ),
         backgroundColor: Colors.red,
-        behavior:
-        SnackBarBehavior.floating,
+        behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.only(
           left: 16,
           right: 16,
           bottom: 16,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius:
-          BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );
   }
 
-  // CABECERA
   Widget _cabecera(ColorScheme colorScheme) {
     return Container(
       width: double.infinity,
@@ -81,7 +114,7 @@ class _EventosGuardadosState extends State<EventosGuardados> {
       child: Column(
         children: [
           CircleAvatar(
-            backgroundColor: colorScheme.surface.withOpacity(0.9),
+            backgroundColor: colorScheme.surface.withValues(alpha: 0.9),
             radius: 45,
             child: Icon(Icons.person, color: colorScheme.primary, size: 45),
           ),
@@ -106,174 +139,134 @@ class _EventosGuardadosState extends State<EventosGuardados> {
       ),
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
-          // EN CASO DE NO HABER EVENTOS
           : _eventos.isEmpty
           ? Column(
-              children: [
-                _cabecera(colorScheme),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      'No tienes eventos guardados',
-                      style: TextStyle(
-                        color: colorScheme.onSurface,
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+        children: [
+          _cabecera(colorScheme),
+          Expanded(
+            child: Center(
+              child: Text(
+                'No tienes eventos guardados',
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontSize: 16,
                 ),
-              ],
-            )
-          // EN CASO DE HABER EVENTOS
-          : ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _cabecera(colorScheme),
-                const SizedBox(height: 16),
-
-                // TARJETA EVENTO
-                ..._eventos.map(
-                  (evento) => Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: colorScheme.primary,
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.onPrimary.withAlpha(64),
-                            blurRadius: 5,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-
-                      // INFORMACIÓN DEL EVENTO
-                      child: Row(
-                        children: [
-                          // IMAGEN DEL EVENTO
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(18),
-                              bottomLeft: Radius.circular(18),
-                            ),
-                            child: Image.network(
-                              evento.foto,
-                              width: 100,
-                              height: 90,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                    width: 100,
-                                    height: 90,
-                                    color: colorScheme.secondary.withAlpha(51),
-                                    child: Icon(
-                                      Icons.image,
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                            ),
-                          ),
-
-                          // CONTENIDO DEL EVENTO
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // TEXTO NOMBRE EVENTO
-                                  Text(
-                                    evento.titulo,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: colorScheme.primary,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-
-                                  // TEXTO LUGAR
-                                  Text(
-                                    evento.localizacion,
-                                    style: TextStyle(
-                                      color: colorScheme.onSurface.withAlpha(
-                                        178,
-                                      ),
-                                      fontSize: 14,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-
-                                  // FECHA Y HORA
-                                  Row(
-                                    children: [
-                                      // TEXTO FECHA
-                                      Icon(
-                                        Icons.calendar_today,
-                                        size: 14,
-                                        color: colorScheme.primary,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "${evento.fechaHora.day.toString().padLeft(2, '0')}/${evento.fechaHora.month.toString().padLeft(2, '0')}/${evento.fechaHora.year}",
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: colorScheme.onSurface,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-
-                                      // TEXTO HORA
-                                      Icon(
-                                        Icons.access_time,
-                                        size: 14,
-                                        color: colorScheme.primary,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "${evento.fechaHora.hour.toString().padLeft(2, '0')}:${evento.fechaHora.minute.toString().padLeft(2, '0')}",
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: colorScheme.onSurface,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // BOTÓN ELIMINAR
-                          IconButton(
-                            icon: Icon(Icons.delete, color: colorScheme.error),
-                            onPressed: () => _borrarEvento(evento),
-                            tooltip: 'Eliminar evento',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
+                textAlign: TextAlign.center,
+              ),
             ),
+          ),
+        ],
+      )
+          : ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          _cabecera(colorScheme),
+          const SizedBox(height: 16),
+          ..._eventos.map(
+                (evento) => Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 10,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: colorScheme.primary,
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.onPrimary.withAlpha(64),
+                      blurRadius: 5,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(18),
+                        bottomLeft: Radius.circular(18),
+                      ),
+                      child: Image.network(
+                        evento.foto,
+                        width: 100,
+                        height: 110,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Container(
+                              width: 100,
+                              height: 110,
+                              color: colorScheme.secondary.withAlpha(51),
+                              child: Icon(
+                                Icons.image,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        child: Column(
+                          crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              evento.titulo,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: colorScheme.primary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              evento.localizacion,
+                              style: TextStyle(
+                                color: colorScheme.onSurface
+                                    .withAlpha(178),
+                                fontSize: 14,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _textoFechaEvento(evento),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colorScheme.onSurface,
+                                height: 1.25,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: colorScheme.error),
+                      onPressed: () => _borrarEvento(evento),
+                      tooltip: 'Eliminar evento',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 }

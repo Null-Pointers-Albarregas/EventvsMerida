@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/router/app_routes.dart';
 import '../services/api_service.dart';
 import '../services/shared_preferences_service.dart';
 import 'package:go_router/go_router.dart';
@@ -373,7 +374,7 @@ class _RegistroState extends State<Registro> {
                             // Si el registro es correcto, guarda el usuario y navega
                             if (usuario != null) {
                               SharedPreferencesService.usuarioSesionActual = usuario;
-                              context.go('/eventos');
+                              context.go(AppRoutes.eventos);
                             }
                           },
                           child: Text(
@@ -397,7 +398,7 @@ class _RegistroState extends State<Registro> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              context.push('/login');
+                              context.push(AppRoutes.login);
                             },
                             child: Text(
                               "Inicia sesión",

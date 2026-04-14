@@ -48,9 +48,10 @@ class _CalendarioState extends State<Calendario> {
     _selectedDay = DateTime(ahora.year, ahora.month, ahora.day);
 
     _years = List.generate(
-        _ultimoMesPermitido.year - _primerMesPermitido.year + 1,
-            (index) => _primerMesPermitido.year + index
+      _ultimoMesPermitido.year - _primerMesPermitido.year + 1,
+          (index) => _primerMesPermitido.year + index,
     );
+
     _cargarEventos();
   }
 
@@ -107,6 +108,65 @@ class _CalendarioState extends State<Calendario> {
     );
   }
 
+  DateTime _normalizar(DateTime fecha) => DateTime(fecha.year, fecha.month, fecha.day);
+
+  bool _esMismoDia(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  bool _esHoraCero(DateTime fecha) => fecha.hour == 0 && fecha.minute == 0;
+
+  int _minutosDelDia(DateTime fecha) => fecha.hour * 60 + fecha.minute;
+
+  int _prioridadEstado(Evento evento, DateTime diaSeleccionado) {
+    final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
+    final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
+
+    if (finalizaHoy) return 0; // 1) finalizan
+    if (iniciaHoy) return 1; // 2) inician
+    return 2; // 3) en curso
+  }
+
+  int _horaOrden(Evento evento, DateTime diaSeleccionado) {
+    final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
+    final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
+
+    if (finalizaHoy) return _minutosDelDia(evento.fechaFin);
+    if (iniciaHoy) return _minutosDelDia(evento.fechaInicio);
+    return _minutosDelDia(evento.fechaInicio);
+  }
+
+  String _etiquetaTiempo(Evento evento, DateTime diaSeleccionado) {
+    final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
+    final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
+
+    final inicioHora = DateFormat('HH:mm').format(evento.fechaInicio);
+    final finHora = DateFormat('HH:mm').format(evento.fechaFin);
+
+    final inicioCero = _esHoraCero(evento.fechaInicio);
+    final finCero = _esHoraCero(evento.fechaFin);
+
+    if (iniciaHoy && finalizaHoy) {
+      if (inicioCero && finCero) return 'Todo el dia';
+      if (inicioHora == finHora) return inicioHora;
+      if (inicioCero) return finHora;
+      if (finCero) return inicioHora;
+      return '$inicioHora - $finHora';
+    }
+
+    if (finalizaHoy) {
+      if (finCero) return 'Finaliza';
+      return 'Finaliza $finHora';
+    }
+
+    if (iniciaHoy) {
+      if (inicioCero) return 'Inicia';
+      return 'Inicia $inicioHora';
+    }
+
+    return 'En curso';
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -114,7 +174,6 @@ class _CalendarioState extends State<Calendario> {
     return Column(
       children: [
         const SizedBox(height: 60),
-        // --- SECCIÓN DE SELECTORES ---
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -124,14 +183,17 @@ class _CalendarioState extends State<Calendario> {
               onChanged: (val) {
                 if (val == null) return;
                 final nuevaFecha = DateTime(_focusedDay.year, val, 1);
+
                 if (_esAntesDelPrimerMes(nuevaFecha)) {
                   _mostrarMensaje('No puedes ir a meses anteriores al actual');
                   return;
                 }
+
                 if (_esDespuesDelUltimoMes(nuevaFecha)) {
-                  _mostrarMensaje('No puedes avanzar más allá de diciembre de 2030');
+                  _mostrarMensaje('No puedes avanzar mas alla de diciembre de 2030');
                   return;
                 }
+
                 setState(() {
                   _focusedDay = nuevaFecha;
                   _selectedDay = nuevaFecha;
@@ -141,21 +203,28 @@ class _CalendarioState extends State<Calendario> {
             const SizedBox(width: 15),
             _buildDropdown(
               value: _focusedDay.year,
-              items: _years.map((y) => DropdownMenuItem(
-                value: y,
-                child: Text(y.toString()),
-              )).toList(),
+              items: _years
+                  .map(
+                    (y) => DropdownMenuItem(
+                  value: y,
+                  child: Text(y.toString()),
+                ),
+              )
+                  .toList(),
               onChanged: (val) {
                 if (val == null) return;
                 final nuevaFecha = DateTime(val, _focusedDay.month, 1);
+
                 if (_esAntesDelPrimerMes(nuevaFecha)) {
                   _mostrarMensaje('No puedes ir a meses anteriores al actual');
                   return;
                 }
+
                 if (_esDespuesDelUltimoMes(nuevaFecha)) {
-                  _mostrarMensaje('No puedes avanzar más allá de diciembre de 2030');
+                  _mostrarMensaje('No puedes avanzar mas alla de diciembre de 2030');
                   return;
                 }
+
                 setState(() {
                   _focusedDay = nuevaFecha;
                   _selectedDay = nuevaFecha;
@@ -169,15 +238,12 @@ class _CalendarioState extends State<Calendario> {
           firstDay: _primerMesPermitido,
           lastDay: _ultimoMesPermitido,
           focusedDay: _focusedDay,
-          headerVisible: false, // Desactivamos el header nativo
+          headerVisible: false,
           availableGestures: AvailableGestures.none,
-          //Función que carga los eventos para cada día
           eventLoader: (day) {
-            // Normalizamos la fecha (sin horas) para buscar en el mapa
             final fechaNormalizada = DateTime(day.year, day.month, day.day);
             return _eventosMap[fechaNormalizada] ?? [];
           },
-
           selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
           onDaySelected: (selectedDay, focusedDay) {
             setState(() {
@@ -185,22 +251,18 @@ class _CalendarioState extends State<Calendario> {
               _focusedDay = focusedDay;
             });
           },
-          /*onPageChanged: (focusedDay) {
-            // Esto actualiza los dropdowns si el usuario desliza lateralmente
-            setState(() => _focusedDay = focusedDay);
-          },*/
           calendarStyle: CalendarStyle(
             todayDecoration: BoxDecoration(
-                color: colorScheme.secondary,
-                shape: BoxShape.circle
+              color: colorScheme.secondary,
+              shape: BoxShape.circle,
             ),
             selectedDecoration: BoxDecoration(
               color: colorScheme.primary,
               shape: BoxShape.circle,
             ),
             markerDecoration: BoxDecoration(
-                color: colorScheme.primary,
-                shape: BoxShape.circle
+              color: colorScheme.primary,
+              shape: BoxShape.circle,
             ),
             markersAlignment: Alignment.bottomCenter,
             markersMaxCount: 1,
@@ -222,12 +284,13 @@ class _CalendarioState extends State<Calendario> {
     required List<DropdownMenuItem<T>> items,
     required ValueChanged<T?> onChanged,
   }) {
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+        ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
@@ -245,17 +308,35 @@ class _CalendarioState extends State<Calendario> {
 
   Widget _buildEventoLista() {
     final fechaSeleccionada = _selectedDay ?? _focusedDay;
-    //final eventosDia = _eventosMap[DateTime(fechaSeleccionada.year, fechaSeleccionada.month, fechaSeleccionada.day)];
     final fechaNormalizada = DateTime(
       fechaSeleccionada.year,
       fechaSeleccionada.month,
       fechaSeleccionada.day,
     );
-    final lista = _eventosMap[fechaNormalizada] ?? [];
 
-    if(lista.isEmpty) {
-      return Center(
-        child: Text("No hay eventos para este día"),
+    final lista = List<Evento>.from(_eventosMap[fechaNormalizada] ?? []);
+
+    lista.sort((a, b) {
+      final prioridadA = _prioridadEstado(a, fechaNormalizada);
+      final prioridadB = _prioridadEstado(b, fechaNormalizada);
+
+      if (prioridadA != prioridadB) {
+        return prioridadA.compareTo(prioridadB);
+      }
+
+      final horaA = _horaOrden(a, fechaNormalizada);
+      final horaB = _horaOrden(b, fechaNormalizada);
+
+      if (horaA != horaB) {
+        return horaA.compareTo(horaB);
+      }
+
+      return a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase());
+    });
+
+    if (lista.isEmpty) {
+      return const Center(
+        child: Text("No hay eventos para este dia"),
       );
     }
 
@@ -263,29 +344,38 @@ class _CalendarioState extends State<Calendario> {
       itemCount: lista.length,
       itemBuilder: (context, index) {
         final evento = lista[index];
-        final String hora = DateFormat('HH:mm').format(evento.fechaHora);
-        //return ListTile(
+        final etiqueta = _etiquetaTiempo(evento, fechaNormalizada);
+
         return Card(
           child: ListTile(
-          leading: Container(
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: .circular(8)
-            ),
-            child: Text(
-              hora,
-              style: TextStyle(
-                  fontWeight: .bold,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            leading: SizedBox(
+              width: 84,
+              child: Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  etiqueta,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.surface,
+                  ),
+                ),
               ),
             ),
-          ),
-          title: Text(evento.titulo),
-          subtitle: Text(evento.localizacion),
+            title: Text(evento.titulo),
+            subtitle: Text(evento.localizacion),
           ),
         );
-      }
+      },
     );
   }
 }

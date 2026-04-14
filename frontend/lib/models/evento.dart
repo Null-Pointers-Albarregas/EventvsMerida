@@ -1,7 +1,8 @@
 class Evento {
   final String titulo;
   final String descripcion;
-  final DateTime fechaHora;
+  final DateTime fechaInicio;
+  final DateTime fechaFin;
   final String localizacion;
   final String foto;
   final String emailUsuario;
@@ -10,7 +11,8 @@ class Evento {
   Evento({
     required this.titulo,
     required this.descripcion,
-    required this.fechaHora,
+    required this.fechaInicio,
+    required this.fechaFin,
     required this.localizacion,
     required this.foto,
     required this.emailUsuario,
@@ -21,7 +23,8 @@ class Evento {
     return Evento(
       titulo: json['titulo'] ?? '',
       descripcion: json['descripcion'] ?? '',
-      fechaHora: DateTime.parse(json['fechaHora'].toString()),
+      fechaInicio: DateTime.parse(json['fechaInicio'].toString()),
+      fechaFin: DateTime.parse(json['fechaFin'].toString()),
       localizacion: json['localizacion'] ?? '',
       foto: json['foto'] ?? '',
       emailUsuario: json['emailUsuario'] ?? '',

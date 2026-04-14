@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../core/router/app_routes.dart';
 import '../core/theme/controlador_tema.dart';
 import '../services/shared_preferences_service.dart';
 import '../models/usuario.dart';
@@ -59,7 +60,7 @@ class _PerfilState extends State<Perfil> {
                       side: BorderSide(color: colorScheme.surface),
                       foregroundColor: colorScheme.surface,
                     ),
-                    onPressed: () => context.push("/registro"),
+                    onPressed: () => context.push(AppRoutes.registro),
                     child: const Text('Registrarse'),
                   ),
                   const SizedBox(width: 12),
@@ -68,7 +69,7 @@ class _PerfilState extends State<Perfil> {
                       backgroundColor: colorScheme.surface,
                       foregroundColor: colorScheme.onSurface,
                     ),
-                    onPressed: () => context.push("/login"),
+                    onPressed: () => context.push(AppRoutes.login),
                     child: const Text('Iniciar sesión'),
                   ),
                 ],
@@ -155,7 +156,7 @@ class _PerfilState extends State<Perfil> {
             Icons.account_circle,
             "Cuenta",
             onTap: () {
-              context.push('/cuenta');
+              context.push(AppRoutes.cuenta);
             },
         ),
         _buildItem(
@@ -170,7 +171,7 @@ class _PerfilState extends State<Perfil> {
             },
           ),
         ),
-        _buildItem(Icons.bookmark_border, "Eventos guardados", onTap: () {context.push('/eventos_guardados');}),
+        _buildItem(Icons.bookmark_border, "Eventos guardados", onTap: () {context.push(AppRoutes.eventosGuardados);}),
         _buildItem(Icons.notifications, "Preferencias de notificaciones"),
       ]
           : [
@@ -197,14 +198,14 @@ class _PerfilState extends State<Perfil> {
           Icons.file_copy,
           "Términos y servicios",
           onTap: () {
-            context.push('/terminos');
+            context.push(AppRoutes.terminos);
           },
         ),
         _buildItem(
           Icons.privacy_tip,
           "Política de privacidad",
           onTap: () {
-            context.push('/privacidad');
+            context.push(AppRoutes.privacidad);
           },
         ),
       ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../core/router/app_routes.dart';
 import '../services/api_service.dart';
 import '../services/shared_preferences_service.dart';
 
@@ -208,7 +209,7 @@ class _LoginState extends State<Login> {
                                     await SharedPreferencesService.guardarUsuarioKey(usuario);
                                   }
 
-                                  context.go('/eventos');
+                                  context.go(AppRoutes.eventos);
                                 }
                               },
                               child: Text(
@@ -232,7 +233,7 @@ class _LoginState extends State<Login> {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  context.push('/registro');
+                                  context.push(AppRoutes.registro);
                                 },
                                 child: Text(
                                   "Regístrate",

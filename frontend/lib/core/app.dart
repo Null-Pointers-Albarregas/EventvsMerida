@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+
+import 'router/router.dart';
 import 'theme/controlador_tema.dart';
-import 'theme/tema_claro.dart';
-import 'theme/tema_oscuro.dart';
-import 'router.dart';
+import 'theme/tema.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
@@ -17,7 +18,7 @@ class App extends StatelessWidget {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: mode,
-          routerConfig: router,
+          routerConfig: appRouter,
         );
       },
     );
