@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/EventvsMerida.iml" filepath="$PROJECT_DIR$/.idea/EventvsMerida.iml" />
+      <module fileurl="file://$PROJECT_DIR$/backend/EventvsMerida.iml" filepath="$PROJECT_DIR$/backend/EventvsMerida.iml" />
     </modules>
   </component>
 </project>

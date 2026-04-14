@@ -12,7 +12,7 @@ Este script:
 - Convierte fechas a ISO 8601
 - Exporta a JSON
 Requisitos:
-  pip install requests python-dateutil
+  pip install requests
 
 Ejecutar:
     python scrapper-calendario.py --ics-url "https://TU_DOMINIO/events/?ical=1" --out eventos-bruto.json
@@ -29,7 +29,11 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
 import requests
-from dateutil import tz
+
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:  # Python < 3.9
+    ZoneInfo = None  # type: ignore[assignment]
 
 
 @dataclass
@@ -43,6 +47,16 @@ class Event:
     dtend: Optional[str]     # ISO 8601
     timezone: Optional[str]
     raw: Dict[str, str]      # campos originales útiles para depurar
+
+
+def resolve_tzinfo(tzid: Optional[str]):
+    """Resuelve un TZID iCal a tzinfo estándar (zoneinfo)."""
+    if not tzid or ZoneInfo is None:
+        return None
+    try:
+        return ZoneInfo(tzid)
+    except Exception:
+        return None
 
 
 def unfold_ical_lines(text: str) -> List[str]:
@@ -80,8 +94,9 @@ def parse_ical_datetime(value: str, params: Dict[str, str], default_tz: Optional
     # Local con hora
     if re.fullmatch(r"\d{8}T\d{6}", value):
         dt = datetime.strptime(value, "%Y%m%dT%H%M%S")
-        if tzid:
-            dt = dt.replace(tzinfo=tz.gettz(tzid))
+        tzinfo = resolve_tzinfo(tzid)
+        if tzinfo is not None:
+            dt = dt.replace(tzinfo=tzinfo)
         return dt, tzid
 
     return None, tzid
@@ -120,14 +135,17 @@ def parse_ics(text: str) -> List[Event]:
             dtend_dt, _ = parse_ical_datetime(dtend_raw, current_params.get("DTEND", {}), tz_guess)
 
         def to_iso(dt: Optional[datetime]) -> Optional[str]:
-            """Devuelve fecha simple o ISO con zona horaria."""
+            """Devuelve fecha simple o ISO sin offset de zona horaria."""
             if dt is None:
                 return None
-            # All-day -> YYYY-MM-DD
-            if dt.tzinfo is None:
-                return dt.strftime("%Y-%m-%d")
-            # Mantener zona horaria original sin convertir a UTC
-            return dt.isoformat()
+            # Eliminar cualquier tzinfo para evitar offsets
+            dt_naive = dt.replace(tzinfo=None) if dt.tzinfo else dt
+            # All-day: solo fecha (sin hora, sin timezone)
+            is_allday = dt_naive.hour == 0 and dt_naive.minute == 0 and dt_naive.second == 0
+            if is_allday:
+                return dt_naive.strftime("%Y-%m-%d")
+            # Con hora: devolver ISO sin offset
+            return dt_naive.strftime("%Y-%m-%dT%H:%M:%S")
 
         events.append(
             Event(

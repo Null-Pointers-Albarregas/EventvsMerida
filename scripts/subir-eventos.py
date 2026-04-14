@@ -1,10 +1,16 @@
-import json
-import random
-import re
+import json, random, re, sys
 from urllib.parse import urljoin
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress
+from rich.table import Table
+from rich.text import Text
+
+console = Console()
 
 """
 
@@ -73,72 +79,112 @@ def load_json_auto(path):
 
 def main():
     """Lee eventos saneados y los publica en la API."""
+    title = Text("CARGADOR DE EVENTOS - EventvsMérida", style="bold cyan", justify="center")
+    console.print(Panel(title, border_style="cyan", padding=(1, 20), expand=False))
+    
     eventos_saneados = []
     num_eventos_almacenados = 0
     num_eventos_fallo = 0
-    data = load_json_auto("eventos_abril_saneados.json")
-    for evento in data["events"]:
-        print(evento["summary"])
+    
+    console.print("[cyan]→[/cyan] Cargando eventos desde archivo: [yellow]" + sys.argv[1] + "[/yellow]")
+    data = load_json_auto(sys.argv[1])
+    total_eventos = len(data["events"])
+    console.print("[green]✓[/green] Se cargaron [bold]" + str(total_eventos) + "[/bold] eventos\n")
+    
+    console.print("[cyan]→[/cyan] Procesando categorías...\n")
+    
+    with Progress() as progress:
+        task = progress.add_task("[cyan]Categorizando", total=total_eventos)
+        for evento in data["events"]:
+            titulo = evento["summary"]
+            
+            id_categoria = 0
+            id_usuario = random.randint(1, 3)
 
-        id_categoria = 0
-        id_usuario = random.randint(1, 3)
+            match(evento["raw"]["CATEGORIES"]):
+                case "Conciertos y Música":
+                    id_categoria = 1
+                case "Festivales y Ferias":
+                    id_categoria = 2
+                case "Cine y Teatro":
+                    id_categoria = 3
+                case "Exposiciones y Arte":
+                    id_categoria = 4
+                case "Gastronomía":
+                    id_categoria = 5
+                case "Conferencias, Talleres y Cursos":
+                    id_categoria = 6
+                case "Deportes y Actividad Física":
+                    id_categoria = 7
+                case "Fiestas y Vida Nocturna":
+                    id_categoria = 8
+                case "Familia e Infantil":
+                    id_categoria = 9
+                case "Tecnología y Ciencia":
+                    id_categoria = 10
+                case "Solidaridad y Causas Sociales":
+                    id_categoria = 11
+                case _:
+                    id_categoria = 12
 
-        match(evento["raw"]["CATEGORIES"]):
-            case "Conciertos":
-                id_categoria = 2
-            case "Festivales":
-                id_categoria = 3
-            case "Cine":
-                id_categoria = 4
-            case "Teatro":
-                id_categoria = 5
-            case "Exposiciones":
-                id_categoria = 6
-            case "Gastronomía":
-                id_categoria = 7
-            case "Conferencias":
-                id_categoria = 8
-            case "Deportes":
-                id_categoria = 9
-            case _:
-                id_categoria = 10
-
-        if id_categoria == 0 or id_categoria == 10:
-            continue
-
-        eventos_saneados.append({
-            "titulo": evento["summary"],
-            "descripcion": evento["description"],
-            "fechaInicio": evento["dtstart"],
-            "fechaFin": evento["dtend"],
-            "localizacion": evento["location"],
-            "foto": obtener_imagen_grande(event_url=evento["url"], timeout=20),
-            "idUsuario": id_usuario,
-            "idCategoria": id_categoria,
-        })
-
-
+            eventos_saneados.append({
+                "titulo": evento["summary"],
+                "descripcion": evento["description"],
+                "fechaInicio": evento["dtstart"],
+                "fechaFin": evento["dtend"],
+                "localizacion": evento["location"],
+                "foto": obtener_imagen_grande(event_url=evento["url"], timeout=20),
+                "idUsuario": id_usuario,
+                "idCategoria": id_categoria,
+            })
+            progress.update(task, advance=1)
+    
+    console.print()
+    
+    encabezado = Text("ENVIANDO EVENTOS A API", style="bold green")
+    console.print(Panel(encabezado, border_style="green"))
+    console.print()
+    
     with requests.Session() as s:
-        for evento in eventos_saneados:
-            try:
-                resp = s.post("https://eventvsmerida.onrender.com/api/eventos/add", json=evento, timeout=10)
-                resp.raise_for_status()
-                print("OK:", resp.status_code, resp.text)
-                num_eventos_almacenados += 1
-            except requests.exceptions.HTTPError as e:
-                print("Error HTTP al enviar evento:", e, "->", resp.status_code, resp.text)
-                num_eventos_fallo += 1
-            except requests.exceptions.Timeout:
-                print("Timeout al conectar con", "https://eventvsmerida.onrender.com/api/eventos/add")
-                num_eventos_fallo += 1
-            except requests.exceptions.RequestException as e:
-                print("Error de petición:", e)
-                num_eventos_fallo += 1
-
-    print("Eventos enviados:", eventos_saneados)
-    print(f"Eventos correctos: {num_eventos_almacenados}")
-    print(f"Eventos fallidos: {num_eventos_fallo}")
-    print(f"Errores")
+        with Progress() as progress:
+            task = progress.add_task("[green]Subiendo", total=len(eventos_saneados))
+            for evento in eventos_saneados:
+                try:
+                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    titulo_corto = evento['titulo'][:50]
+                    console.print(f"[blue][{timestamp}][/blue] [bold]📌 {titulo_corto}[/bold]")
+                    
+                    resp = s.post("https://eventvsmerida.onrender.com/api/eventos/add", json=evento, timeout=10)
+                    resp.raise_for_status()
+                    
+                    console.print(f"        [green]✓ Publicado[/green] [dim](HTTP {resp.status_code})[/dim]")
+                    num_eventos_almacenados += 1
+                    
+                except requests.exceptions.HTTPError as e:
+                    console.print(f"        [red]✗ Error HTTP[/red] [dim](HTTP {resp.status_code})[/dim]")
+                    num_eventos_fallo += 1
+                except requests.exceptions.Timeout:
+                    console.print(f"        [red]✗ Timeout[/red] [dim](servidor tardó demasiado)[/dim]")
+                    num_eventos_fallo += 1
+                except requests.exceptions.RequestException as e:
+                    console.print(f"        [red]✗ Error de conexión[/red] [dim]({str(e)[:40]})[/dim]")
+                    num_eventos_fallo += 1
+                
+                progress.update(task, advance=1)
+    
+    console.print()
+    
+    porcentaje_exito = (num_eventos_almacenados / len(eventos_saneados) * 100) if eventos_saneados else 0
+    
+    tabla = Table(title="RESUMEN FINAL", border_style="cyan", show_header=True)
+    tabla.add_column("Métrica", style="cyan")
+    tabla.add_column("Valor", style="bold")
+    tabla.add_row("Eventos enviados", f"[green]{num_eventos_almacenados}[/green]/{len(eventos_saneados)}")
+    tabla.add_row("Eventos fallidos", f"[red]{num_eventos_fallo}[/red]/{len(eventos_saneados)}")
+    tabla.add_row("Tasa de éxito", f"[yellow]{porcentaje_exito:.1f}%[/yellow]")
+    
+    console.print(tabla)
+    console.print()
 
 if __name__ == "__main__":
     main()

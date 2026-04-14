@@ -23,12 +23,12 @@ def sanitize_text(s: str) -> str:
 
 
 def to_iso_utc_z(value: str) -> str:
-    """Normaliza fechas ISO manteniendo el offset original."""
+    """Normaliza fechas ISO sin offset de zona horaria."""
     v = value.strip()
 
     # Fechas sin hora.
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
-        return f"{v}T00:00:00.000"
+        return f"{v}T00:00:00"
 
     v_norm = v.replace("Z", "+00:00") if v.endswith("Z") else v
 
@@ -37,12 +37,11 @@ def to_iso_utc_z(value: str) -> str:
     except ValueError as e:
         raise ValueError(f"Formato de fecha/hora no soportado: {value!r}") from e
 
-    # Si no trae zona, asumimos UTC.
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+    # Eliminar tzinfo para no incluir offset
+    dt_naive = dt.replace(tzinfo=None) if dt.tzinfo else dt
 
-    out = dt.isoformat(timespec="milliseconds")
-    return out
+    # Devolver sin offset
+    return dt_naive.strftime("%Y-%m-%dT%H:%M:%S")
 
 
 def walk_and_sanitize(obj: Any, *, skip_keys: set[str] | None = None) -> Any:
