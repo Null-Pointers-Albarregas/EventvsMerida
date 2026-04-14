@@ -91,6 +91,26 @@
                         </ol>
                         <div class="row justify-content-center">
                     </div>
+
+                    <!-- <ul id="listadoEventos">
+
+                    </ul> -->
+
+                    <table class="table text-light table-custom" >
+                        <thead>
+                            <th scope="col">Título</th>
+                            <th scope="col">Descripción</th>
+                            <th scope="col">Fecha de inicio</th>
+                            <th scope="col">Fecha de fin</th>
+                            <th scope="col">Localización</th>
+                            <th scope="col">Acciones</th>
+                        </thead>
+                        <tbody id="listadoEventos" class="table-bordered"></tbody>
+                        <tr>
+                            <td>hola</td>
+                            <td>mundo</td>
+                        </tr>
+                    </table>
   
                 </main>
                 
@@ -109,12 +129,22 @@
                 </footer>
             </div>
         </div>
+
+            <div class="modal fade" id="modalVerEvento" tabindex="-1" aria-labelledby="modalVerEventoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalVerEventoLabel">Detalle del evento</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="contenidoModalEvento">
+        <!-- Aquí se mostrarán los datos del evento -->
+      </div>
+    </div>
+  </div>
+</div>
+
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
         <script src="../js/scripts.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-        <script src="assets/demo/chart-area-demo.js"></script>
-        <script src="assets/demo/chart-bar-demo.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
-        <script src="js/datatables-simple-demo.js"></script>
     </body>
 </html>
