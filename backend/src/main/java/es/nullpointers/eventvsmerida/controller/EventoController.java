@@ -86,7 +86,7 @@ public class EventoController {
      * @param eventoActualizarRequest DTO con los datos del evento a actualizar.
      * @return ResponseEntity con el evento actualizado y el estado HTTP 200 (OK).
      */
-    @PutMapping("update/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<EventoResponse> actualizarEvento (@PathVariable Long id, @Valid @RequestBody EventoActualizarRequest eventoActualizarRequest) {
         EventoResponse eventoActualizado = eventoService.actualizarEvento(id, eventoActualizarRequest);
         return ResponseEntity.ok(eventoActualizado);

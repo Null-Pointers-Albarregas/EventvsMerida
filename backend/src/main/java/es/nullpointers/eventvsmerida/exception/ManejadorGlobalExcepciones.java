@@ -1,12 +1,13 @@
 package es.nullpointers.eventvsmerida.exception;
 
-import jakarta.persistence.NoResultException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
@@ -48,21 +49,6 @@ public class ManejadorGlobalExcepciones {
     // ========================
 
     /**
-     * Maneja la excepción NoResultException.
-     *
-     * @param e La excepción capturada.
-     * @return Una respuesta HTTP 204 No Content.
-     */
-    @ExceptionHandler(NoResultException.class)
-    public ResponseEntity<ErrorResponse> manejadorNoResultException(NoResultException e) {
-        String mensajeError = e.getMessage();
-        log.error(mensajeError);
-        return ResponseEntity
-                .status(204)
-                .body(new ErrorResponse(mensajeError));
-    }
-
-    /**
      * Maneja la excepción NoSuchElementException.
      *
      * @param e La excepción capturada.
@@ -102,7 +88,7 @@ public class ManejadorGlobalExcepciones {
      * dato que viola restricciones de integridad.
      *
      * @param e La excepción capturada.
-     * @return Una respuesta HTTP 400 Bad Request.
+     * @return Una respuesta HTTP 409 Conflict.
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> manejadorDataIntegrityViolationException(DataIntegrityViolationException e) {
@@ -110,6 +96,38 @@ public class ManejadorGlobalExcepciones {
         String claseMetodo = obtenerClaseMetodoDesdeStackTrace(e.getStackTrace());
         String logMsg = obtenerMensajePersonalizado(mensaje, null);
         String mensajeError = "Error en " + claseMetodo + ": " + logMsg;
+        log.error(mensajeError);
+        return ResponseEntity
+                .status(409)
+                .body(new ErrorResponse(mensajeError));
+    }
+
+    /**
+     * Maneja la excepción MissingServletRequestParameterException.
+     * Se lanza cuando falta un parametro obligatorio de query/path en la petición.
+     *
+     * @param e La excepción capturada.
+     * @return Una respuesta HTTP 400 Bad Request.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> manejadorMissingServletRequestParameterException(MissingServletRequestParameterException e) {
+        String mensajeError = "Falta el parámetro obligatorio '" + e.getParameterName() + "'";
+        log.error(mensajeError);
+        return ResponseEntity
+                .badRequest()
+                .body(new ErrorResponse(mensajeError));
+    }
+
+    /**
+     * Maneja la excepción ConstraintViolationException.
+     * Se lanza cuando fallan validaciones sobre parámetros simples (query/path params).
+     *
+     * @param e La excepción capturada.
+     * @return Una respuesta HTTP 400 Bad Request.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> manejadorConstraintViolationException(ConstraintViolationException e) {
+        String mensajeError = e.getMessage();
         log.error(mensajeError);
         return ResponseEntity
                 .badRequest()

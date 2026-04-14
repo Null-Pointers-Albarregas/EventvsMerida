@@ -7,12 +7,12 @@ import es.nullpointers.eventvsmerida.entity.Rol;
 import es.nullpointers.eventvsmerida.entity.Usuario;
 import es.nullpointers.eventvsmerida.mapper.UsuarioMapper;
 import es.nullpointers.eventvsmerida.repository.UsuarioRepository;
-import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,10 +46,6 @@ public class UsuarioService {
     public List<UsuarioResponse> obtenerUsuarios() {
         List<Usuario> usuarios = usuarioRepository.findAll();
         List<UsuarioResponse> usuariosResponse = new ArrayList<>();
-
-        if (usuarios.isEmpty()) {
-            throw new NoResultException("Error en UsuarioService.obtenerUsuarios: No se encontraron usuarios en la base de datos");
-        }
 
         for (Usuario usuario : usuarios) {
             usuariosResponse.add(UsuarioMapper.convertirAResponse(usuario));
@@ -162,7 +158,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow(() -> new NoSuchElementException("Error en UsuarioService.login: No se encontró el usuario con email " + email));
 
         if (!passwordEncoder.matches(password, usuario.getPassword())) {
-            throw new DataIntegrityViolationException("Credenciales inválidas");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
         }
 
         log.info("Login exitoso para el usuario con email: {}", email);

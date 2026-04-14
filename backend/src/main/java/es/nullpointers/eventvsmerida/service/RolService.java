@@ -5,7 +5,6 @@ import es.nullpointers.eventvsmerida.dto.response.RolResponse;
 import es.nullpointers.eventvsmerida.entity.Rol;
 import es.nullpointers.eventvsmerida.mapper.RolMapper;
 import es.nullpointers.eventvsmerida.repository.RolRepository;
-import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,10 +39,6 @@ public class RolService {
     public List<RolResponse> obtenerRoles() {
         List<Rol> roles = rolRepository.findAll();
         List<RolResponse> rolesResponse = new ArrayList<>();
-
-        if (roles.isEmpty()) {
-            throw new NoResultException("Error en RolService.obtenerRoles: No se encontraron roles en la base de datos");
-        }
 
         for (Rol rol : roles) {
             rolesResponse.add(RolMapper.convertirAResponse(rol));

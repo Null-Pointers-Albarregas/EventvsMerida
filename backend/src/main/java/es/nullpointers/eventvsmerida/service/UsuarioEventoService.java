@@ -12,9 +12,10 @@ import es.nullpointers.eventvsmerida.repository.EventoRepository;
 import es.nullpointers.eventvsmerida.repository.UsuarioEventoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.time.ZoneId;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -49,7 +50,7 @@ public class UsuarioEventoService {
         id.setIdEvento(evento.getId());
 
         if (usuarioEventoRepository.existsById(id)) {
-            throw new IllegalStateException("Error en UsuarioEventoService.guardarUsuarioEvento: El usuario ya tiene guardado este evento");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Error en UsuarioEventoService.guardarUsuarioEvento: El usuario ya tiene guardado este evento");
         }
 
         // Crear la relación entre el usuario y el evento y guardarla en la base de datos
@@ -90,9 +91,6 @@ public class UsuarioEventoService {
 
         // Buscar las relaciones entre el usuario y los eventos guardados, lanzando una excepción si no se encuentran
         List<UsuarioEvento> relaciones = usuarioEventoRepository.findByIdIdUsuario(usuario.getId());
-        if (relaciones.isEmpty()) {
-            throw new NoSuchElementException("Error en UsuarioEventoService.obtenerEventosGuardadosPorUsuario: El usuario con email " + emailUsuario + " no tiene eventos guardados");
-        }
 
         // Convertir las entidades Evento a DTOs EventoResponse y devolver la lista resultante
         return relaciones.stream()

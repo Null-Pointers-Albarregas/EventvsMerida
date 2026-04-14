@@ -46,10 +46,6 @@ public class EventoService {
         List<Evento> eventos = eventoRepository.findAll();
         List<EventoResponse> eventosResponse = new ArrayList<>();
 
-        if (eventos.isEmpty()) {
-            throw new NoSuchElementException("Error en EventoService.obtenerEventos: No se encontraron eventos en la base de datos");
-        }
-
         for (Evento evento : eventos) {
             eventosResponse.add(EventoMapper.convertirAResponse(evento));
         }
