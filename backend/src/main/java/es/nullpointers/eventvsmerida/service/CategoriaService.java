@@ -5,7 +5,6 @@ import es.nullpointers.eventvsmerida.dto.response.CategoriaResponse;
 import es.nullpointers.eventvsmerida.entity.Categoria;
 import es.nullpointers.eventvsmerida.mapper.CategoriaMapper;
 import es.nullpointers.eventvsmerida.repository.CategoriaRepository;
-import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,10 +39,6 @@ public class CategoriaService {
     public List<CategoriaResponse> obtenerCategorias() {
         List<Categoria> categorias = categoriaRepository.findAll();
         List<CategoriaResponse> categoriasResponse = new ArrayList<>();
-
-        if (categorias.isEmpty()) {
-            throw new NoResultException("Error en CategoriaService.obtenerCategorias: No se encontraron categorias en la base de datos");
-        }
 
         for (Categoria categoria : categorias) {
             categoriasResponse.add(CategoriaMapper.convertirAResponse(categoria));

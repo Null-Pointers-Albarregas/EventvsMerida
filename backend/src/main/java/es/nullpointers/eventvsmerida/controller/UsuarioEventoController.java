@@ -3,10 +3,14 @@ package es.nullpointers.eventvsmerida.controller;
 import es.nullpointers.eventvsmerida.dto.request.UsuarioEventoRequest;
 import es.nullpointers.eventvsmerida.dto.response.EventoResponse;
 import es.nullpointers.eventvsmerida.service.UsuarioEventoService;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +24,7 @@ import java.util.List;
  * @author Adrián Pérez
  */
 @Slf4j
+@Validated
 @RestController
 @RequestMapping("/api/usuario-eventos")
 @RequiredArgsConstructor
@@ -29,7 +34,7 @@ public class UsuarioEventoController {
     @PostMapping("/guardar")
     public ResponseEntity<Void> guardarUsuarioEvento(@Valid @RequestBody UsuarioEventoRequest request) {
         usuarioEventoService.guardarUsuarioEvento(request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @DeleteMapping("/eliminar")
@@ -39,7 +44,8 @@ public class UsuarioEventoController {
     }
 
     @GetMapping("/guardados")
-    public ResponseEntity<List<EventoResponse>> obtenerEventosGuardadosPorUsuario(@RequestParam String emailUsuario) {
+    public ResponseEntity<List<EventoResponse>> obtenerEventosGuardadosPorUsuario(
+            @RequestParam @NotBlank @Email String emailUsuario) {
         List<EventoResponse> eventos = usuarioEventoService.obtenerEventosGuardadosPorUsuario(emailUsuario);
         return ResponseEntity.ok(eventos);
     }
