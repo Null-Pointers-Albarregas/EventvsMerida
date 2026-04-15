@@ -14,7 +14,7 @@ class Calendario extends StatefulWidget {
 
 class _CalendarioState extends State<Calendario> {
   // ===========================================================================
-  // ESTADO
+  // VARIABLES
   // ===========================================================================
 
   late final DateTime _primerMesPermitido;
@@ -120,7 +120,7 @@ class _CalendarioState extends State<Calendario> {
   }
 
   // ===========================================================================
-  // HELPERS DE FECHAS
+  // FUNCIONES AUXILIARES
   // ===========================================================================
 
   DateTime _normalizarFecha(DateTime fecha) {
@@ -156,10 +156,6 @@ class _CalendarioState extends State<Calendario> {
   bool _esEventoDeUnSoloDia(Evento evento) {
     return _esMismoDia(evento.fechaInicio, evento.fechaFin);
   }
-
-  // ===========================================================================
-  // ORDENACIÓN DE EVENTOS
-  // ===========================================================================
 
   int _prioridadEvento(Evento evento, DateTime diaSeleccionado) {
     final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
@@ -207,10 +203,6 @@ class _CalendarioState extends State<Calendario> {
     return lista;
   }
 
-  // ===========================================================================
-  // TEXTOS PARA LA UI
-  // ===========================================================================
-
   String _textoEtiquetaTiempo(Evento evento, DateTime diaSeleccionado) {
     final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
     final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
@@ -253,21 +245,6 @@ class _CalendarioState extends State<Calendario> {
     return 'Fecha: $inicio - $fin';
   }
 
-  // ===========================================================================
-  // MENSAJES
-  // ===========================================================================
-
-  void _mostrarMensaje(String mensaje) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensaje)),
-    );
-  }
-
-  // ===========================================================================
-  // SELECTORES DE MES Y AÑO
-  // ===========================================================================
-
   List<DropdownMenuItem<int>> _buildMonthItems() {
     var mesInicio = 1;
     var mesFin = 12;
@@ -308,6 +285,21 @@ class _CalendarioState extends State<Calendario> {
       _selectedDay = nuevaFecha;
     });
   }
+
+  // ===========================================================================
+  // MENSAJES
+  // ===========================================================================
+
+  void _mostrarMensaje(String mensaje) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensaje)),
+    );
+  }
+
+  // ===========================================================================
+  // INTERFAZ
+  // ===========================================================================
 
   Widget _buildDropdown<T>({required T value, required List<DropdownMenuItem<T>> items, required ValueChanged<T?> onChanged,}) {
     return Container(
@@ -368,17 +360,15 @@ class _CalendarioState extends State<Calendario> {
     );
   }
 
-  // ===========================================================================
-  // CALENDARIO
-  // ===========================================================================
-
   Widget _buildCalendario() {
     return TableCalendar(
+      locale: 'es',
       firstDay: _primerMesPermitido,
       lastDay: _ultimoMesPermitido,
       focusedDay: _focusedDay,
       headerVisible: false,
       availableGestures: AvailableGestures.none,
+      startingDayOfWeek: StartingDayOfWeek.monday,
       eventLoader: (day) {
         final fechaNormalizada = _normalizarFecha(day);
         return _eventosMap[fechaNormalizada] ?? const [];
@@ -405,15 +395,11 @@ class _CalendarioState extends State<Calendario> {
         ),
         markersAlignment: Alignment.bottomCenter,
         markersMaxCount: 1,
-        selectedTextStyle: TextStyle(color: _cs.onPrimary),
-        todayTextStyle: TextStyle(color: _cs.onSecondary),
+        selectedTextStyle: TextStyle(color: _cs.surface),
+        todayTextStyle: TextStyle(color: _cs.surface),
       ),
     );
   }
-
-  // ===========================================================================
-  // LISTA DE EVENTOS
-  // ===========================================================================
 
   Widget _buildEventoBadge(String texto) {
     return Container(
@@ -435,7 +421,7 @@ class _CalendarioState extends State<Calendario> {
         style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 11,
-          color: _cs.onSurface,
+          color: _cs.surface,
         ),
       ),
     );

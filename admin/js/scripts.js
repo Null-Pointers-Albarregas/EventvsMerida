@@ -69,13 +69,5 @@ function mostrarAlerta(tipo, mensaje) {
 
 
 function obtenerNombreUsuario() {
-  const nombreUsuario = localStorage.getItem("nombreUsuario");
-  if (nombreUsuario) {
-    return nombreUsuario;
-  } else {
-    if (!window.location.pathname.endsWith("/html/login.html")) {
-      window.location.href = "/html/login.html";
-    }
-  }
+  return localStorage.getItem("nombreUsuario");
 }
-

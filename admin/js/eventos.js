@@ -1,32 +1,7 @@
 window.addEventListener("DOMContentLoaded", async (event) => {
     const URL_BASE = "https://eventvsmerida.onrender.com/api/";
-    obtenerCategorias(URL_BASE);
     cargarEventos(URL_BASE);
-
-    const form = document.getElementById("formAgregarEvento");
-
-    form.addEventListener("submit", function (event) {
-        if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-            form.classList.add("was-validated"); // Esto activa los mensajes de error de Bootstrap
-        } else {
-            event.preventDefault();
-            console.log(document.getElementById("fechaFin").value)
-            const datosFormulario = {
-                titulo: document.getElementById("titulo").value,
-                descripcion: document.getElementById("descripcion").value,
-                fechaInicio: document.getElementById("fechaInicio").value + "T" + document.getElementById("horaInicio").value + ":00.000Z",
-                fechaFin: document.getElementById("fechaFin").value + "T" + document.getElementById("horaFin").value + ":00.000Z",
-                localizacion: document.getElementById("localizacion").value,
-                foto: document.getElementById("fotoEvento").value,
-                idUsuario: 3,
-                idCategoria: asociarIdCategoria(document.getElementById("categorias").value),
-            };
-            subirEvento(URL_BASE, datosFormulario);
-        }
-        form.classList.add("was-validated");
-    }, false);
+    obtenerCategorias(URL_BASE);
 });
 
 async function cargarEventos(URL_BASE) {
@@ -101,15 +76,6 @@ async function cargarEventos(URL_BASE) {
                 console.log(evento.titulo);
                 document.getElementById("tituloEvento").value = evento.titulo;
                 document.getElementById("descripcionEvento").value = evento.descripcion;
-                console.log(evento.fechaInicio.split("T")[0]);
-                document.getElementById("fechaInicio").value = evento.fechaInicio.split("T")[0];
-                document.getElementById("horaInicio").value = evento.fechaInicio.split("T")[1];
-                document.getElementById("fechaFin").value = evento.fechaFin.split("T")[0];
-                document.getElementById("horaFin").value = evento.fechaFin.split("T")[1];
-                document.getElementById("localizacionEvento").value = evento.localizacion;
-                console.log(evento.nombreCategoria);
-                document.getElementById("categoriasEvento").value = evento.nombreCategoria;
-                document.getElementById("imagenEvento").src = evento.foto;
             });
 
             // Botón eliminar
@@ -138,7 +104,6 @@ async function cargarEventos(URL_BASE) {
 
 async function obtenerCategorias(URL_BASE) {
     const select = document.getElementById("categorias");
-    const selectEditar = document.getElementById("categoriasEvento");
 
     try {
         const resp = await fetch(URL_BASE + "categorias/all", {
@@ -149,7 +114,7 @@ async function obtenerCategorias(URL_BASE) {
         });
 
         if (!resp.ok) {
-            throw new Error("Error al obtener las categorías");
+            throw new Error("Error al obtener los roles");
         }
 
         const data = await resp.json();
@@ -158,34 +123,9 @@ async function obtenerCategorias(URL_BASE) {
             opt.value = categoria["nombre"];
             opt.textContent = categoria["nombre"];
             select.appendChild(opt);
-            const optEditar = document.createElement("option");
-            optEditar.value = categoria["nombre"];
-            optEditar.textContent = categoria["nombre"];
-            selectEditar.appendChild(optEditar);
         });
     } catch (error) {
         console.error("Error al cargar las categorías:", error);
-    }
-}
-
-async function subirEvento(URL_BASE, datosFormulario) {
-    try {
-        const resp = await fetch(URL_BASE + "eventos/add", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(datosFormulario),
-        });
-
-        const respuesta = await resp.json();
-        if (resp.status === 201) {
-            mostrarAlerta("success", "Evento creado correctamente");
-        } else {
-            mostrarAlerta("error", "Error al crear el evento: " + respuesta.message);
-        }
-    } catch (error) {
-        console.error("Error al subir el evento:", error);
     }
 }
 
@@ -214,33 +154,4 @@ function formatearFecha(fechaISO) {
     const hora = fecha.getHours().toString().padStart(2, "0");
     const minutos = fecha.getMinutes().toString().padStart(2, "0");
     return `${dia}/${mes}/${anio} - ${hora}:${minutos}`;
-}
-
-function asociarIdCategoria(nombreCategoria) {
-    switch (nombreCategoria) {
-        case "Conciertos y Música":
-            return 1;
-        case "Festivales y Ferias":
-            return 2;
-        case "Cine y Teatro":
-            return 3;
-        case "Exposiciones y Arte":
-            return 4;
-        case "Gastronomía":
-            return 5;
-        case "Conferencias, Talleres y Cursos":
-            return 6;
-        case "Deportes y Actividad Física":
-            return 7;
-        case "Fiestas y Vida Nocturna": 
-            return 8;
-        case "Familia e Infantil":
-            return 9;
-        case "Tecnología y Ciencia":
-            return 10;
-        case "Solidaridad y Causas Sociales":
-            return 11;
-        default:
-            return 12;
-    }
 }

@@ -14,7 +14,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   // ===========================================================================
-  // CONTROLADORES Y ESTADO
+  // VARIABLES
   // ===========================================================================
 
   final TextEditingController _emailController = TextEditingController();
@@ -25,6 +25,10 @@ class _LoginState extends State<Login> {
 
   ColorScheme get _cs => Theme.of(context).colorScheme;
 
+  // ===========================================================================
+  // CICLO DE VIDA
+  // ===========================================================================
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -33,7 +37,7 @@ class _LoginState extends State<Login> {
   }
 
   // ===========================================================================
-  // HELPERS
+  // FUNCIONES AUXILIARES
   // ===========================================================================
 
   InputDecoration _buildDecoration({required String labelText, Widget? suffixIcon}) {
@@ -141,7 +145,7 @@ class _LoginState extends State<Login> {
   }
 
   // ===========================================================================
-  // WIDGETS DE INTERFAZ
+  // INTERFAZ
   // ===========================================================================
 
   Widget _buildHeader(double headerHeight) {

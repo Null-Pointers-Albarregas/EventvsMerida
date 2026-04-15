@@ -30,8 +30,7 @@
                 <a class="nav-link dropdown-toggle text-light" id="navbarDropdown" href="#" role="button"
                     data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
                 <ul class="dropdown-menu dropdown-menu-end text-light aria-labelledby=" navbarDropdown>
-                    <li><a class="dropdown-item" href="login.html"><i class="fa-solid fa-right-from-bracket"></i> Cerrar
-                            sesión</a></li>
+                    <li><a class="dropdown-item" href="login.html"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a></li>
                 </ul>
             </li>
         </ul>
@@ -97,9 +96,9 @@
 
                     <div class="d-flex justify-content-end">
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#modalCrearEvento">
-                            Añadir evento
-                        </button>
+                        data-bs-target="#modalCrearEvento">
+                        Añadir evento
+                    </button>
                     </div>
 
                     <table class="table text-light table-custom">
@@ -145,41 +144,121 @@
                     <form class="row g-3 needs-validation" id="formAgregarEvento" novalidate>
                         <div class="col-md-6">
                             <label for="nombre" class="form-label">Título</label>
-                            <input type="text" class="form-control" id="titulo" required minlength="2"
-                                maxlength="150">
+                            <input type="text" class="form-control" id="nombre" name="nombre" required minlength="2"
+                                maxlength="50" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo letras y espacios">
                             <div class="invalid-feedback">
-                                Introduce un título.
-                            </div>
-
-                            <label for="tituloEvento" class="form-label mt-2">Localización</label>
-                            <input type="text" class="form-control" id="localizacion" required minlength="2"
-                                maxlength="50" title="Solo letras y espacios">
-                            <div class="invalid-feedback">
-                                Introduce una localización.
+                                Ingresa un título válido (solo letras y espacios).
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label for="descripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" rows="5" required></textarea>
-                            <div class="invalid-feedback">
-                                Introduce una descripción.
+                            <label for="exampleFormControlTextarea1" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="startDate">Fecha de inicio</label>
+                                    <input id="startDate" class="form-control" type="date" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="startTime">Hora de inicio</label>
+                                    <input id="startTime" class="form-control" type="time" />
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="row">
                                 <div class="col-md-6">
+                                    <label for="startDate">Fecha de fin</label>
+                                    <input id="startDate" class="form-control" type="date" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="startTime">Hora de fin</label>
+                                    <input id="startTime" class="form-control" type="time" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="idRol" class="form-label">Organizador</label>
+                            <select class="form-select" id="organizadores" required>
+                                <option value="">Selecciona un organizador</option>
+                                <!-- <option value="1">Usuario</option>
+                                                <option value="2">Organizador</option>
+                                                <option value="2">Administrador</option> -->
+                            </select>
+                            <div class="invalid-feedback">
+                                Selecciona un rol.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="idRol" class="form-label">Categoría</label>
+                            <select class="form-select" id="categorias" required>
+                                <option value="">Selecciona una categoría</option>
+                                <!-- <option value="1">Usuario</option>
+                                                <option value="2">Organizador</option>
+                                                <option value="2">Administrador</option> -->
+                            </select>
+                            <div class="invalid-feedback">
+                                Selecciona un rol.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="formFile" class="form-label">Cartel / Imagen del evento</label>
+                            <input class="form-control" type="file" id="formFile">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary bg-danger" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="formAgregarUsuario" class="btn btn-primary">Agregar usuario</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalVerEvento" tabindex="-1" aria-labelledby="modalVerEventoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalVerEventoLabel">Detalle del evento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="contenidoModalEvento">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditarEvento" tabindex="-1" aria-labelledby="modalEditarEventoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarEventoLabel">Detalle del evento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="contenidoModalEvento">
+                    <form class="row g-3 needs-validation" id="formEditarEvento" novalidate>
+                        <div class="col-md-6">
+                            <label for="tituloEvento" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="tituloEvento" required minlength="2"
+                                maxlength="50" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo letras y espacios">
+                            <div class="invalid-feedback">
+                                Ingresa un título válido (solo letras y espacios).
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="descripcionEvento" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcionEvento" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-md-6">
                                     <label for="fechaInicio">Fecha de inicio</label>
-                                    <input id="fechaInicio" class="form-control" type="date" required/>
-                                    <div class="invalid-feedback">
-                                        Introduce una fecha de inicio.
-                                    </div>
+                                    <input id="fechaInicio" class="form-control" type="date" />
                                 </div>
                                 <div class="col-md-6">
                                     <label for="horaInicio">Hora de inicio</label>
-                                    <input id="horaInicio" class="form-control" type="time" required/>
-                                    <div class="invalid-feedback">
-                                        Introduce una hora de inicio.
-                                    </div>
+                                    <input id="horaInicio" class="form-control" type="time" />
                                 </div>
                             </div>
                         </div>
@@ -187,23 +266,17 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <label for="fechaFin">Fecha de fin</label>
-                                    <input id="fechaFin" class="form-control" type="date" required/>
-                                    <div class="invalid-feedback">
-                                        Introduce una fecha de fin.
-                                    </div>
+                                    <input id="fechaFin" class="form-control" type="date" />
                                 </div>
                                 <div class="col-md-6">
                                     <label for="horaFin">Hora de fin</label>
-                                    <input id="horaFin" class="form-control" type="time" required/>
-                                    <div class="invalid-feedback">
-                                        Introduce una hora de fin.
-                                    </div>
+                                    <input id="horaFin" class="form-control" type="time" />
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <label for="idRol" class="form-label">Organizador</label>
-                            <select class="form-select" id="organizadores">
+                            <select class="form-select" id="organizadores" required>
                                 <option value="">Selecciona un organizador</option>
                             </select>
                             <div class="invalid-feedback">
@@ -221,129 +294,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="formFile" class="form-label">Cartel / Imagen del evento</label>
-                            <input class="form-control" type="file" id="fotoEvento" required>
-                            <div class="invalid-feedback">
-                                Seleccione un cartel / imagen.
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary bg-danger" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="formAgregarEvento" class="btn btn-primary">Agregar evento</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalVerEvento" tabindex="-1" aria-labelledby="modalVerEventoLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content bg-dark text-light">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalVerEventoLabel">Detalle del evento</h5>
-                    <button type="button" class="btn-close custom-close" data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body" id="contenidoModalEvento">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalEditarEvento" tabindex="-1" aria-labelledby="modalEditarEventoLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content bg-dark text-light">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalEditarEventoLabel">Editar evento</h5>
-                    <button type="button" class="btn-close custom-close" data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body" id="contenidoModalEvento">
-                    <form class="row g-3 needs-validation" id="formEditarEvento" novalidate>
-                        <div class="col-md-6">
-                            <label for="tituloEvento" class="form-label">Título</label>
-                            <input type="text" class="form-control" id="tituloEvento" required minlength="2"
-                                maxlength="150" title="Solo letras y espacios">
-                            <div class="invalid-feedback">
-                                Introduce un título.
-                            </div>
-
-                            <label for="tituloEvento" class="form-label mt-2">Localización</label>
-                            <input type="text" class="form-control" id="localizacionEvento" required minlength="2"
-                                maxlength="50" title="Solo letras y espacios">
-                            <div class="invalid-feedback">
-                                Introduce una localización.
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="descripcionEvento" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcionEvento" rows="5" required></textarea>
-                            <div class="invalid-feedback">
-                                Introduce una descripción.
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="fechaInicio">Fecha de inicio</label>
-                                    <input id="fechaInicio" class="form-control" type="date" required/>
-                                    <div class="invalid-feedback">
-                                Introduce una fecha de inicio.
-                            </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="horaInicio">Hora de inicio</label>
-                                    <input id="horaInicio" class="form-control" type="time" required/>
-                                    <div class="invalid-feedback">
-                                Introduce una hora de inicio.
-                            </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="fechaFin">Fecha de fin</label>
-                                    <input id="fechaFin" class="form-control" type="date" required/>
-                                    <div class="invalid-feedback">
-                                Introduce una fecha de fin.
-                            </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="horaFin">Hora de fin</label>
-                                    <input id="horaFin" class="form-control" type="time" required/>
-                                    <div class="invalid-feedback">
-                                Introduce una hora de fin.
-                            </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="idRol" class="form-label">Organizador</label>
-                            <select class="form-select" id="organizadores" required>
-                                <option value="">Selecciona un organizador</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Selecciona un organizador.
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="idRol" class="form-label">Categoría</label>
-                            <select class="form-select" id="categoriasEvento" required>
-                                <option value="">Selecciona una categoría</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Selecciona una categoría.
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="formFile" class="form-label">Cartel / Imagen del evento</label>
-                            <input class="form-control" type="file" id="fotoEvento">
-                            <img class="img w-25 mt-2 d-block m-auto img-thumbnail" id="imagenEvento" src="#!" alt="">
-                            <div class="invalid-feedback">
-                                Seleccione un cartel / imagen.
-                            </div>
+                            <input class="form-control" type="file" id="formFile">
                         </div>
                     </form>
                 </div>
@@ -355,8 +306,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../js/scripts.js"></script>
     <script src="../js/eventos.js"></script>

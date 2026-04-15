@@ -20,40 +20,55 @@ class Eventos extends StatefulWidget {
 }
 
 class _EventosState extends State<Eventos> {
+  // ===========================================================================
+  // VARIABLES
+  // ===========================================================================
+
   late Future<ApiResponse<List<Evento>>> _eventos;
   Usuario? _usuario;
   List<Evento> _eventosGuardados = [];
+
+  ColorScheme get _cs => Theme.of(context).colorScheme;
+  TextTheme get _tt => Theme.of(context).textTheme;
+
+  // ===========================================================================
+  // CICLO DE VIDA
+  // ===========================================================================
 
   @override
   void initState() {
     super.initState();
     _eventos = ApiService.obtenerEventos();
-    _cargarDatos();
+    _cargarDatosUsuarioYGuardados();
   }
 
-  Future<void> _cargarEventosGuardados(Usuario usuario) async {
-    final respuesta = await ApiService.obtenerEventosGuardados(usuario.email);
-    if (respuesta.exito) {
-      _eventosGuardados = respuesta.datos ?? [];
-    } else {
-      _eventosGuardados = [];
-    }
-  }
+  // ===========================================================================
+  // CARGA DE DATOS
+  // ===========================================================================
 
-  Future<void> _cargarDatos() async {
+  Future<void> _cargarDatosUsuarioYGuardados() async {
     final usuario = await SharedPreferencesService.cargarUsuario();
+
+    List<Evento> guardados = [];
+    if (usuario != null) {
+      final respuestaGuardados =
+      await ApiService.obtenerEventosGuardados(usuario.email);
+      if (respuestaGuardados.exito) {
+        guardados = respuestaGuardados.datos ?? [];
+      }
+    }
+
     if (!mounted) return;
 
     setState(() {
       _usuario = usuario;
+      _eventosGuardados = guardados;
     });
-
-    if (_usuario != null) {
-      await _cargarEventosGuardados(_usuario!);
-      if (!mounted) return;
-      setState(() {});
-    }
   }
+
+  // ===========================================================================
+  // FUNCIONES AUXILIARES
+  // ===========================================================================
 
   bool _esMismoDia(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
@@ -65,8 +80,17 @@ class _EventosState extends State<Eventos> {
         a.fechaFin == b.fechaFin;
   }
 
-  String _formatearFecha(DateTime fecha) => DateFormat('dd/MM/yyyy').format(fecha);
-  String _formatearHora(DateTime fecha) => DateFormat('HH:mm').format(fecha);
+  bool _esHoraCero(DateTime fecha) {
+    return fecha.hour == 0 && fecha.minute == 0;
+  }
+
+  String _formatearFecha(DateTime fecha) {
+    return DateFormat('dd/MM/yyyy').format(fecha);
+  }
+
+  String _formatearHora(DateTime fecha) {
+    return DateFormat('HH:mm').format(fecha);
+  }
 
   String _textoFechaHoraCard(Evento evento) {
     final esMismoDia = _esMismoDia(evento.fechaInicio, evento.fechaFin);
@@ -74,24 +98,26 @@ class _EventosState extends State<Eventos> {
     final finFecha = _formatearFecha(evento.fechaFin);
     final inicioHora = _formatearHora(evento.fechaInicio);
     final finHora = _formatearHora(evento.fechaFin);
+    final horasIguales = inicioHora == finHora;
+    final ambasHorasCero = _esHoraCero(evento.fechaInicio) && _esHoraCero(evento.fechaFin);
 
     if (esMismoDia) {
-      if (inicioHora == finHora && inicioHora == '00:00') {
+      if (horasIguales && ambasHorasCero) {
         return 'Fecha: $inicioFecha';
       }
-      if (inicioHora == finHora) {
+      if (horasIguales) {
         return 'Fecha: $inicioFecha · $inicioHora';
       }
       return 'Fecha: $inicioFecha · $inicioHora - $finHora';
-    } else {
-      if (inicioHora == finHora && inicioHora == '00:00') {
-        return 'Fecha: $inicioFecha - $finFecha';
-      }
-      if (inicioHora == finHora) {
-        return 'Fecha: $inicioFecha - $finFecha · $inicioHora';
-      }
-      return 'Fecha: $inicioFecha - $finFecha · $inicioHora - $finHora';
     }
+
+    if (horasIguales && ambasHorasCero) {
+      return 'Fecha: $inicioFecha - $finFecha';
+    }
+    if (horasIguales) {
+      return 'Fecha: $inicioFecha - $finFecha · $inicioHora';
+    }
+    return 'Fecha: $inicioFecha - $finFecha · $inicioHora - $finHora';
   }
 
   String _textoFechaHoraDetalle(Evento evento) {
@@ -100,185 +126,123 @@ class _EventosState extends State<Eventos> {
     final finFecha = _formatearFecha(evento.fechaFin);
     final inicioHora = _formatearHora(evento.fechaInicio);
     final finHora = _formatearHora(evento.fechaFin);
+    final horasIguales = inicioHora == finHora;
+    final ambasHorasCero = _esHoraCero(evento.fechaInicio) && _esHoraCero(evento.fechaFin);
 
     if (esMismoDia) {
-      if (inicioHora == finHora && inicioHora == '00:00') {
+      if (horasIguales && ambasHorasCero) {
         return 'Fecha: $inicioFecha';
       }
-      if (inicioHora == finHora) {
+      if (horasIguales) {
         return 'Fecha: $inicioFecha\nHora: $inicioHora';
       }
       return 'Fecha: $inicioFecha\nHora: $inicioHora - $finHora';
-    } else {
-      if (inicioHora == finHora && inicioHora == '00:00') {
-        return 'Desde: $inicioFecha\nHasta: $finFecha';
+    }
+
+    if (horasIguales && ambasHorasCero) {
+      return 'Desde: $inicioFecha\nHasta: $finFecha';
+    }
+
+    return 'Desde: $inicioFecha $inicioHora\nHasta: $finFecha $finHora';
+  }
+
+  bool _estaGuardado(Evento evento) {
+    return _eventosGuardados.any((e) => _esMismoEvento(e, evento));
+  }
+
+  Future<void> _abrirEnGoogleMaps(String direccion) async {
+    final limpia = direccion.trim();
+    final query = Uri.encodeComponent(limpia);
+    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query',);
+
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
+
+      if (!ok && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo abrir Google Maps')),
+        );
       }
-      if (inicioHora == finHora) {
-        return 'Desde: $inicioFecha $inicioHora\nHasta: $finFecha $finHora';
-      }
-      return 'Desde: $inicioFecha $inicioHora\nHasta: $finFecha $finHora';
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir Google Maps')),
+      );
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Future<String> _guardarEvento(Evento evento, Usuario usuario) async {
+    final respuesta = await ApiService.guardarEventoUsuario(usuario.email, evento.titulo, evento.fechaInicio, evento.fechaFin,);
 
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: colorScheme.surface,
-        foregroundColor: colorScheme.onPrimary,
-        title: SizedBox(
-          height: 40,
-          child: Image.asset(
-            'assets/images/logo-eventvs-merida-no-bg.png',
-            fit: BoxFit.contain,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: null,
-                  icon: Icon(
-                    Icons.search,
-                    color: colorScheme.primary.withValues(alpha: 0.5),
-                  ),
-                  tooltip: 'Buscar - Proximamente',
-                ),
-                IconButton(
-                  onPressed: null,
-                  icon: Icon(
-                    Icons.filter_alt_rounded,
-                    color: colorScheme.primary.withValues(alpha: 0.5),
-                  ),
-                  tooltip: 'Filtrar - Proximamente',
-                ),
-              ],
+    if (respuesta.exito) {
+      setState(() {
+        final yaEsta = _eventosGuardados.any((e) => _esMismoEvento(e, evento));
+        if (!yaEsta) {
+          _eventosGuardados.add(evento);
+        }
+      });
+    }
+
+    return respuesta.mensaje;
+  }
+
+  Future<String> _eliminarEvento(Evento evento, Usuario usuario) async {
+    final respuesta = await ApiService.eliminarEventoUsuario(usuario.email, evento.titulo, evento.fechaInicio, evento.fechaFin,);
+
+    if (respuesta.exito) {
+      setState(() {
+        _eventosGuardados.removeWhere((e) => _esMismoEvento(e, evento));
+      });
+    }
+
+    return respuesta.mensaje;
+  }
+
+  // ===========================================================================
+  // MENSAJES
+  // ===========================================================================
+
+  void _mostrarSnackBarResultado(BuildContext context, {required String mensaje, required bool guardado,}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              guardado ? Icons.check : Icons.delete,
+              size: 20,
+              color: Colors.white,
             ),
-          ),
-        ],
-      ),
-      body: Center(
-        child: FutureBuilder<ApiResponse<List<Evento>>>(
-          future: _eventos,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            } else if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            }
-
-            final respuesta = snapshot.data;
-            if (respuesta == null) {
-              return const Text('No se han podido cargar los eventos');
-            }
-            if (!respuesta.exito) {
-              return Text(respuesta.mensaje);
-            }
-
-            final eventos = respuesta.datos ?? [];
-
-            return ListView.builder(
-              itemCount: eventos.length,
-              itemBuilder: (context, indice) {
-                final evento = eventos[indice];
-
-                return Card(
-                  elevation: 6,
-                  shadowColor: colorScheme.onSurface,
-                  margin: const EdgeInsets.all(16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: colorScheme.onPrimary, width: 2),
-                  ),
-                  color: colorScheme.secondary,
-                  child: InkWell(
-                    onTap: () => _abrirModal(context, evento, _usuario),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                          child: AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: Image.network(
-                              evento.foto,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.topCenter,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(15),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                evento.titulo,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                evento.nombreCategoria,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                evento.localizacion,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                _textoFechaHoraCard(evento),
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
-                                  height: 1.25,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                mensaje,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: guardado ? Colors.green : Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: 16,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );
   }
 
-  void _abrirModal(BuildContext context, Evento evento, Usuario? usuario) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+  // ===========================================================================
+  // INTERFAZ
+  // ===========================================================================
 
-    bool estaGuardado = comprobarEstadoEvento(evento);
+  void _abrirModalEvento(Evento evento, Usuario? usuario) {
+    bool estaGuardado = _estaGuardado(evento);
 
     showDialog<bool>(
       context: context,
@@ -292,6 +256,7 @@ class _EventosState extends State<Eventos> {
             builder: (dialogContext, setStateDialog) {
               return Stack(
                 children: [
+                  // === FONDO DIFUMINADO DEL MODAL ===
                   Positioned.fill(
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
@@ -307,12 +272,14 @@ class _EventosState extends State<Eventos> {
                           maxHeight: 700,
                         ),
                         child: Material(
-                          color: colorScheme.surface,
+                          color: _cs.surface,
                           borderRadius: BorderRadius.circular(16),
                           elevation: 12,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+
+                              // === CABECERA DEL MODAL: TÍTULO Y BOTÓN CERRAR ===
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(12, 10, 4, 0),
                                 child: Row(
@@ -321,7 +288,7 @@ class _EventosState extends State<Eventos> {
                                     Expanded(
                                       child: Text(
                                         evento.titulo,
-                                        style: textTheme.titleMedium?.copyWith(
+                                        style: _tt.titleMedium?.copyWith(
                                           fontWeight: FontWeight.bold,
                                         ),
                                         maxLines: 2,
@@ -337,6 +304,8 @@ class _EventosState extends State<Eventos> {
                                 ),
                               ),
                               const SizedBox(height: 8),
+
+                              // === IMAGEN PRINCIPAL DEL EVENTO EN EL MODAL ===
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 12),
                                 child: ClipRRect(
@@ -359,12 +328,15 @@ class _EventosState extends State<Eventos> {
                                 ),
                               ),
                               const SizedBox(height: 12),
+
+                              // === INFORMACIÓN DETALLADA DEL EVENTO (LOCALIZACIÓN, FECHA, DESCRIPCIÓN) ===
                               Expanded(
                                 child: SingleChildScrollView(
                                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
+                                      // --- Localización con botón Google Maps ---
                                       TextButton.icon(
                                         onPressed: () => _abrirEnGoogleMaps(evento.localizacion),
                                         icon: const Icon(
@@ -374,7 +346,7 @@ class _EventosState extends State<Eventos> {
                                         ),
                                         label: Text(
                                           evento.localizacion,
-                                          style: textTheme.bodyMedium?.copyWith(
+                                          style: _tt.bodyMedium?.copyWith(
                                             decoration: TextDecoration.underline,
                                           ),
                                         ),
@@ -384,6 +356,8 @@ class _EventosState extends State<Eventos> {
                                         ),
                                       ),
                                       const SizedBox(height: 10),
+
+                                      // --- Fecha y hora detallada ---
                                       Row(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
@@ -392,7 +366,7 @@ class _EventosState extends State<Eventos> {
                                           Expanded(
                                             child: Text(
                                               _textoFechaHoraDetalle(evento),
-                                              style: textTheme.bodyMedium?.copyWith(
+                                              style: _tt.bodyMedium?.copyWith(
                                                 fontWeight: FontWeight.w600,
                                                 height: 1.35,
                                               ),
@@ -401,21 +375,25 @@ class _EventosState extends State<Eventos> {
                                         ],
                                       ),
                                       const SizedBox(height: 16),
+
+                                      // --- Descripción del evento ---
                                       Text(
                                         'Descripcion',
-                                        style: textTheme.titleSmall?.copyWith(
+                                        style: _tt.titleSmall?.copyWith(
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         evento.descripcion,
-                                        style: textTheme.bodyMedium,
+                                        style: _tt.bodyMedium,
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
+
+                              // === BOTÓN DE GUARDAR/ELIMINAR EVENTO ===
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                                 child: Row(
@@ -424,7 +402,7 @@ class _EventosState extends State<Eventos> {
                                       child: FilledButton.icon(
                                         onPressed: () async {
                                           if (usuario == null) {
-                                            _mostrarModalNoLogeado(context);
+                                            _mostrarModalNoLogeado();
                                             return;
                                           }
 
@@ -432,41 +410,16 @@ class _EventosState extends State<Eventos> {
                                             estaGuardado = !estaGuardado;
                                           });
 
-                                          String respuesta;
-                                          if (estaGuardado) {
-                                            respuesta = await _guardarEvento(evento, usuario);
-                                          } else {
-                                            respuesta = await _eliminarEvento(evento, usuario);
-                                          }
+                                          final mensaje = estaGuardado
+                                              ? await _guardarEvento(evento, usuario)
+                                              : await _eliminarEvento(evento, usuario);
 
-                                          ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                            SnackBar(
-                                              content: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    estaGuardado ? Icons.check : Icons.delete,
-                                                    size: 20,
-                                                    color: Colors.white,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    respuesta,
-                                                    style: const TextStyle(color: Colors.white),
-                                                  ),
-                                                ],
-                                              ),
-                                              backgroundColor: estaGuardado ? Colors.green : Colors.red,
-                                              behavior: SnackBarBehavior.floating,
-                                              margin: const EdgeInsets.only(
-                                                left: 16,
-                                                right: 16,
-                                                bottom: 16,
-                                              ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                            ),
+                                          if (!mounted) return;
+
+                                          _mostrarSnackBarResultado(
+                                            context,
+                                            mensaje: mensaje,
+                                            guardado: estaGuardado,
                                           );
                                         },
                                         icon: Icon(
@@ -497,73 +450,8 @@ class _EventosState extends State<Eventos> {
     );
   }
 
-  Future<void> _abrirEnGoogleMaps(String direccion) async {
-    final limpia = direccion.trim();
-    final query = Uri.encodeComponent(limpia);
-    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
 
-    try {
-      final ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
-      if (!ok && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo abrir Google Maps')),
-        );
-      }
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo abrir Google Maps')),
-      );
-    }
-  }
-
-  bool comprobarEstadoEvento(Evento evento) {
-    return _eventosGuardados.any((e) => _esMismoEvento(e, evento));
-  }
-
-  Future<String> _guardarEvento(Evento evento, Usuario usuario) async {
-    final respuesta = await ApiService.guardarEventoUsuario(
-      usuario.email,
-      evento.titulo,
-      evento.fechaInicio,
-      evento.fechaFin,
-    );
-
-    if (respuesta.exito) {
-      setState(() {
-        final yaEsta = _eventosGuardados.any((e) => _esMismoEvento(e, evento));
-        if (!yaEsta) {
-          _eventosGuardados.add(evento);
-        }
-      });
-      return respuesta.mensaje;
-    }
-
-    return respuesta.mensaje;
-  }
-
-  Future<String> _eliminarEvento(Evento evento, Usuario usuario) async {
-    final respuesta = await ApiService.eliminarEventoUsuario(
-      usuario.email,
-      evento.titulo,
-      evento.fechaInicio,
-      evento.fechaFin,
-    );
-
-    if (respuesta.exito) {
-      setState(() {
-        _eventosGuardados.removeWhere((e) => _esMismoEvento(e, evento));
-      });
-      return respuesta.mensaje;
-    }
-
-    return respuesta.mensaje;
-  }
-
-  void _mostrarModalNoLogeado(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
+  void _mostrarModalNoLogeado() {
     showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -577,7 +465,7 @@ class _EventosState extends State<Eventos> {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: AlertDialog(
-                backgroundColor: colorScheme.surface.withValues(alpha: 0.98),
+                backgroundColor: _cs.surface.withValues(alpha: 0.98),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -587,15 +475,16 @@ class _EventosState extends State<Eventos> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // --- Título y botón cerrar ---
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.info_outline, color: colorScheme.primary),
+                        Icon(Icons.info_outline, color: _cs.primary),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Inicia sesion o registrate',
-                            style: textTheme.titleMedium?.copyWith(
+                            style: _tt.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -609,9 +498,11 @@ class _EventosState extends State<Eventos> {
                       ],
                     ),
                     const SizedBox(height: 12),
+
+                    // --- Mensaje informativo ---
                     Text(
                       'Para poder guardar un evento, tienes que iniciar sesion o registrarte.',
-                      style: textTheme.bodyMedium,
+                      style: _tt.bodyMedium,
                     ),
                   ],
                 ),
@@ -621,14 +512,14 @@ class _EventosState extends State<Eventos> {
                       Expanded(
                         child: FilledButton(
                           style: FilledButton.styleFrom(
-                            backgroundColor: colorScheme.primary,
+                            backgroundColor: _cs.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),
                           onPressed: () {
-                            context.go(AppRoutes.registro);
                             Navigator.of(ctx).pop();
+                            context.go(AppRoutes.registro);
                           },
                           child: const Text('Registrarse'),
                         ),
@@ -637,7 +528,7 @@ class _EventosState extends State<Eventos> {
                       Expanded(
                         child: FilledButton(
                           style: FilledButton.styleFrom(
-                            backgroundColor: colorScheme.primary,
+                            backgroundColor: _cs.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -645,7 +536,6 @@ class _EventosState extends State<Eventos> {
                           onPressed: () {
                             Navigator.of(ctx).pop();
                             context.go(AppRoutes.login);
-                            Navigator.of(ctx).pop();
                           },
                           child: const Text(
                             'Iniciar sesion',
@@ -661,6 +551,221 @@ class _EventosState extends State<Eventos> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAppBarAction({
+    required IconData icon,
+    required String tooltip,
+  }) {
+    return IconButton(
+      onPressed: null,
+      icon: Icon(
+        icon,
+        color: _cs.primary.withValues(alpha: 0.5),
+      ),
+      tooltip: tooltip,
+    );
+  }
+
+  Widget _buildEstadoCentro({
+    required IconData icono,
+    required String mensaje,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icono, size: 42),
+            const SizedBox(height: 12),
+            Text(
+              mensaje,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventoCard(Evento evento) {
+    return Card(
+      elevation: 6,
+      shadowColor: _cs.onSurface,
+      margin: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: _cs.onPrimary, width: 2),
+      ),
+      color: _cs.secondary,
+      child: InkWell(
+        onTap: () => _abrirModalEvento(evento, _usuario),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // === IMAGEN DEL EVENTO ===
+            ClipRRect(
+              borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(16)),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Image.network(
+                  evento.foto,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                ),
+              ),
+            ),
+
+            // === INFORMACIÓN PRINCIPAL DEL EVENTO (TÍTULO, CATEGORÍA, LOCALIZACIÓN, FECHA) ===
+            Padding(
+              padding: const EdgeInsets.all(15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    evento.titulo,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+
+                  Text(
+                    evento.nombreCategoria,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+
+                  Text(
+                    evento.localizacion,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 12),
+
+                  Text(
+                    _textoFechaHoraCard(evento),
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      height: 1.25,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    return Center(
+      child: FutureBuilder<ApiResponse<List<Evento>>>(
+        future: _eventos,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          }
+
+          if (snapshot.hasError) {
+            return _buildEstadoCentro(
+              icono: Icons.error_outline,
+              mensaje: 'Error: ${snapshot.error}',
+            );
+          }
+
+          final respuesta = snapshot.data;
+          if (respuesta == null) {
+            return _buildEstadoCentro(
+              icono: Icons.error_outline,
+              mensaje: 'No se han podido cargar los eventos',
+            );
+          }
+
+          if (!respuesta.exito) {
+            return _buildEstadoCentro(
+              icono: Icons.error_outline,
+              mensaje: respuesta.mensaje,
+            );
+          }
+
+          final eventos = respuesta.datos ?? [];
+          if (eventos.isEmpty) {
+            return _buildEstadoCentro(
+              icono: Icons.event_busy,
+              mensaje: 'No hay eventos disponibles',
+            );
+          }
+
+          return ListView.builder(
+            itemCount: eventos.length,
+            itemBuilder: (context, indice) {
+              return _buildEventoCard(eventos[indice]);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        backgroundColor: _cs.surface,
+        foregroundColor: _cs.onPrimary,
+        title: SizedBox(
+          height: 40,
+          child: Image.asset(
+            'assets/images/logo-eventvs-merida-no-bg.png',
+            fit: BoxFit.contain,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                _buildAppBarAction(
+                  icon: Icons.search,
+                  tooltip: 'Buscar - Proximamente',
+                ),
+                _buildAppBarAction(
+                  icon: Icons.filter_alt_rounded,
+                  tooltip: 'Filtrar - Proximamente',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      body: _buildBody(),
     );
   }
 }

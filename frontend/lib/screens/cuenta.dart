@@ -14,7 +14,7 @@ class Cuenta extends StatefulWidget {
 
 class _CuentaState extends State<Cuenta> {
   // ===========================================================================
-  // ESTADO
+  // VARIABLES
   // ===========================================================================
 
   Usuario? _usuario;
@@ -46,7 +46,7 @@ class _CuentaState extends State<Cuenta> {
   }
 
   // ===========================================================================
-  // HELPERS DE UI
+  // FUNCIONES AUXILIARES
   // ===========================================================================
 
   String _formatearFechaNacimiento(DateTime fecha) {
@@ -55,6 +55,10 @@ class _CuentaState extends State<Cuenta> {
     final anio = fecha.year.toString();
     return '$dia/$mes/$anio';
   }
+
+  // ===========================================================================
+  // INTERFAZ
+  // ===========================================================================
 
   Widget _infoTile({required String label, required String value, required IconData icon}) {
     return Card(
