@@ -94,10 +94,12 @@
                     <div class="row justify-content-center">
                     </div>
 
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                         data-bs-target="#modalCrearEvento">
                         Añadir evento
                     </button>
+                    </div>
 
                     <table class="table text-light table-custom">
                         <thead>
@@ -222,14 +224,90 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body" id="contenidoModalEvento">
-                    <!-- Aquí se mostrarán los datos del evento -->
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        crossorigin="anonymous"></script>
+    <div class="modal fade" id="modalEditarEvento" tabindex="-1" aria-labelledby="modalEditarEventoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarEventoLabel">Detalle del evento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="contenidoModalEvento">
+                    <form class="row g-3 needs-validation" id="formEditarEvento" novalidate>
+                        <div class="col-md-6">
+                            <label for="tituloEvento" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="tituloEvento" required minlength="2"
+                                maxlength="50" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo letras y espacios">
+                            <div class="invalid-feedback">
+                                Ingresa un título válido (solo letras y espacios).
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="descripcionEvento" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcionEvento" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="fechaInicio">Fecha de inicio</label>
+                                    <input id="fechaInicio" class="form-control" type="date" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="horaInicio">Hora de inicio</label>
+                                    <input id="horaInicio" class="form-control" type="time" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="fechaFin">Fecha de fin</label>
+                                    <input id="fechaFin" class="form-control" type="date" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="horaFin">Hora de fin</label>
+                                    <input id="horaFin" class="form-control" type="time" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="idRol" class="form-label">Organizador</label>
+                            <select class="form-select" id="organizadores" required>
+                                <option value="">Selecciona un organizador</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Selecciona un organizador.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="idRol" class="form-label">Categoría</label>
+                            <select class="form-select" id="categorias" required>
+                                <option value="">Selecciona una categoría</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Selecciona una categoría.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="formFile" class="form-label">Cartel / Imagen del evento</label>
+                            <input class="form-control" type="file" id="formFile">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary bg-danger" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="formEditarEvento" class="btn btn-primary">Guardar cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../js/scripts.js"></script>
     <script src="../js/eventos.js"></script>
 </body>
