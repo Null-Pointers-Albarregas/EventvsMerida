@@ -25,9 +25,6 @@ window.addEventListener("DOMContentLoaded", async (event) => {
       );
     });
   }
-
-  document.getElementById("nombreUsuario").innerText = obtenerNombreUsuario();
-
 });
 
 function mostrarAlerta(tipo, mensaje) {
@@ -75,7 +72,7 @@ function obtenerNombreUsuario() {
 
 function logeado() {
   const nombreUsuario = obtenerNombreUsuario();
-  if (!nombreUsuario) {
+  if (!nombreUsuario && window.location.pathname !== "/html/login.html") {
     window.location.href = `${window.location.origin}/html/login.html`;
   } else {
     document.getElementById("nombreUsuario").innerText = nombreUsuario;
