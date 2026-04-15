@@ -56,7 +56,7 @@ window.addEventListener("DOMContentLoaded", async (event) => {
     <img src="${evento.foto}" alt="${evento.titulo}" class="img-fluid img-thumbnail img-evento-modal mt-3 mb-2"><br>
     <p class="mb-1"><strong>Descripción:</strong> ${evento.descripcion}</p>
     <p><b>Fecha inicio:</b> ${formatearFecha(evento.fechaInicio)}</p>
-    <p><b>Fecha fin:</b> ${evento.fechaFin}</p>
+    <p><b>Fecha fin:</b> ${formatearFecha(evento.fechaFin)}</p>
     <p><b>Localización:</b> ${evento.localizacion}</p>
     <p><b>Organizador:</b> ${evento.emailUsuario}</p>
     <p><b>Categoría:</b> ${evento.nombreCategoria}</p>
