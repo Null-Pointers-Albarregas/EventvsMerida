@@ -2,6 +2,8 @@ package es.nullpointers.eventvsmerida.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
@@ -28,8 +30,8 @@ public record EventoCrearRequest(
         @NotBlank
         String localizacion,
 
-        @NotBlank
-        String foto,
+        String url,
+        MultipartFile ficheroImagen,
 
         @NotNull
         long idUsuario,
