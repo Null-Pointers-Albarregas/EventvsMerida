@@ -21,10 +21,7 @@ class SharedPreferencesService {
   // API principal de sesion
   // ===========================
 
-  static Future<void> iniciarSesion({
-    required Usuario usuario,
-    required bool autoLogin,
-  }) async {
+  static Future<void> iniciarSesion({required Usuario usuario, required bool autoLogin}) async {
     usuarioSesionActual = usuario;
 
     final prefs = await _prefs;
