@@ -8,6 +8,7 @@
 //
 
 window.addEventListener("DOMContentLoaded", async (event) => {
+  logeado();
   // Toggle the side navigation
   const sidebarToggle = document.body.querySelector("#sidebarToggle");
   if (sidebarToggle) {
@@ -70,4 +71,18 @@ function mostrarAlerta(tipo, mensaje) {
 
 function obtenerNombreUsuario() {
   return localStorage.getItem("nombreUsuario");
+}
+
+function logeado() {
+  const nombreUsuario = obtenerNombreUsuario();
+  if (!nombreUsuario) {
+    window.location.href = `${window.location.origin}/html/login.html`;
+  } else {
+    document.getElementById("nombreUsuario").innerText = nombreUsuario;
+  }
+}
+
+function cerrarSesion() {
+  localStorage.removeItem("nombreUsuario");
+  window.location.href = `${window.location.origin}/html/login.html`;
 }
