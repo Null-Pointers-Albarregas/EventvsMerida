@@ -11,28 +11,19 @@ import '../models/usuario.dart';
 class ApiService {
   static const String baseUrl = 'https://eventvsmerida.onrender.com/api';
   static const Duration _tiempoLimite = Duration(seconds: 10);
-
-  static const Map<String, String> _cabecerasJson = {
-    'Content-Type': 'application/json',
-  };
-
-  static const String _mensajeSinConexion =
-      'No hay conexión. Intenta de nuevo más tarde.';
+  static const Map<String, String> _cabecerasJson = {'Content-Type': 'application/json',};
+  static const String _mensajeSinConexion = 'No hay conexión. Intenta de nuevo más tarde.';
 
   // ============================================================================
   // USUARIOS
   // ============================================================================
 
   /// POST /api/usuarios/add
-  static Future<ApiResponse<Usuario>> registrarUsuario(
-      Map<String, dynamic> datosUsuario,
-      ) async {
+  static Future<ApiResponse<Usuario>> registrarUsuario(Map<String, dynamic> datosUsuario,) async {
     final respuesta = await _post('/usuarios/add', datosUsuario);
 
     if (respuesta == null) {
-      return ApiResponse<Usuario>.sinConexion(
-        mensaje: _mensajeSinConexion,
-      );
+      return ApiResponse<Usuario>.sinConexion(mensaje: _mensajeSinConexion,);
     }
 
     if (respuesta.statusCode == 201) {
@@ -57,14 +48,8 @@ class ApiService {
   }
 
   /// POST /api/usuarios/login
-  static Future<ApiResponse<Usuario>> iniciarSesion(
-      String email,
-      String password,
-      ) async {
-    final respuesta = await _post('/usuarios/login', {
-      'email': email,
-      'password': password,
-    });
+  static Future<ApiResponse<Usuario>> iniciarSesion(String email, String password) async {
+    final respuesta = await _post('/usuarios/login', {'email': email, 'password': password,});
 
     if (respuesta == null) {
       return ApiResponse<Usuario>.sinConexion(
@@ -72,25 +57,44 @@ class ApiService {
       );
     }
 
-    if (respuesta.statusCode == 200) {
-      try {
-        final mapa = jsonDecode(respuesta.body) as Map<String, dynamic>;
-        final usuario = Usuario.fromJson(mapa);
+    switch (respuesta.statusCode) {
+      case 200:
+        try {
+          final mapa = jsonDecode(respuesta.body) as Map<String, dynamic>;
+          final usuario = Usuario.fromJson(mapa);
 
-        return ApiResponse<Usuario>.exito(
-          datos: usuario,
-          mensaje: 'Login exitoso',
-          codigoEstado: 200,
-        );
-      } catch (_) {
+          return ApiResponse<Usuario>.exito(
+            datos: usuario,
+            mensaje: 'Login exitoso',
+            codigoEstado: 200,
+          );
+        } catch (_) {
+          return ApiResponse<Usuario>.error(
+            mensaje: 'No se pudo leer la respuesta del servidor',
+            codigoEstado: 200,
+          );
+        }
+
+      case 400:
+      case 401:
+      case 404:
         return ApiResponse<Usuario>.error(
-          mensaje: 'No se pudo leer la respuesta del servidor',
-          codigoEstado: 200,
+          mensaje: 'Credenciales inválidas.',
+          codigoEstado: respuesta.statusCode,
         );
-      }
-    }
 
-    return _manejarError<Usuario>(respuesta);
+      case 500:
+        return ApiResponse<Usuario>.error(
+          mensaje: 'Error interno del servidor. Intenta más tarde.',
+          codigoEstado: 500,
+        );
+
+      default:
+        return ApiResponse<Usuario>.error(
+          mensaje: 'Error desconocido (${respuesta.statusCode}).',
+          codigoEstado: respuesta.statusCode,
+        );
+    }
   }
 
   // ============================================================================
@@ -135,14 +139,7 @@ class ApiService {
   // ============================================================================
 
   /// GET /api/usuario-eventos/guardados?emailUsuario=
-  /// Contrato final:
-  /// - 200 => lista de eventos (puede ser [])
-  /// - 400 => parámetro inválido/ausente
-  /// - 404 => usuario no existe
-  /// - 500 => error servidor
-  static Future<ApiResponse<List<Evento>>> obtenerEventosGuardados(
-      String emailUsuario,
-      ) async {
+  static Future<ApiResponse<List<Evento>>> obtenerEventosGuardados(String emailUsuario,) async {
     final uri = Uri.parse('$baseUrl/usuario-eventos/guardados').replace(
       queryParameters: {'emailUsuario': emailUsuario},
     );
@@ -179,13 +176,7 @@ class ApiService {
   }
 
   /// POST /api/usuario-eventos/guardar
-  /// Contrato final: 201
-  static Future<ApiResponse<void>> guardarEventoUsuario(
-      String emailUsuario,
-      String tituloEvento,
-      DateTime fechaInicio,
-      DateTime fechaFin,
-      ) async {
+  static Future<ApiResponse<void>> guardarEventoUsuario(String emailUsuario, String tituloEvento, DateTime fechaInicio, DateTime fechaFin) async {
     final respuesta = await _post('/usuario-eventos/guardar', {
       'emailUsuario': emailUsuario,
       'tituloEvento': tituloEvento,
@@ -211,13 +202,7 @@ class ApiService {
   }
 
   /// DELETE /api/usuario-eventos/eliminar
-  /// Contrato final: 204
-  static Future<ApiResponse<void>> eliminarEventoUsuario(
-      String emailUsuario,
-      String tituloEvento,
-      DateTime fechaInicio,
-      DateTime fechaFin,
-      ) async {
+  static Future<ApiResponse<void>> eliminarEventoUsuario(String emailUsuario, String tituloEvento, DateTime fechaInicio, DateTime fechaFin) async {
     final respuesta = await _delete('/usuario-eventos/eliminar', {
       'emailUsuario': emailUsuario,
       'tituloEvento': tituloEvento,
@@ -274,9 +259,7 @@ class ApiService {
     });
   }
 
-  static Future<http.Response?> _solicitud(
-      Future<http.Response> Function() accion,
-      ) async {
+  static Future<http.Response?> _solicitud(Future<http.Response> Function() accion,) async {
     try {
       return await accion().timeout(_tiempoLimite);
     } on TimeoutException {
@@ -298,9 +281,7 @@ class ApiService {
     switch (respuesta.statusCode) {
       case 400:
         return ApiResponse<T>.error(
-          mensaje: mensaje.isEmpty
-              ? 'Datos inválidos. Revisa los campos.'
-              : mensaje,
+          mensaje: mensaje.isEmpty ? 'Datos inválidos. Revisa los campos.' : mensaje,
           codigoEstado: 400,
         );
 
@@ -312,9 +293,7 @@ class ApiService {
 
       case 403:
         return ApiResponse<T>.error(
-          mensaje: mensaje.isEmpty
-              ? 'No tienes permisos para realizar esta acción.'
-              : mensaje,
+          mensaje: mensaje.isEmpty ? 'No tienes permisos para realizar esta acción.' : mensaje,
           codigoEstado: 403,
         );
 
@@ -326,9 +305,7 @@ class ApiService {
 
       case 409:
         return ApiResponse<T>.error(
-          mensaje: mensaje.isEmpty
-              ? 'Ya existe un conflicto con los datos enviados.'
-              : mensaje,
+          mensaje: mensaje.isEmpty ? 'Ya existe un conflicto con los datos enviados.' : mensaje,
           codigoEstado: 409,
         );
 
@@ -340,9 +317,7 @@ class ApiService {
 
       default:
         return ApiResponse<T>.error(
-          mensaje: mensaje.isEmpty
-              ? 'Error desconocido (${respuesta.statusCode}).'
-              : mensaje,
+          mensaje: mensaje.isEmpty ? 'Error desconocido (${respuesta.statusCode}).' : mensaje,
           codigoEstado: respuesta.statusCode,
         );
     }
@@ -355,10 +330,7 @@ class ApiService {
       final decodificado = jsonDecode(cuerpo);
 
       if (decodificado is Map<String, dynamic>) {
-        final mensaje = decodificado['mensaje'] ??
-            decodificado['message'] ??
-            decodificado['error'];
-
+        final mensaje = decodificado['mensaje'] ?? decodificado['message'] ?? decodificado['error'];
         return mensaje?.toString() ?? '';
       }
     } catch (_) {

@@ -4,18 +4,9 @@ class ApiResponse<T> {
   final T? datos;
   final int codigoEstado;
 
-  const ApiResponse({
-    required this.exito,
-    required this.mensaje,
-    required this.codigoEstado,
-    this.datos,
-  });
+  const ApiResponse({required this.exito, required this.mensaje, required this.codigoEstado, this.datos});
 
-  factory ApiResponse.exito({
-    required T? datos,
-    required String mensaje,
-    required int codigoEstado,
-  }) {
+  factory ApiResponse.exito({required T? datos, required String mensaje, required int codigoEstado}) {
     return ApiResponse<T>(
       exito: true,
       mensaje: mensaje,
@@ -24,10 +15,7 @@ class ApiResponse<T> {
     );
   }
 
-  factory ApiResponse.error({
-    required String mensaje,
-    required int codigoEstado,
-  }) {
+  factory ApiResponse.error({required String mensaje, required int codigoEstado}) {
     return ApiResponse<T>(
       exito: false,
       mensaje: mensaje,
@@ -36,9 +24,7 @@ class ApiResponse<T> {
     );
   }
 
-  factory ApiResponse.sinConexion({
-    required String mensaje,
-  }) {
+  factory ApiResponse.sinConexion({required String mensaje}) {
     return ApiResponse<T>(
       exito: false,
       mensaje: mensaje,

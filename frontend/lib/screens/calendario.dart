@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+
 import '../models/evento.dart';
 import '../services/api_service.dart';
 
@@ -12,6 +13,10 @@ class Calendario extends StatefulWidget {
 }
 
 class _CalendarioState extends State<Calendario> {
+  // ===========================================================================
+  // ESTADO
+  // ===========================================================================
+
   late final DateTime _primerMesPermitido;
   late final DateTime _ultimoMesPermitido;
   late final List<int> _years;
@@ -19,9 +24,11 @@ class _CalendarioState extends State<Calendario> {
   late DateTime _focusedDay;
   DateTime? _selectedDay;
 
+  bool _cargandoEventos = true;
+  String? _mensajeError;
   Map<DateTime, List<Evento>> _eventosMap = {};
 
-  final List<String> _months = [
+  static const List<String> _months = [
     'Enero',
     'Febrero',
     'Marzo',
@@ -33,12 +40,19 @@ class _CalendarioState extends State<Calendario> {
     'Septiembre',
     'Octubre',
     'Noviembre',
-    'Diciembre'
+    'Diciembre',
   ];
+
+  ColorScheme get _cs => Theme.of(context).colorScheme;
+
+  // ===========================================================================
+  // CICLO DE VIDA
+  // ===========================================================================
 
   @override
   void initState() {
     super.initState();
+
     final ahora = DateTime.now();
 
     _primerMesPermitido = DateTime(ahora.year, ahora.month, 1);
@@ -55,18 +69,36 @@ class _CalendarioState extends State<Calendario> {
     _cargarEventos();
   }
 
+  // ===========================================================================
+  // CARGA DE DATOS
+  // ===========================================================================
+
   Future<void> _cargarEventos() async {
+    setState(() {
+      _cargandoEventos = true;
+      _mensajeError = null;
+    });
+
     final respuesta = await ApiService.obtenerEventos();
+
     if (!mounted) return;
 
     if (!respuesta.exito) {
+      setState(() {
+        _cargandoEventos = false;
+        _mensajeError = respuesta.mensaje;
+      });
+
       _mostrarMensaje(respuesta.mensaje);
       return;
     }
 
-    final eventos = respuesta.datos ?? [];
+    final eventos = respuesta.datos ?? const <Evento>[];
+
     setState(() {
       _eventosMap = _crearMapaPorDia(eventos);
+      _cargandoEventos = false;
+      _mensajeError = null;
     });
   }
 
@@ -74,17 +106,8 @@ class _CalendarioState extends State<Calendario> {
     final mapa = <DateTime, List<Evento>>{};
 
     for (final evento in eventos) {
-      var dia = DateTime(
-        evento.fechaInicio.year,
-        evento.fechaInicio.month,
-        evento.fechaInicio.day,
-      );
-
-      final fin = DateTime(
-        evento.fechaFin.year,
-        evento.fechaFin.month,
-        evento.fechaFin.day,
-      );
+      var dia = _normalizarFecha(evento.fechaInicio);
+      final fin = _normalizarFecha(evento.fechaFin);
 
       while (!dia.isAfter(fin)) {
         mapa.putIfAbsent(dia, () => []);
@@ -94,6 +117,30 @@ class _CalendarioState extends State<Calendario> {
     }
 
     return mapa;
+  }
+
+  // ===========================================================================
+  // HELPERS DE FECHAS
+  // ===========================================================================
+
+  DateTime _normalizarFecha(DateTime fecha) {
+    return DateTime(fecha.year, fecha.month, fecha.day);
+  }
+
+  bool _esMismoDia(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  bool _esHoraCero(DateTime fecha) {
+    return fecha.hour == 0 && fecha.minute == 0;
+  }
+
+  String _formatearHora(DateTime fecha) {
+    return DateFormat('HH:mm').format(fecha);
+  }
+
+  String _formatearFecha(DateTime fecha) {
+    return DateFormat('dd/MM/yyyy').format(fecha);
   }
 
   bool _esAntesDelPrimerMes(DateTime fecha) {
@@ -106,6 +153,110 @@ class _CalendarioState extends State<Calendario> {
     return mes.isAfter(_ultimoMesPermitido);
   }
 
+  bool _esEventoDeUnSoloDia(Evento evento) {
+    return _esMismoDia(evento.fechaInicio, evento.fechaFin);
+  }
+
+  // ===========================================================================
+  // ORDENACIÓN DE EVENTOS
+  // ===========================================================================
+
+  int _prioridadEvento(Evento evento, DateTime diaSeleccionado) {
+    final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
+    final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
+
+    if (finalizaHoy) return 0; // primero los que finalizan
+    if (iniciaHoy) return 1; // después los que inician
+    return 2; // luego los que están en curso
+  }
+
+  int _horaReferencia(Evento evento, DateTime diaSeleccionado) {
+    final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
+    final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
+
+    if (finalizaHoy) return evento.fechaFin.hour * 60 + evento.fechaFin.minute;
+    if (iniciaHoy) return evento.fechaInicio.hour * 60 + evento.fechaInicio.minute;
+
+    return evento.fechaInicio.hour * 60 + evento.fechaInicio.minute;
+  }
+
+  List<Evento> _eventosDelDiaSeleccionado() {
+    final fechaSeleccionada = _selectedDay ?? _focusedDay;
+    final fechaNormalizada = _normalizarFecha(fechaSeleccionada);
+
+    final lista = List<Evento>.from(_eventosMap[fechaNormalizada] ?? []);
+
+    lista.sort((a, b) {
+      final prioridadA = _prioridadEvento(a, fechaNormalizada);
+      final prioridadB = _prioridadEvento(b, fechaNormalizada);
+
+      if (prioridadA != prioridadB) {
+        return prioridadA.compareTo(prioridadB);
+      }
+
+      final horaA = _horaReferencia(a, fechaNormalizada);
+      final horaB = _horaReferencia(b, fechaNormalizada);
+
+      if (horaA != horaB) {
+        return horaA.compareTo(horaB);
+      }
+
+      return a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase());
+    });
+
+    return lista;
+  }
+
+  // ===========================================================================
+  // TEXTOS PARA LA UI
+  // ===========================================================================
+
+  String _textoEtiquetaTiempo(Evento evento, DateTime diaSeleccionado) {
+    final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
+    final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
+
+    final inicioHora = _formatearHora(evento.fechaInicio);
+    final finHora = _formatearHora(evento.fechaFin);
+
+    final inicioCero = _esHoraCero(evento.fechaInicio);
+    final finCero = _esHoraCero(evento.fechaFin);
+
+    if (_esEventoDeUnSoloDia(evento)) {
+      if (inicioCero && finCero) return 'Todo el día';
+      if (inicioHora == finHora) return inicioHora;
+      if (inicioCero) return finHora;
+      if (finCero) return inicioHora;
+      return '$inicioHora - $finHora';
+    }
+
+    if (finalizaHoy) {
+      if (finCero) return 'Finaliza';
+      return 'Finaliza $finHora';
+    }
+
+    if (iniciaHoy) {
+      if (inicioCero) return 'Inicia';
+      return 'Inicia $inicioHora';
+    }
+
+    return 'En curso';
+  }
+
+  String _textoFechaCard(Evento evento) {
+    final inicio = _formatearFecha(evento.fechaInicio);
+    final fin = _formatearFecha(evento.fechaFin);
+
+    if (_esEventoDeUnSoloDia(evento)) {
+      return 'Fecha: $inicio';
+    }
+
+    return 'Fecha: $inicio - $fin';
+  }
+
+  // ===========================================================================
+  // MENSAJES
+  // ===========================================================================
+
   void _mostrarMensaje(String mensaje) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -113,9 +264,13 @@ class _CalendarioState extends State<Calendario> {
     );
   }
 
+  // ===========================================================================
+  // SELECTORES DE MES Y AÑO
+  // ===========================================================================
+
   List<DropdownMenuItem<int>> _buildMonthItems() {
-    int mesInicio = 1;
-    int mesFin = 12;
+    var mesInicio = 1;
+    var mesFin = 12;
 
     if (_focusedDay.year == _primerMesPermitido.year) {
       mesInicio = _primerMesPermitido.month;
@@ -137,188 +292,30 @@ class _CalendarioState extends State<Calendario> {
     );
   }
 
-  DateTime _normalizar(DateTime fecha) => DateTime(fecha.year, fecha.month, fecha.day);
-
-  bool _esMismoDia(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-
-  bool _esHoraCero(DateTime fecha) => fecha.hour == 0 && fecha.minute == 0;
-
-  int _minutosDelDia(DateTime fecha) => fecha.hour * 60 + fecha.minute;
-
-  int _prioridadEstado(Evento evento, DateTime diaSeleccionado) {
-    final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
-    final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
-
-    if (finalizaHoy) return 0; // 1) finalizan
-    if (iniciaHoy) return 1; // 2) inician
-    return 2; // 3) en curso
-  }
-
-  int _horaOrden(Evento evento, DateTime diaSeleccionado) {
-    final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
-    final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
-
-    if (finalizaHoy) return _minutosDelDia(evento.fechaFin);
-    if (iniciaHoy) return _minutosDelDia(evento.fechaInicio);
-    return _minutosDelDia(evento.fechaInicio);
-  }
-
-  String _etiquetaTiempo(Evento evento, DateTime diaSeleccionado) {
-    final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
-    final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
-
-    final inicioHora = DateFormat('HH:mm').format(evento.fechaInicio);
-    final finHora = DateFormat('HH:mm').format(evento.fechaFin);
-
-    final inicioCero = _esHoraCero(evento.fechaInicio);
-    final finCero = _esHoraCero(evento.fechaFin);
-
-    if (iniciaHoy && finalizaHoy) {
-      if (inicioCero && finCero) return 'Todo el dia';
-      if (inicioHora == finHora) return inicioHora;
-      if (inicioCero) return finHora;
-      if (finCero) return inicioHora;
-      return '$inicioHora - $finHora';
+  void _actualizarFechaVisible(DateTime nuevaFecha) {
+    if (_esAntesDelPrimerMes(nuevaFecha)) {
+      _mostrarMensaje('No puedes ir a meses anteriores al actual');
+      return;
     }
 
-    if (finalizaHoy) {
-      if (finCero) return 'Finaliza';
-      return 'Finaliza $finHora';
+    if (_esDespuesDelUltimoMes(nuevaFecha)) {
+      _mostrarMensaje('No puedes avanzar más allá de diciembre de 2030');
+      return;
     }
 
-    if (iniciaHoy) {
-      if (inicioCero) return 'Inicia';
-      return 'Inicia $inicioHora';
-    }
-
-    return 'En curso';
+    setState(() {
+      _focusedDay = nuevaFecha;
+      _selectedDay = nuevaFecha;
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Column(
-      children: [
-        const SizedBox(height: 60),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildDropdown(
-              value: _focusedDay.month,
-              items: _buildMonthItems(),
-              onChanged: (val) {
-                if (val == null) return;
-                final nuevaFecha = DateTime(_focusedDay.year, val, 1);
-
-                if (_esAntesDelPrimerMes(nuevaFecha)) {
-                  _mostrarMensaje('No puedes ir a meses anteriores al actual');
-                  return;
-                }
-
-                if (_esDespuesDelUltimoMes(nuevaFecha)) {
-                  _mostrarMensaje('No puedes avanzar mas alla de diciembre de 2030');
-                  return;
-                }
-
-                setState(() {
-                  _focusedDay = nuevaFecha;
-                  _selectedDay = nuevaFecha;
-                });
-              },
-            ),
-            const SizedBox(width: 15),
-            _buildDropdown(
-              value: _focusedDay.year,
-              items: _years
-                  .map(
-                    (y) => DropdownMenuItem(
-                  value: y,
-                  child: Text(y.toString()),
-                ),
-              )
-                  .toList(),
-              onChanged: (val) {
-                if (val == null) return;
-                final nuevaFecha = DateTime(val, _focusedDay.month, 1);
-
-                if (_esAntesDelPrimerMes(nuevaFecha)) {
-                  _mostrarMensaje('No puedes ir a meses anteriores al actual');
-                  return;
-                }
-
-                if (_esDespuesDelUltimoMes(nuevaFecha)) {
-                  _mostrarMensaje('No puedes avanzar mas alla de diciembre de 2030');
-                  return;
-                }
-
-                setState(() {
-                  _focusedDay = nuevaFecha;
-                  _selectedDay = nuevaFecha;
-                });
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        TableCalendar(
-          firstDay: _primerMesPermitido,
-          lastDay: _ultimoMesPermitido,
-          focusedDay: _focusedDay,
-          headerVisible: false,
-          availableGestures: AvailableGestures.none,
-          eventLoader: (day) {
-            final fechaNormalizada = DateTime(day.year, day.month, day.day);
-            return _eventosMap[fechaNormalizada] ?? [];
-          },
-          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-          onDaySelected: (selectedDay, focusedDay) {
-            setState(() {
-              _selectedDay = selectedDay;
-              _focusedDay = focusedDay;
-            });
-          },
-          calendarStyle: CalendarStyle(
-            todayDecoration: BoxDecoration(
-              color: colorScheme.secondary,
-              shape: BoxShape.circle,
-            ),
-            selectedDecoration: BoxDecoration(
-              color: colorScheme.primary,
-              shape: BoxShape.circle,
-            ),
-            markerDecoration: BoxDecoration(
-              color: colorScheme.primary,
-              shape: BoxShape.circle,
-            ),
-            markersAlignment: Alignment.bottomCenter,
-            markersMaxCount: 1,
-            selectedTextStyle: TextStyle(color: colorScheme.onPrimary),
-            todayTextStyle: TextStyle(color: colorScheme.onSecondary),
-          ),
-        ),
-        const SizedBox(height: 12),
-        const Divider(),
-        Expanded(
-          child: _buildEventoLista(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDropdown<T>({
-    required T value,
-    required List<DropdownMenuItem<T>> items,
-    required ValueChanged<T?> onChanged,
-  }) {
+  Widget _buildDropdown<T>({required T value, required List<DropdownMenuItem<T>> items, required ValueChanged<T?> onChanged,}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+          color: _cs.primary.withValues(alpha: 128),
         ),
       ),
       child: DropdownButtonHideUnderline(
@@ -327,7 +324,7 @@ class _CalendarioState extends State<Calendario> {
           items: items,
           onChanged: onChanged,
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
+            color: _cs.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -335,76 +332,248 @@ class _CalendarioState extends State<Calendario> {
     );
   }
 
-  Widget _buildEventoLista() {
-    final fechaSeleccionada = _selectedDay ?? _focusedDay;
-    final fechaNormalizada = DateTime(
-      fechaSeleccionada.year,
-      fechaSeleccionada.month,
-      fechaSeleccionada.day,
+  Widget _buildSelectoresFecha() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildDropdown<int>(
+          value: _focusedDay.month,
+          items: _buildMonthItems(),
+          onChanged: (val) {
+            if (val == null) return;
+            _actualizarFechaVisible(
+              DateTime(_focusedDay.year, val, 1),
+            );
+          },
+        ),
+        const SizedBox(width: 15),
+        _buildDropdown<int>(
+          value: _focusedDay.year,
+          items: _years
+              .map(
+                (anio) => DropdownMenuItem<int>(
+              value: anio,
+              child: Text(anio.toString()),
+            ),
+          )
+              .toList(),
+          onChanged: (val) {
+            if (val == null) return;
+            _actualizarFechaVisible(
+              DateTime(val, _focusedDay.month, 1),
+            );
+          },
+        ),
+      ],
     );
+  }
 
-    final lista = List<Evento>.from(_eventosMap[fechaNormalizada] ?? []);
+  // ===========================================================================
+  // CALENDARIO
+  // ===========================================================================
 
-    lista.sort((a, b) {
-      final prioridadA = _prioridadEstado(a, fechaNormalizada);
-      final prioridadB = _prioridadEstado(b, fechaNormalizada);
+  Widget _buildCalendario() {
+    return TableCalendar(
+      firstDay: _primerMesPermitido,
+      lastDay: _ultimoMesPermitido,
+      focusedDay: _focusedDay,
+      headerVisible: false,
+      availableGestures: AvailableGestures.none,
+      eventLoader: (day) {
+        final fechaNormalizada = _normalizarFecha(day);
+        return _eventosMap[fechaNormalizada] ?? const [];
+      },
+      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+      onDaySelected: (selectedDay, focusedDay) {
+        setState(() {
+          _selectedDay = _normalizarFecha(selectedDay);
+          _focusedDay = _normalizarFecha(focusedDay);
+        });
+      },
+      calendarStyle: CalendarStyle(
+        todayDecoration: BoxDecoration(
+          color: _cs.secondary,
+          shape: BoxShape.circle,
+        ),
+        selectedDecoration: BoxDecoration(
+          color: _cs.primary,
+          shape: BoxShape.circle,
+        ),
+        markerDecoration: BoxDecoration(
+          color: _cs.primary,
+          shape: BoxShape.circle,
+        ),
+        markersAlignment: Alignment.bottomCenter,
+        markersMaxCount: 1,
+        selectedTextStyle: TextStyle(color: _cs.onPrimary),
+        todayTextStyle: TextStyle(color: _cs.onSecondary),
+      ),
+    );
+  }
 
-      if (prioridadA != prioridadB) {
-        return prioridadA.compareTo(prioridadB);
-      }
+  // ===========================================================================
+  // LISTA DE EVENTOS
+  // ===========================================================================
 
-      final horaA = _horaOrden(a, fechaNormalizada);
-      final horaB = _horaOrden(b, fechaNormalizada);
+  Widget _buildEventoBadge(String texto) {
+    return Container(
+      width: 100,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: _cs.primary.withValues(alpha: 20),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _cs.primary.withValues(alpha: 64),
+        ),
+      ),
+      child: Text(
+        texto,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 11,
+          color: _cs.onSurface,
+        ),
+      ),
+    );
+  }
 
-      if (horaA != horaB) {
-        return horaA.compareTo(horaB);
-      }
+  Widget _buildEventoCard(Evento evento) {
+    final fechaSeleccionada = _normalizarFecha(_selectedDay ?? _focusedDay);
+    final etiquetaTiempo = _textoEtiquetaTiempo(evento, fechaSeleccionada);
+    final textoFecha = _textoFechaCard(evento);
 
-      return a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase());
-    });
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 8,
+        ),
+        minLeadingWidth: 96,
+        leading: _buildEventoBadge(etiquetaTiempo),
+        title: Text(
+          evento.titulo,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (evento.localizacion.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                evento.localizacion,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: 2),
+            Text(
+              textoFecha,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-    if (lista.isEmpty) {
+  Widget _buildEstadoCentro({required IconData icono, required String mensaje, Widget? accion,}) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icono,
+              size: 42,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              mensaje,
+              textAlign: TextAlign.center,
+            ),
+            if (accion != null) ...[
+              const SizedBox(height: 12),
+              accion,
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventoLista() {
+    if (_cargandoEventos) {
       return const Center(
-        child: Text("No hay eventos para este dia"),
+        child: CircularProgressIndicator(),
       );
     }
 
-    return ListView.builder(
+    if (_mensajeError != null) {
+      return _buildEstadoCentro(
+        icono: Icons.error_outline,
+        mensaje: _mensajeError!,
+        accion: TextButton(
+          onPressed: _cargarEventos,
+          child: const Text('Reintentar'),
+        ),
+      );
+    }
+
+    final lista = _eventosDelDiaSeleccionado();
+
+    if (lista.isEmpty) {
+      return _buildEstadoCentro(
+        icono: Icons.event_busy,
+        mensaje: 'No hay eventos para este día',
+      );
+    }
+
+    return ListView.separated(
       itemCount: lista.length,
+      padding: const EdgeInsets.only(bottom: 12),
       itemBuilder: (context, index) {
         final evento = lista[index];
-        final etiqueta = _etiquetaTiempo(evento, fechaNormalizada);
-
-        return Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            leading: SizedBox(
-              width: 84,
-              child: Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  etiqueta,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                    color: Theme.of(context).colorScheme.surface,
-                  ),
-                ),
-              ),
-            ),
-            title: Text(evento.titulo),
-            subtitle: Text(evento.localizacion),
-          ),
-        );
+        return _buildEventoCard(evento);
       },
+      separatorBuilder: (context, index) => const SizedBox(height: 0),
+    );
+  }
+
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 60),
+
+        // SELECTORES DE MES Y AÑO
+        _buildSelectoresFecha(),
+        const SizedBox(height: 12),
+
+        // CALENDARIO
+        _buildCalendario(),
+        const SizedBox(height: 12),
+        const Divider(),
+
+        // LISTA DE EVENTOS
+        Expanded(
+          child: _buildEventoLista(),
+        ),
+      ],
     );
   }
 }

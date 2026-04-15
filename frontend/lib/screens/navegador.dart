@@ -23,9 +23,16 @@ class _NavegadorState extends State<Navegador> {
       case AppRoutes.calendario:
         return 2;
       case AppRoutes.perfil:
+      case AppRoutes.registro:
+      case AppRoutes.login:
+      case AppRoutes.cuenta:
+      case AppRoutes.eventosGuardados:
+      case AppRoutes.terminos:
+      case AppRoutes.privacidad:
         return 3;
+      default:
+        return 0;
     }
-    return 0;
   }
 
   void _cambiarRuta(int indice) {
