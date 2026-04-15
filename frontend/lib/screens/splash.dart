@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../core/router/app_routes.dart';
 
 class Splash extends StatefulWidget {
@@ -10,25 +13,61 @@ class Splash extends StatefulWidget {
 }
 
 class _SplashState extends State<Splash> {
+  // ===========================================================================
+  // VARIABLES
+  // ===========================================================================
+
+  Timer? _timer;
+
+  ColorScheme get _cs => Theme.of(context).colorScheme;
+
+  // ===========================================================================
+  // CICLO DE VIDA
+  // ===========================================================================
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 2), () {
-      context.go(AppRoutes.eventos);
-    });
+    _timer = Timer(const Duration(seconds: 2), _irAEventos);
   }
 
   @override
-  Widget build(BuildContext context) {
-    final colorFondo = Theme.of(context).colorScheme.surface;
-    return Scaffold(
-      backgroundColor: colorFondo,
-      body: Center(
-        child: Image.asset(
-          'assets/images/logo-eventvs-merida-no-bg.png',
-          width: 350,
-        ),
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // ===========================================================================
+  // FUNCIONES AUXILIARES
+  // ===========================================================================
+
+  void _irAEventos() {
+    if (!mounted) return;
+    context.go(AppRoutes.eventos);
+  }
+
+  // ===========================================================================
+  // INTERFAZ
+  // ===========================================================================
+
+  Widget _logoSplash() {
+    return Center(
+      child: Image.asset(
+        'assets/images/logo-eventvs-merida-no-bg.png',
+        width: 350,
       ),
+    );
+  }
+
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _cs.surface,
+      body: _logoSplash(),
     );
   }
 }

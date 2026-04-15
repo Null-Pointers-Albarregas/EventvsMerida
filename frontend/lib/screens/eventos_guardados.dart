@@ -14,9 +14,19 @@ class EventosGuardados extends StatefulWidget {
 }
 
 class _EventosGuardadosState extends State<EventosGuardados> {
+  // ===========================================================================
+  // VARIABLES
+  // ===========================================================================
+
   Usuario? _usuario;
   List<Evento> _eventos = [];
   bool _cargando = true;
+
+  ColorScheme get _cs => Theme.of(context).colorScheme;
+
+  // ===========================================================================
+  // CICLO DE VIDA
+  // ===========================================================================
 
   @override
   void initState() {
@@ -24,11 +34,43 @@ class _EventosGuardadosState extends State<EventosGuardados> {
     _cargarDatos();
   }
 
+  // ===========================================================================
+  // CARGA DE DATOS
+  // ===========================================================================
+
+  Future<void> _cargarDatos() async {
+    final usuario = await SharedPreferencesService.cargarUsuario();
+    final respuesta = await ApiService.obtenerEventosGuardados(usuario!.email);
+
+    if (!mounted) return;
+
+    setState(() {
+      _usuario = usuario;
+      _eventos = respuesta.exito ? (respuesta.datos ?? []) : [];
+      _cargando = false;
+    });
+
+    if (!respuesta.exito) {
+      _mostrarMensajeCarga(respuesta.mensaje);
+    }
+  }
+
+  // ===========================================================================
+  // FUNCIONES AUXILIARES
+  // ===========================================================================
+
   bool _esMismoDia(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  bool _esMismoEvento(Evento a, Evento b) {
+    return a.titulo == b.titulo &&
+        a.fechaInicio == b.fechaInicio &&
+        a.fechaFin == b.fechaFin;
+  }
+
   String _fecha(DateTime fecha) => DateFormat('dd/MM/yyyy').format(fecha);
+
   String _hora(DateTime fecha) => DateFormat('HH:mm').format(fecha);
 
   String _textoFechaEvento(Evento evento) {
@@ -40,40 +82,12 @@ class _EventosGuardadosState extends State<EventosGuardados> {
         'Hasta: ${_fecha(evento.fechaFin)} ${_hora(evento.fechaFin)}';
   }
 
-  Future<void> _cargarDatos() async {
-    final usuario = await SharedPreferencesService.cargarUsuario();
-
-    if (usuario == null) {
-      if (!mounted) return;
-      setState(() {
-        _usuario = null;
-        _eventos = [];
-        _cargando = false;
-      });
-      return;
-    }
-
-    final respuesta = await ApiService.obtenerEventosGuardados(usuario.email);
-
-    if (!mounted) return;
-    setState(() {
-      _usuario = usuario;
-      _eventos = respuesta.exito ? (respuesta.datos ?? []) : [];
-      _cargando = false;
-    });
-
-    if (!respuesta.exito) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(respuesta.mensaje)),
-      );
-    }
-  }
-
   Future<void> _borrarEvento(Evento evento) async {
-    if (_usuario == null) return;
+    final email = _usuario?.email;
+    if (email == null) return;
 
     final respuesta = await ApiService.eliminarEventoUsuario(
-      _usuario!.email,
+      email,
       evento.titulo,
       evento.fechaInicio,
       evento.fechaFin,
@@ -81,13 +95,24 @@ class _EventosGuardadosState extends State<EventosGuardados> {
 
     if (respuesta.exito) {
       setState(() {
-        _eventos.removeWhere((e) =>
-        e.titulo == evento.titulo &&
-            e.fechaInicio == evento.fechaInicio &&
-            e.fechaFin == evento.fechaFin);
+        _eventos.removeWhere((e) => _esMismoEvento(e, evento));
       });
     }
 
+    _mostrarMensajeEliminacion(respuesta.mensaje, respuesta.exito);
+  }
+
+  // ===========================================================================
+  // MENSAJES
+  // ===========================================================================
+
+  void _mostrarMensajeCarga(String mensaje) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensaje)),
+    );
+  }
+
+  void _mostrarMensajeEliminacion(String mensaje, bool exito) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -97,13 +122,13 @@ class _EventosGuardadosState extends State<EventosGuardados> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                respuesta.mensaje,
+                mensaje,
                 style: const TextStyle(color: Colors.white),
               ),
             ),
           ],
         ),
-        backgroundColor: respuesta.exito ? Colors.red : Colors.orange,
+        backgroundColor: exito ? Colors.red : Colors.orange,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.only(
           left: 16,
@@ -117,17 +142,21 @@ class _EventosGuardadosState extends State<EventosGuardados> {
     );
   }
 
-  Widget _cabecera(ColorScheme colorScheme) {
+  // ===========================================================================
+  // INTERFAZ
+  // ===========================================================================
+
+  Widget _cabecera() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-      color: colorScheme.primary,
+      color: _cs.primary,
       child: Column(
         children: [
           CircleAvatar(
-            backgroundColor: colorScheme.surface.withValues(alpha: 0.9),
+            backgroundColor: _cs.surface.withValues(alpha: 0.9),
             radius: 45,
-            child: Icon(Icons.person, color: colorScheme.primary, size: 45),
+            child: Icon(Icons.person, color: _cs.primary, size: 45),
           ),
           const SizedBox(height: 8),
         ],
@@ -135,15 +164,153 @@ class _EventosGuardadosState extends State<EventosGuardados> {
     );
   }
 
+  Widget _contenidoVacio() {
+    return Column(
+      children: [
+        _cabecera(),
+        Expanded(
+          child: Center(
+            child: Text(
+              'No tienes eventos guardados',
+              style: TextStyle(
+                color: _cs.onSurface,
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _imagenEvento(String foto) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(18),
+        bottomLeft: Radius.circular(18),
+      ),
+      child: Image.network(
+        foto,
+        width: 100,
+        height: 110,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: 100,
+          height: 110,
+          color: _cs.secondary.withAlpha(51),
+          child: Icon(
+            Icons.image,
+            color: _cs.primary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tarjetaEvento(Evento evento) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 10,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _cs.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: _cs.primary,
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _cs.onPrimary.withAlpha(64),
+              blurRadius: 5,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            _imagenEvento(evento.foto),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      evento.titulo,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: _cs.primary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      evento.localizacion,
+                      style: TextStyle(
+                        color: _cs.onSurface.withAlpha(178),
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _textoFechaEvento(evento),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _cs.onSurface,
+                        height: 1.25,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete, color: _cs.error),
+              onPressed: () => _borrarEvento(evento),
+              tooltip: 'Eliminar evento',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _listaEventos() {
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        _cabecera(),
+        const SizedBox(height: 16),
+        ..._eventos.map(_tarjetaEvento),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: _cs.surface,
       appBar: AppBar(
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.surface,
+        backgroundColor: _cs.primary,
+        foregroundColor: _cs.surface,
         centerTitle: true,
         title: const Text('Eventos guardados'),
         elevation: 2,
@@ -151,133 +318,8 @@ class _EventosGuardadosState extends State<EventosGuardados> {
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
           : _eventos.isEmpty
-          ? Column(
-        children: [
-          _cabecera(colorScheme),
-          Expanded(
-            child: Center(
-              child: Text(
-                'No tienes eventos guardados',
-                style: TextStyle(
-                  color: colorScheme.onSurface,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ],
-      )
-          : ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          _cabecera(colorScheme),
-          const SizedBox(height: 16),
-          ..._eventos.map(
-                (evento) => Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: colorScheme.primary,
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.onPrimary.withAlpha(64),
-                      blurRadius: 5,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(18),
-                        bottomLeft: Radius.circular(18),
-                      ),
-                      child: Image.network(
-                        evento.foto,
-                        width: 100,
-                        height: 110,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Container(
-                              width: 100,
-                              height: 110,
-                              color: colorScheme.secondary.withAlpha(51),
-                              child: Icon(
-                                Icons.image,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        child: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              evento.titulo,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: colorScheme.primary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              evento.localizacion,
-                              style: TextStyle(
-                                color: colorScheme.onSurface
-                                    .withAlpha(178),
-                                fontSize: 14,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _textoFechaEvento(evento),
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: colorScheme.onSurface,
-                                height: 1.25,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: colorScheme.error),
-                      onPressed: () => _borrarEvento(evento),
-                      tooltip: 'Eliminar evento',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
+          ? _contenidoVacio()
+          : _listaEventos(),
     );
   }
 }

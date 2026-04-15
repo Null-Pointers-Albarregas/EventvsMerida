@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 
-class Terminos extends StatelessWidget {
+class Terminos extends StatefulWidget {
   const Terminos({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Términos y Servicios'),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.surface,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: SingleChildScrollView(
-          child: Text(
-            '''
+  State<Terminos> createState() => _TerminosState();
+}
+
+class _TerminosState extends State<Terminos> {
+  // ===========================================================================
+  // VARIABLES
+  // ===========================================================================
+  ColorScheme get _cs => Theme.of(context).colorScheme;
+
+  static const String _textoTerminos = '''
 Términos y Condiciones de Uso
 
 Bienvenido a Eventvs Mérida. Al utilizar nuestra aplicación, aceptas los siguientes términos:
@@ -40,14 +37,41 @@ Los presentes términos podrán ser modificados para adaptarlos a nuevas normati
 La relación se regirá por la legislación española. Para cualquier controversia, las partes se someten a los juzgados de Mérida (España).
 
 Última actualización: 06/03/2026
-            ''',
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 16,
-            ),
+''';
+
+  // ===========================================================================
+  // INTERFAZ
+  // ===========================================================================
+
+  Widget _contenidoTerminos() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: SingleChildScrollView(
+        child: Text(
+          _textoTerminos,
+          style: TextStyle(
+            color: _cs.onSurface,
+            fontSize: 16,
           ),
         ),
       ),
+    );
+  }
+
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _cs.surface,
+      appBar: AppBar(
+        title: const Text('Términos y Servicios'),
+        backgroundColor: _cs.primary,
+        foregroundColor: _cs.surface,
+      ),
+      body: _contenidoTerminos(),
     );
   }
 }

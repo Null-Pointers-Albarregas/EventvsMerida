@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'router/router.dart';
 import 'theme/controlador_tema.dart';
@@ -19,6 +20,12 @@ class App extends StatelessWidget {
           darkTheme: darkTheme,
           themeMode: mode,
           routerConfig: appRouter,
+          supportedLocales: const [Locale('es', '')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
         );
       },
     );

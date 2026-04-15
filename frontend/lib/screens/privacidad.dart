@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
 
-class Privacidad extends StatelessWidget {
+class Privacidad extends StatefulWidget {
   const Privacidad({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Política de Privacidad'),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.surface,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: SingleChildScrollView(
-          child: Text(
-            '''
+  State<Privacidad> createState() => _PrivacidadState();
+}
+
+class _PrivacidadState extends State<Privacidad> {
+
+  // ===========================================================================
+  // VARIABLES
+  // ===========================================================================
+  ColorScheme get _cs => Theme.of(context).colorScheme;
+
+  static const String _textoPrivacidad = '''
 Política de Privacidad
 
 1. Responsable del tratamiento
@@ -44,14 +42,41 @@ Aplicamos medidas técnicas y organizativas para proteger tus datos de accesos n
 Esta política puede actualizarse en el futuro. Te notificaremos si hay cambios relevantes.
 
 Última actualización: 06/03/2026
-            ''',
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 16,
-            ),
+''';
+
+  // ===========================================================================
+  // INTERFAZ
+  // ===========================================================================
+
+  Widget _contenidoPrivacidad() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: SingleChildScrollView(
+        child: Text(
+          _textoPrivacidad,
+          style: TextStyle(
+            color: _cs.onSurface,
+            fontSize: 16,
           ),
         ),
       ),
+    );
+  }
+
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _cs.surface,
+      appBar: AppBar(
+        title: const Text('Política de Privacidad'),
+        backgroundColor: _cs.primary,
+        foregroundColor: _cs.surface,
+      ),
+      body: _contenidoPrivacidad(),
     );
   }
 }

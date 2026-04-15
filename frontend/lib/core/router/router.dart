@@ -8,7 +8,7 @@ import 'package:eventvsmerida/screens/eventos.dart';
 import 'package:eventvsmerida/screens/eventos_guardados.dart';
 import 'package:eventvsmerida/screens/login.dart';
 import 'package:eventvsmerida/screens/mapa.dart';
-import 'package:eventvsmerida/screens/navegador.dart';
+import 'package:eventvsmerida/screens/menu.dart';
 import 'package:eventvsmerida/screens/perfil.dart';
 import 'package:eventvsmerida/screens/privacidad.dart';
 import 'package:eventvsmerida/screens/registro.dart';
@@ -31,7 +31,7 @@ final List<RouteBase> _appRoutes = [
   ),
   ShellRoute(
     navigatorKey: _shellNavigatorKey,
-    builder: (context, state, child) => Navegador(child: child),
+    builder: (context, state, child) => Menu(child: child),
     routes: _shellRoutes,
   ),
 ];
