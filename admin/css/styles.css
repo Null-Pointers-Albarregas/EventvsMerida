@@ -11806,3 +11806,34 @@ body {
   text-overflow: ellipsis;
   max-width: 300px; /* Opcional, ajusta el ancho */
 }
+
+.img-evento-modal {
+  display: block;
+  margin: 0 auto;
+  max-width: 20em;
+  height: auto;
+}
+
+#loader {
+    display:none; 
+    position:fixed; 
+    top: 2; 
+    left: 100;
+    width: 82em; 
+    height: 40em; 
+    background:rgba(0,0,0,0.6); 
+    z-index:9999;
+}
+
+@keyframes pulso {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+#loader img {
+  animation: pulso 2s infinite;
+}
