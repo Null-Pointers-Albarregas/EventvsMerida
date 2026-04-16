@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -45,9 +47,7 @@ class _MapaState extends State<Mapa> {
       options: const MapOptions(
         initialCenter: _merida,
         initialZoom: _zoomInicial,
-        interactionOptions: InteractionOptions(
-          flags: InteractiveFlag.none,
-        ),
+
       ),
       children: [
         TileLayer(
@@ -60,10 +60,14 @@ class _MapaState extends State<Mapa> {
               point: _merida,
               width: 80,
               height: 80,
-              child: Icon(
-                Icons.location_on,
-                color: _cs.primary,
-                size: 40,
+              child: GestureDetector(
+                onTap: () {
+                  print("Tocado");
+                },
+                // AQUÍ ES DONDE LE PASAS LA RUTA REAL A TU WIDGET
+                child: const PinConFoto(
+                  imagePath: 'assets/images/logo-eventvs-merida.png',
+                ),
               ),
             ),
           ],
@@ -82,41 +86,6 @@ class _MapaState extends State<Mapa> {
     );
   }
 
-  Widget _buildAvisoProximamente() {
-    return Positioned(
-      top: _altoOverlay,
-      left: 8,
-      right: 8,
-      child: Material(
-        elevation: 6,
-        borderRadius: BorderRadius.circular(16),
-        color: _cs.surface.withValues(alpha: 0.95),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 50),
-          child: Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: _cs.primary,
-                size: 30,
-              ),
-              const SizedBox(width: 30),
-              Expanded(
-                child: Text(
-                  'Proximamente...',
-                  style: TextStyle(
-                    color: _cs.onSurface,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   // ===========================================================================
   // BUILD
@@ -129,7 +98,48 @@ class _MapaState extends State<Mapa> {
         children: [
           _buildMapa(),
           _buildOverlayOscuro(),
-          _buildAvisoProximamente(),
+        ],
+      ),
+    );
+  }
+}
+
+// Widget personalizado para el pin con forma clásica y foto
+class PinConFoto extends StatelessWidget {
+  final String imagePath; // Ruta a la foto (asset o URL)
+
+  const PinConFoto({super.key, required this.imagePath});
+
+  @override
+  Widget build(BuildContext context) {
+    // Obtenemos los colores dinámicos del tema
+    final ColorScheme cs = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      width: 55, // Ancho total del área
+      height: 65, // Alto total del área
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          // 1. El icono del pin clásico de fondo (Se pone azul o naranja automático)
+          Icon(
+            Icons.location_on,
+            size: 65,
+            color: cs.primary,
+          ),
+
+          // 2. La foto posicionada en el centro de la "cabeza" del pin
+          Positioned(
+            top: 7, // Bajamos la foto un poquito para que encaje en el círculo del icono
+            child: CircleAvatar(
+              radius: 17,
+              backgroundColor: cs.surface, // Borde blanco (claro) o negro (oscuro)
+              child: CircleAvatar(
+                radius: 15, // La imagen real un poquito más pequeña
+                backgroundImage: AssetImage(imagePath),
+              ),
+            ),
+          ),
         ],
       ),
     );
