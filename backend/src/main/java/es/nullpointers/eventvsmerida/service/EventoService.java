@@ -132,6 +132,14 @@ public class EventoService {
             eventoExistente.setLocalizacion(eventoRequest.localizacion());
         }
 
+        if (eventoRequest.latitud() != null) {
+            eventoExistente.setLatitud(eventoRequest.latitud());
+        }
+
+        if (eventoRequest.longitud() != null) {
+            eventoExistente.setLongitud(eventoRequest.longitud());
+        }
+
         if (eventoRequest.foto() != null) {
             eventoExistente.setFoto(eventoRequest.foto());
         }

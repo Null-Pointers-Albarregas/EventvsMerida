@@ -37,6 +37,8 @@ public class EventoMapper {
         evento.setFechaInicio(request.fechaInicio());
         evento.setFechaFin(request.fechaFin());
         evento.setLocalizacion(request.localizacion());
+        evento.setLatitud(request.latitud());
+        evento.setLongitud(request.longitud());
         evento.setFoto(storageUploader.subirImagen(request.foto()));
         evento.setUsuario(usuario);
         evento.setCategoria(categoria);
@@ -56,10 +58,12 @@ public class EventoMapper {
         LocalDateTime fechaInicio = evento.getFechaInicio();
         LocalDateTime fechaFin = evento.getFechaFin();
         String localizacion = evento.getLocalizacion();
+        Double latitud = evento.getLatitud();
+        Double longitud = evento.getLongitud();
         String urlFoto = evento.getFoto();
         String emailOrganizador = evento.getUsuario().getEmail();
         String categoria = evento.getCategoria().getNombre();
 
-        return new EventoResponse(titulo, descripcion, fechaInicio, fechaFin, localizacion, urlFoto, emailOrganizador, categoria);
+        return new EventoResponse(titulo, descripcion, fechaInicio, fechaFin, localizacion, latitud, longitud, urlFoto, emailOrganizador, categoria);
     }
 }
