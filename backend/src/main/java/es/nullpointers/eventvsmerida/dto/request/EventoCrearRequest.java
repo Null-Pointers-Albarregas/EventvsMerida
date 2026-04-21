@@ -30,8 +30,10 @@ public record EventoCrearRequest(
         @NotBlank
         String localizacion,
 
-        String url,
-        MultipartFile ficheroImagen,
+        Double latitud,
+        Double longitud,
+        String foto,
+        //MultipartFile ficheroImagen,
 
         @NotNull
         long idUsuario,

@@ -42,6 +42,12 @@ public class Evento {
     @Column(name = "localizacion", nullable = false, length = Integer.MAX_VALUE)
     private String localizacion;
 
+    @Column(name = "latitud", nullable = false)
+    private Double latitud;
+
+    @Column(name = "longitud", nullable = false)
+    private Double longitud;
+
     @NotNull
     @Column(name = "foto", nullable = false, length = Integer.MAX_VALUE)
     private String foto;

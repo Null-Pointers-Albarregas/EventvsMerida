@@ -1,7 +1,8 @@
 import json, random, re, sys
 from urllib.parse import urljoin
+import time
 from datetime import datetime
-
+from typing import Optional, Tuple
 import requests
 from bs4 import BeautifulSoup
 from rich.console import Console
@@ -77,6 +78,37 @@ def load_json_auto(path):
     raise RuntimeError("No se pudo decodificar el archivo con las codificaciones probadas.")
 
 
+def geocodificar_direccion(localizacion: str) -> Optional[Tuple[float, float]]:
+    """
+    Convierte una dirección en latitud y longitud usando Nominatim.
+    Devuelve (latitud, longitud) o None si no encuentra resultado.
+    """
+    if not localizacion or not localizacion.strip():
+        return None
+
+    consulta = f"{localizacion}, Mérida, Badajoz, España"
+
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {
+        "q": consulta,
+        "format": "jsonv2",
+        "limit": 1
+    }
+    headers = {
+        "User-Agent": "EventvsMerida/1.0 (TFG geocoding)"
+    }
+
+    resp = requests.get(url, params=params, headers=headers, timeout=20)
+    resp.raise_for_status()
+
+    resultados = resp.json()
+    if not resultados:
+        return None
+
+    primero = resultados[0]
+    return float(primero["lat"]), float(primero["lon"])
+
+
 def main():
     """Lee eventos saneados y los publica en la API."""
     title = Text("CARGADOR DE EVENTOS - EventvsMérida", style="bold cyan", justify="center")
@@ -127,12 +159,32 @@ def main():
                 case _:
                     id_categoria = 12
 
+            localizacion = evento["location"]
+
+            latitud = None
+            longitud = None
+
+            if localizacion:
+                try:
+                    coords = geocodificar_direccion(localizacion)
+                    if coords:
+                        latitud, longitud = coords
+                        console.print(f"[green]📍 Coordenadas:[/green] {latitud}, {longitud}")
+                    else:
+                        console.print(f"[yellow]⚠️ No se pudo geocodificar:[/yellow] {localizacion}")
+                    time.sleep(1.1)
+                except requests.exceptions.RequestException as e:
+                    console.print(f"[red]✗ Error geocodificando[/red] {localizacion} [dim]({str(e)[:60]})[/dim]")
+
+
             eventos_saneados.append({
                 "titulo": evento["summary"],
                 "descripcion": evento["description"],
                 "fechaInicio": evento["dtstart"],
                 "fechaFin": evento["dtend"],
                 "localizacion": evento["location"],
+                "latitud": latitud,
+                "longitud": longitud,
                 "foto": obtener_imagen_grande(event_url=evento["url"], timeout=20),
                 "idUsuario": id_usuario,
                 "idCategoria": id_categoria,
@@ -154,7 +206,7 @@ def main():
                     titulo_corto = evento['titulo'][:50]
                     console.print(f"[blue][{timestamp}][/blue] [bold]📌 {titulo_corto}[/bold]")
                     
-                    resp = s.post("https://eventvsmerida.onrender.com/api/eventos/add", json=evento, timeout=10)
+                    resp = s.post("http://localhost:8080/api/eventos/add", json=evento, timeout=10)
                     resp.raise_for_status()
                     
                     console.print(f"        [green]✓ Publicado[/green] [dim](HTTP {resp.status_code})[/dim]")
