@@ -1,11 +1,13 @@
 package es.nullpointers.eventvsmerida.mapper;
 
 import es.nullpointers.eventvsmerida.dto.request.EventoCrearRequest;
+import es.nullpointers.eventvsmerida.dto.request.EventoImagenCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.EventoResponse;
 import es.nullpointers.eventvsmerida.entity.Categoria;
 import es.nullpointers.eventvsmerida.entity.Evento;
 import es.nullpointers.eventvsmerida.entity.Usuario;
 import es.nullpointers.eventvsmerida.supabase.SupabaseStorage;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -39,7 +41,24 @@ public class EventoMapper {
         evento.setLocalizacion(request.localizacion());
         evento.setLatitud(request.latitud());
         evento.setLongitud(request.longitud());
-        evento.setFoto(storageUploader.subirImagen(request.foto()));
+        evento.setFoto(storageUploader.subirImagen(request.foto(), null, null));
+        evento.setUsuario(usuario);
+        evento.setCategoria(categoria);
+
+        return evento;
+    }
+
+    public static Evento convertirAEntidadEventoImagen(EventoImagenCrearRequest request, MultipartFile imagen, Usuario usuario, Categoria categoria, SupabaseStorage storageUploader) {
+        Evento evento = new Evento();
+
+        evento.setTitulo(request.titulo());
+        evento.setDescripcion(request.descripcion());
+        evento.setFechaInicio(request.fechaInicio());
+        evento.setFechaFin(request.fechaFin());
+        evento.setLocalizacion(request.localizacion());
+        evento.setLatitud(request.latitud());
+        evento.setLongitud(request.longitud());
+        evento.setFoto(storageUploader.subirImagen(null, imagen, request.titulo()));
         evento.setUsuario(usuario);
         evento.setCategoria(categoria);
 
