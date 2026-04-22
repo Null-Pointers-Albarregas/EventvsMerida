@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 /**
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
  * @author David Muñoz
  * @author Adrián Pérez
  */
-public record EventoCrearRequest(
+public record EventoImagenCrearRequest(
         @NotBlank
         String titulo,
 
@@ -32,8 +31,9 @@ public record EventoCrearRequest(
 
         Double latitud,
         Double longitud,
-        String foto,
-        //MultipartFile ficheroImagen,
+
+//        @NotBlank
+//        MultipartFile foto,
 
         @NotNull
         long idUsuario,

@@ -1,6 +1,8 @@
 package es.nullpointers.eventvsmerida.controller;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import es.nullpointers.eventvsmerida.dto.request.EventoCrearRequest;
+import es.nullpointers.eventvsmerida.dto.request.EventoImagenCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.EventoResponse;
 import es.nullpointers.eventvsmerida.dto.request.EventoActualizarRequest;
 import es.nullpointers.eventvsmerida.service.EventoService;
@@ -8,8 +10,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.List;
 
@@ -65,6 +71,19 @@ public class EventoController {
     public ResponseEntity<EventoResponse> crearEvento(@Valid @RequestBody EventoCrearRequest eventoCrearRequest) {
         EventoResponse eventoNuevo = eventoService.crearEvento(eventoCrearRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(eventoNuevo);
+    }
+
+    @PostMapping(value = "/addWithImage", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<EventoResponse> crearEventoConImagen(@Valid @RequestPart("evento")String jsonEvento, @RequestPart("foto") MultipartFile foto) throws JsonProcessingException {
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        EventoImagenCrearRequest request = mapper.readValue(jsonEvento, EventoImagenCrearRequest.class);
+
+
+        EventoResponse eventoConImagenNuevo = eventoService.crearEventoConImagen(request, foto);
+        log.error("ENTRA controlador addWithImage");
+        return ResponseEntity.status(HttpStatus.CREATED).body(eventoConImagenNuevo);
     }
 
     /**

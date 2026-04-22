@@ -1,5 +1,7 @@
 package es.nullpointers.eventvsmerida.supabase;
 
+import jakarta.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -8,9 +10,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriUtils;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -21,6 +25,7 @@ import java.util.UUID;
 /**
  * Clase que se encarga de subir la imagen al bucket de Supabase una vez ha sido descargada con CURL.
  */
+@Slf4j
 @Component
 public class SupabaseStorage {
 
@@ -50,22 +55,49 @@ public class SupabaseStorage {
     /**
      * Método que se encarga de subir la imagen a Supabase.
      * @param urlOrigen URL de la imagen que se desea almacenar.
-     * @return URL de la imagen almacenadad en el bucket.
+     * @return URL de la imagen almacenadas en el bucket.
      */
-    public String subirImagen(String urlOrigen) {
-        // Descarga con curl.
-        byte[] bytes = CurlDownloader.download(urlOrigen, Duration.ofSeconds(30));
-        if (bytes.length == 0) {
-            throw new IllegalStateException("La URL no devolvió contenido (body vacío): " + urlOrigen);
+    public String subirImagen(@Nullable String urlOrigen, @Nullable MultipartFile imagen, @Nullable String tituloEvento) {
+        byte[] bytes = new byte[0];
+        String filename;
+        String contentType = "";
+        String objectPath = "";
+        log.info("estoy en subirImagen");
+        log.error("TEST ERROR subirImagen");
+
+        if(urlOrigen != null) {
+            log.info("entra en el if");
+            // Descarga con curl.
+            bytes = CurlDownloader.download(urlOrigen, Duration.ofSeconds(30));
+
+            if (bytes.length == 0) {
+                throw new IllegalStateException("La URL no devolvió contenido (body vacío): " + urlOrigen);
+            }
+
+            // Genera nombre de la imagen.
+            filename = filenameFromUrlOrGenerate(urlOrigen, null);
+
+            // Content-Type: se extrae según sea la extensión de la imagen.
+            contentType = contentTypeFromFilename(filename);
+            objectPath = filename; // raíz del bucket
+
+        } else {
+            log.info("entra en el else");
+            if (imagen != null && tituloEvento != null) {
+                try {
+                    bytes = imagen.getBytes();
+
+                    filename = imagen.getOriginalFilename();
+                    log.info("Filename--->{}", filename);
+                    contentType = imagen.getContentType();
+                    if (contentType == null || contentType.equals("application/octet-stream")) {
+                        contentType = contentTypeFromFilename(filename);
+                    }                    objectPath = filename; // raíz del bucket
+                } catch (IOException e) {
+                    throw new IllegalStateException("Error al leer el contenido de la imagen: " + imagen.getOriginalFilename(), e);
+                }
+            }
         }
-
-        // Genera nombre de la imagen.
-        String filename = filenameFromUrlOrGenerate(urlOrigen, null);
-        String objectPath = filename; // raíz del bucket
-
-        // Content-Type: se extrae según sea la extensión de la imagen.
-        String contentType = contentTypeFromFilename(filename);
-
         // Normaliza la url del path para evitar caracteres raros.
         String encodedPath = UriUtils.encodePath(objectPath, StandardCharsets.UTF_8);
 

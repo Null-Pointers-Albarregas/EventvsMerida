@@ -1,6 +1,7 @@
 package es.nullpointers.eventvsmerida.service;
 
 import es.nullpointers.eventvsmerida.dto.request.EventoCrearRequest;
+import es.nullpointers.eventvsmerida.dto.request.EventoImagenCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.EventoResponse;
 import es.nullpointers.eventvsmerida.dto.request.EventoActualizarRequest;
 import es.nullpointers.eventvsmerida.entity.Categoria;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
@@ -91,6 +93,27 @@ public class EventoService {
         return EventoMapper.convertirAResponse(eventoCreado);
     }
 
+    public EventoResponse crearEventoConImagen(EventoImagenCrearRequest eventoRequest, MultipartFile imagen) {
+        // Se hacen las comprobaciones necesarias para evitar errores de integridad de datos
+        if (eventoRepository.existsByTituloAndFechaInicioAndFechaFin(eventoRequest.titulo(), eventoRequest.fechaInicio(), eventoRequest.fechaFin())) {
+            throw new DataIntegrityViolationException("Ya existe un evento con el título y fecha indicados");
+        }
+
+        Usuario usuario = usuarioService.obtenerUsuarioPorIdOExcepcion(eventoRequest.idUsuario(), "Error en EventoService.crearEvento: No se encontró el usuario con id " + eventoRequest.idUsuario());
+        Categoria categoria = categoriaService.obtenerCategoriaPorIdOExcepcion(eventoRequest.idCategoria(), "Error en EventoService.crearEvento: No se encontró la categoría con id " + eventoRequest.idCategoria());
+
+        log.info("antes de convertir a entidad");
+        // Se convierte el DTO a entidad
+        Evento eventoNuevo = EventoMapper.convertirAEntidadEventoImagen(eventoRequest, imagen, usuario, categoria, storageUploader);
+        log.info("despues de convertir a entidad");
+
+        // Se guarda el nuevo evento en la base de datos
+        Evento eventoCreado = eventoRepository.save(eventoNuevo);
+
+        // Se devuelve el evento creado convertido a response
+        return EventoMapper.convertirAResponse(eventoCreado);
+    }
+
     /**
      * Método para eliminar un evento por su ID.
      *
@@ -130,6 +153,14 @@ public class EventoService {
 
         if (eventoRequest.localizacion() != null) {
             eventoExistente.setLocalizacion(eventoRequest.localizacion());
+        }
+
+        if (eventoRequest.latitud() != null) {
+            eventoExistente.setLatitud(eventoRequest.latitud());
+        }
+
+        if (eventoRequest.longitud() != null) {
+            eventoExistente.setLongitud(eventoRequest.longitud());
         }
 
         if (eventoRequest.foto() != null) {

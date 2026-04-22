@@ -15,6 +15,8 @@ public record EventoActualizarRequest(
         LocalDateTime fechaInicio,
         LocalDateTime fechaFin,
         String localizacion,
+        Double latitud,
+        Double longitud,
         String foto,
         Long idUsuario,
         Long idCategoria
