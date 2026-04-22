@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Descarga un feed iCal (ICS) y lo convierte a JSON.
 

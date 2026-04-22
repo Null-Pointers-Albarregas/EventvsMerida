@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import json
 import random
 import re
@@ -97,7 +96,6 @@ def main():
     total_eventos = len(data.get("events", []))
     console.print("[green]✓[/green] Se cargaron [bold]" + str(total_eventos) + "[/bold] eventos\n")
 
-    # IMPORTAR E INICIAR MapsGeocoder (Playwright). Si falla, salir.
     try:
         from mapsgeocoder import MapsGeocoder
     except Exception as e:
@@ -111,46 +109,20 @@ def main():
         console.print(f"[red]✗ No se pudo iniciar MapsGeocoder: {e}[/red]")
         sys.exit(1)
 
-    console.print("[cyan]→[/cyan] MapsGeocoder iniciado (Playwright) — usando solo Google Maps para geocoding\n")
+    console.print("[cyan]→[/cyan] MapsGeocoder iniciado (Playwright)\n")
 
     eventos_saneados = []
     num_eventos_almacenados = 0
     num_eventos_fallo = 0
 
-    console.print("[cyan]→[/cyan] Procesando categorías...\n")
+    console.print("[cyan]→[/cyan] Procesando localizaciones...\n")
 
     with Progress() as progress:
-        task = progress.add_task("[cyan]Categorizando", total=total_eventos)
+        task = progress.add_task("Título: ", evento.get("summary") "[cyan]Localizando", total=total_eventos)
         for evento in data.get("events", []):
             titulo = evento.get("summary", "")
             id_categoria = 0
             id_usuario = random.randint(1, 5)
-
-            match evento.get("raw", {}).get("CATEGORIES", ""):
-                case "Conciertos y Música":
-                    id_categoria = 1
-                case "Festivales y Ferias":
-                    id_categoria = 2
-                case "Cine y Teatro":
-                    id_categoria = 3
-                case "Exposiciones y Arte":
-                    id_categoria = 4
-                case "Gastronomía":
-                    id_categoria = 5
-                case "Conferencias, Talleres y Cursos":
-                    id_categoria = 6
-                case "Deportes y Actividad Física":
-                    id_categoria = 7
-                case "Fiestas y Vida Nocturna":
-                    id_categoria = 8
-                case "Familia e Infantil":
-                    id_categoria = 9
-                case "Tecnología y Ciencia":
-                    id_categoria = 10
-                case "Solidaridad y Causas Sociales":
-                    id_categoria = 11
-                case _:
-                    id_categoria = 12
 
             localizacion = evento.get("location", "") or ""
             latitud = None
@@ -159,7 +131,6 @@ def main():
             if localizacion:
                 coords = None
                 try:
-                    # usar el geocoder (reutiliza el navegador). Ajusta max_wait/poll_interval si quieres más paciencia/velocidad.
                     coords = geocoder.geocode(localizacion, max_wait=4.0, poll_interval=0.18)
                 except Exception as e:
                     coords = None
@@ -171,8 +142,18 @@ def main():
                 else:
                     console.print(f"[yellow]⚠️ No se pudo geocodificar (Google Maps):[/yellow] {localizacion}")
 
-                # ligera pausa para no saturar
                 time.sleep(0.15)
+
+            raw_cats = evento.get("raw", {}).get("CATEGORIES")
+            if isinstance(raw_cats, dict):
+                raw_id = raw_cats.get("id")
+                if raw_id is not None:
+                    try:
+                        id_categoria = int(raw_id)
+                    except Exception:
+                        id_categoria = 12
+            elif isinstance(raw_cats, str):
+                id_categoria = 12
 
             eventos_saneados.append(
                 {
@@ -190,7 +171,6 @@ def main():
             )
             progress.update(task, advance=1)
 
-    # Cerrar geocoder
     try:
         geocoder.close()
     except Exception:

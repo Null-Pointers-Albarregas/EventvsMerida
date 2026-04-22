@@ -22,7 +22,7 @@ class MapsGeocoder:
         self.page.set_default_navigation_timeout(nav_timeout)
         self.page.set_default_timeout(nav_timeout)
 
-    def geocode(self, localizacion: str, max_wait: float = 4.0, poll_interval: float = 0.2, debug: bool = True) -> Optional[Tuple[float, float]]:
+    def geocode(self, localizacion: str, max_wait: float = 4.0, poll_interval: float = 0.2, debug: bool = False) -> Optional[Tuple[float, float]]:
         """
         Geocodifica usando Google Maps: navega a la búsqueda y extrae coordenadas desde la URL final (@lat,lon).
         Si `debug=True` imprime información y guarda screenshot/html para inspección.
@@ -30,7 +30,13 @@ class MapsGeocoder:
         if not localizacion or not localizacion.strip():
             return None
 
-        consulta = f"{localizacion}, Mérida, Badajoz, España"
+        # Caso especial: si la localización contiene "Varios puntos de la ciudad"
+        # devolver inmediatamente las coordenadas fijas de Mérida
+        normalized = localizacion.strip().lower()
+        if 'varios puntos de la ciudad' in normalized:
+            return 38.918017, -6.342947
+
+        consulta = f"{localizacion}"
         start_url = f"https://www.google.com/maps/search/?api=1&query={quote_plus(consulta)}"
         if debug:
             print("DEBUG start_url:", start_url)
