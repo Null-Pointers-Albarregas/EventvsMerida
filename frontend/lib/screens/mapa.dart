@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../models/evento.dart';
 import '../services/api_service.dart';
+import '../widgets/customizar_app_bar.dart';
 
 class Mapa extends StatefulWidget {
   const Mapa({super.key});
@@ -171,6 +172,7 @@ class _MapaState extends State<Mapa> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const CustomAppBar(),
       body: Stack(
         children: [
           _buildMapa(),
@@ -183,7 +185,7 @@ class _MapaState extends State<Mapa> {
 }
 
 // ===========================================================================
-// WIDGET DEL PIN (Mantenemos tu diseño clásico)
+// WIDGET DEL PIN
 // ===========================================================================
 
 class PinConFoto extends StatelessWidget {
