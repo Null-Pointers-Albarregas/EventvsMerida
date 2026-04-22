@@ -1,8 +1,13 @@
-import json, random, re, sys
-from urllib.parse import urljoin
+#!/usr/bin/env python3
+import json
+import random
+import re
+import sys
 import time
+from urllib.parse import urljoin
 from datetime import datetime
 from typing import Optional, Tuple
+
 import requests
 from bs4 import BeautifulSoup
 from rich.console import Console
@@ -13,15 +18,11 @@ from rich.text import Text
 
 console = Console()
 
-"""
 
-"""
 def obtener_imagen_grande(event_url: str, timeout: int = 20) -> str | None:
-    """Devuelve la imagen principal del evento si existe."""
     headers = {"User-Agent": "Mozilla/5.0"}
 
     def pick_largest_from_srcset(srcset: str) -> str | None:
-        """Elige la URL con mayor ancho del srcset."""
         best_url, best_w = None, -1
         for part in (p.strip() for p in srcset.split(",")):
             if not part:
@@ -37,27 +38,27 @@ def obtener_imagen_grande(event_url: str, timeout: int = 20) -> str | None:
                 best_url, best_w = u, w
         return best_url
 
-    r = requests.get(event_url, headers=headers, timeout=timeout)
-    r.raise_for_status()
-    soup = BeautifulSoup(r.text, "html.parser")
+    try:
+        r = requests.get(event_url, headers=headers, timeout=timeout)
+        r.raise_for_status()
+    except Exception:
+        return None
 
+    soup = BeautifulSoup(r.text, "html.parser")
     container = soup.select_one(".tribe-events-single-event-description") or soup
 
-    # Prioriza el enlace original del contenido.
     img_inside_a = container.select_one("a[href] > img")
     if img_inside_a and img_inside_a.parent and img_inside_a.parent.name == "a":
         href = img_inside_a.parent.get("href")
         if href:
             return urljoin(event_url, href)
 
-    # Luego busca la mejor variante en srcset.
     img = container.select_one("img[srcset]")
     if img and img.get("srcset"):
         best = pick_largest_from_srcset(img["srcset"])
         if best:
             return urljoin(event_url, best)
 
-    # Último recurso: src directo.
     img = container.select_one("img[src]")
     if img and img.get("src"):
         return urljoin(event_url, img["src"])
@@ -66,7 +67,6 @@ def obtener_imagen_grande(event_url: str, timeout: int = 20) -> str | None:
 
 
 def load_json_auto(path):
-    """Carga JSON probando varias codificaciones comunes."""
     for enc in ("utf-8", "utf-8-sig", "cp1252", "latin-1"):
         try:
             with open(path, encoding=enc) as f:
@@ -78,62 +78,55 @@ def load_json_auto(path):
     raise RuntimeError("No se pudo decodificar el archivo con las codificaciones probadas.")
 
 
-def geocodificar_direccion(localizacion: str) -> Optional[Tuple[float, float]]:
-    """
-    Convierte una dirección en latitud y longitud usando Nominatim.
-    Devuelve (latitud, longitud) o None si no encuentra resultado.
-    """
-    if not localizacion or not localizacion.strip():
-        return None
-
-    consulta = f"{localizacion}, Mérida, Badajoz, España"
-
-    url = "https://nominatim.openstreetmap.org/search"
-    params = {
-        "q": consulta,
-        "format": "jsonv2",
-        "limit": 1
-    }
-    headers = {
-        "User-Agent": "EventvsMerida/1.0 (TFG geocoding)"
-    }
-
-    resp = requests.get(url, params=params, headers=headers, timeout=20)
-    resp.raise_for_status()
-
-    resultados = resp.json()
-    if not resultados:
-        return None
-
-    primero = resultados[0]
-    return float(primero["lat"]), float(primero["lon"])
-
-
 def main():
-    """Lee eventos saneados y los publica en la API."""
+    if len(sys.argv) < 2:
+        print("Uso: python subir-eventos.py <eventos-saneados.json>")
+        sys.exit(1)
+
+    archivo = sys.argv[1]
+
     title = Text("CARGADOR DE EVENTOS - EventvsMérida", style="bold cyan", justify="center")
     console.print(Panel(title, border_style="cyan", padding=(1, 20), expand=False))
-    
+
+    try:
+        data = load_json_auto(archivo)
+    except Exception as e:
+        console.print(f"[red]✗ Error cargando JSON:[/red] {e}")
+        sys.exit(1)
+
+    total_eventos = len(data.get("events", []))
+    console.print("[green]✓[/green] Se cargaron [bold]" + str(total_eventos) + "[/bold] eventos\n")
+
+    # IMPORTAR E INICIAR MapsGeocoder (Playwright). Si falla, salir.
+    try:
+        from mapsgeocoder import MapsGeocoder
+    except Exception as e:
+        console.print(f"[red]✗ mapsgeocoder no encontrado: {e}[/red]")
+        console.print("[red]Este script requiere Playwright y la clase MapsGeocoder en scripts/mapsgeocoder.py[/red]")
+        sys.exit(1)
+
+    try:
+        geocoder = MapsGeocoder(headless=True, nav_timeout=8000)
+    except Exception as e:
+        console.print(f"[red]✗ No se pudo iniciar MapsGeocoder: {e}[/red]")
+        sys.exit(1)
+
+    console.print("[cyan]→[/cyan] MapsGeocoder iniciado (Playwright) — usando solo Google Maps para geocoding\n")
+
     eventos_saneados = []
     num_eventos_almacenados = 0
     num_eventos_fallo = 0
-    
-    console.print("[cyan]→[/cyan] Cargando eventos desde archivo: [yellow]" + sys.argv[1] + "[/yellow]")
-    data = load_json_auto(sys.argv[1])
-    total_eventos = len(data["events"])
-    console.print("[green]✓[/green] Se cargaron [bold]" + str(total_eventos) + "[/bold] eventos\n")
-    
+
     console.print("[cyan]→[/cyan] Procesando categorías...\n")
-    
+
     with Progress() as progress:
         task = progress.add_task("[cyan]Categorizando", total=total_eventos)
-        for evento in data["events"]:
-            titulo = evento["summary"]
-            
+        for evento in data.get("events", []):
+            titulo = evento.get("summary", "")
             id_categoria = 0
-            id_usuario = random.randint(1, 3)
+            id_usuario = random.randint(1, 5)
 
-            match(evento["raw"]["CATEGORIES"]):
+            match evento.get("raw", {}).get("CATEGORIES", ""):
                 case "Conciertos y Música":
                     id_categoria = 1
                 case "Festivales y Ferias":
@@ -159,60 +152,71 @@ def main():
                 case _:
                     id_categoria = 12
 
-            localizacion = evento["location"]
-
+            localizacion = evento.get("location", "") or ""
             latitud = None
             longitud = None
 
             if localizacion:
+                coords = None
                 try:
-                    coords = geocodificar_direccion(localizacion)
-                    if coords:
-                        latitud, longitud = coords
-                        console.print(f"[green]📍 Coordenadas:[/green] {latitud}, {longitud}")
-                    else:
-                        console.print(f"[yellow]⚠️ No se pudo geocodificar:[/yellow] {localizacion}")
-                    time.sleep(1.1)
-                except requests.exceptions.RequestException as e:
-                    console.print(f"[red]✗ Error geocodificando[/red] {localizacion} [dim]({str(e)[:60]})[/dim]")
+                    # usar el geocoder (reutiliza el navegador). Ajusta max_wait/poll_interval si quieres más paciencia/velocidad.
+                    coords = geocoder.geocode(localizacion, max_wait=4.0, poll_interval=0.18)
+                except Exception as e:
+                    coords = None
+                    console.print(f"[yellow]⚠️ Error geocoding con MapsGeocoder:[/yellow] {e}")
 
+                if coords:
+                    latitud, longitud = coords
+                    console.print(f"[green]📍 Coordenadas:[/green] {latitud}, {longitud}")
+                else:
+                    console.print(f"[yellow]⚠️ No se pudo geocodificar (Google Maps):[/yellow] {localizacion}")
 
-            eventos_saneados.append({
-                "titulo": evento["summary"],
-                "descripcion": evento["description"],
-                "fechaInicio": evento["dtstart"],
-                "fechaFin": evento["dtend"],
-                "localizacion": evento["location"],
-                "latitud": latitud,
-                "longitud": longitud,
-                "foto": obtener_imagen_grande(event_url=evento["url"], timeout=20),
-                "idUsuario": id_usuario,
-                "idCategoria": id_categoria,
-            })
+                # ligera pausa para no saturar
+                time.sleep(0.15)
+
+            eventos_saneados.append(
+                {
+                    "titulo": titulo,
+                    "descripcion": evento.get("description", "") or "",
+                    "fechaInicio": evento.get("dtstart", ""),
+                    "fechaFin": evento.get("dtend", ""),
+                    "localizacion": localizacion,
+                    "latitud": latitud,
+                    "longitud": longitud,
+                    "foto": obtener_imagen_grande(event_url=evento.get("url", ""), timeout=20),
+                    "idUsuario": id_usuario,
+                    "idCategoria": id_categoria,
+                }
+            )
             progress.update(task, advance=1)
-    
+
+    # Cerrar geocoder
+    try:
+        geocoder.close()
+    except Exception:
+        pass
+
     console.print()
-    
     encabezado = Text("ENVIANDO EVENTOS A API", style="bold green")
     console.print(Panel(encabezado, border_style="green"))
     console.print()
-    
+
     with requests.Session() as s:
         with Progress() as progress:
             task = progress.add_task("[green]Subiendo", total=len(eventos_saneados))
             for evento in eventos_saneados:
                 try:
                     timestamp = datetime.now().strftime("%H:%M:%S")
-                    titulo_corto = evento['titulo'][:50]
+                    titulo_corto = (evento.get("titulo") or "")[:50]
                     console.print(f"[blue][{timestamp}][/blue] [bold]📌 {titulo_corto}[/bold]")
-                    
-                    resp = s.post("http://localhost:8080/api/eventos/add", json=evento, timeout=10)
+
+                    resp = s.post("https://eventvsmerida.onrender.com/api/eventos/add", json=evento, timeout=10)
                     resp.raise_for_status()
-                    
+
                     console.print(f"        [green]✓ Publicado[/green] [dim](HTTP {resp.status_code})[/dim]")
                     num_eventos_almacenados += 1
-                    
-                except requests.exceptions.HTTPError as e:
+
+                except requests.exceptions.HTTPError:
                     console.print(f"        [red]✗ Error HTTP[/red] [dim](HTTP {resp.status_code})[/dim]")
                     num_eventos_fallo += 1
                 except requests.exceptions.Timeout:
@@ -221,22 +225,22 @@ def main():
                 except requests.exceptions.RequestException as e:
                     console.print(f"        [red]✗ Error de conexión[/red] [dim]({str(e)[:40]})[/dim]")
                     num_eventos_fallo += 1
-                
+
                 progress.update(task, advance=1)
-    
+
     console.print()
-    
     porcentaje_exito = (num_eventos_almacenados / len(eventos_saneados) * 100) if eventos_saneados else 0
-    
+
     tabla = Table(title="RESUMEN FINAL", border_style="cyan", show_header=True)
     tabla.add_column("Métrica", style="cyan")
     tabla.add_column("Valor", style="bold")
     tabla.add_row("Eventos enviados", f"[green]{num_eventos_almacenados}[/green]/{len(eventos_saneados)}")
     tabla.add_row("Eventos fallidos", f"[red]{num_eventos_fallo}[/red]/{len(eventos_saneados)}")
     tabla.add_row("Tasa de éxito", f"[yellow]{porcentaje_exito:.1f}%[/yellow]")
-    
+
     console.print(tabla)
     console.print()
+
 
 if __name__ == "__main__":
     main()
