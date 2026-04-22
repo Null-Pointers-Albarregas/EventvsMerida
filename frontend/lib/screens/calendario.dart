@@ -1,4 +1,4 @@
-import 'package:eventvsmerida/widgets/customizar_app_bar.dart';
+import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
