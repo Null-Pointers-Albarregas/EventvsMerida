@@ -223,6 +223,32 @@ class _PerfilState extends State<Perfil> {
               ),
               _buildSeccionTitulo('INFORMACIÓN LEGAL'),
               _buildLegal(),
+              const SizedBox(height: 80),
+              Align(
+                alignment: .centerRight,
+                child: Padding(
+                  padding: const EdgeInsetsGeometry.only(right: 24.0),
+                  child: Column(
+                    crossAxisAlignment: .end,
+                    children: [
+                      Image.asset(
+                        'assets/images/logo-eventvs-merida-no-bg.png',
+                        height: 30,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Verión 1.0.0',
+                        style: TextStyle(
+                          color: _cs.onSurface,
+                          fontSize: 9,
+                          fontWeight: .w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
             ],
           ),
         ),
