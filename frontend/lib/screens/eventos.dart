@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:eventvsmerida/models/evento.dart';
+import 'package:eventvsmerida/widgets/customizar_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -736,17 +737,7 @@ class _EventosState extends State<Eventos> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: _cs.surface,
-        foregroundColor: _cs.onPrimary,
-        title: SizedBox(
-          height: 40,
-          child: Image.asset(
-            'assets/images/logo-eventvs-merida-no-bg.png',
-            fit: BoxFit.contain,
-          ),
-        ),
+      appBar: CustomAppBar(
         actions: [
           Padding(
             padding: const EdgeInsets.all(8),

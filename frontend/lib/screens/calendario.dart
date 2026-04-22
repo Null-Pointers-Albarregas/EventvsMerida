@@ -1,3 +1,4 @@
+import 'package:eventvsmerida/widgets/customizar_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -542,24 +543,27 @@ class _CalendarioState extends State<Calendario> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 60),
+    return Scaffold(
+      appBar: const CustomAppBar(),
+      body: Column(
+        children: [
+          const SizedBox(height: 12),
 
-        // SELECTORES DE MES Y AÑO
-        _buildSelectoresFecha(),
-        const SizedBox(height: 12),
+          // SELECTORES DE MES Y AÑO
+          _buildSelectoresFecha(),
+          const SizedBox(height: 12),
 
-        // CALENDARIO
-        _buildCalendario(),
-        const SizedBox(height: 12),
-        const Divider(),
+          // CALENDARIO
+          _buildCalendario(),
+          const SizedBox(height: 12),
+          const Divider(),
 
-        // LISTA DE EVENTOS
-        Expanded(
-          child: _buildEventoLista(),
-        ),
-      ],
+          // LISTA DE EVENTOS
+          Expanded(
+            child: _buildEventoLista(),
+          ),
+        ],
+      ),
     );
   }
 }
