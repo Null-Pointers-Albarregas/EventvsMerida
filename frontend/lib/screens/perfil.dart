@@ -240,7 +240,7 @@ class _PerfilState extends State<Perfil> {
                         'Verión 1.0.0',
                         style: TextStyle(
                           color: _cs.onSurface,
-                          fontSize: 9,
+                          fontSize: 10,
                           fontWeight: .w500,
                         ),
                       ),
