@@ -1,4 +1,9 @@
 window.addEventListener("DOMContentLoaded", async (event) => {
-  const nombreUsuario = localStorage.getItem("nombreUsuario");
-  mostrarAlerta("info", "Bienvenid@ de nuevo", nombreUsuario);
+  mostrarAlerta = true;
+
+  if (mostrarAlerta) {
+    const nombreUsuario = localStorage.getItem("nombreUsuario");
+    mostrarAlerta("info", `Bienvenid@ de nuevo ${nombreUsuario}`);
+    mostrarAlerta = false;
+  }
 });
