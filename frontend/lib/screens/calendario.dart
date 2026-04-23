@@ -314,6 +314,7 @@ class _CalendarioState extends State<Calendario> {
             _eventosGuardados = nuevaLista;
           });
         },
+        mostrarBotonGuardado: true,
       ),
     );
   }

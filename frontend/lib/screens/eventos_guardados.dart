@@ -5,6 +5,7 @@ import '../models/evento.dart';
 import '../models/usuario.dart';
 import '../services/api_service.dart';
 import '../services/shared_preferences_service.dart';
+import '../widgets/componentes_compartidos.dart';
 
 class EventosGuardados extends StatefulWidget {
   const EventosGuardados({super.key});
@@ -102,6 +103,24 @@ class _EventosGuardadosState extends State<EventosGuardados> {
     _mostrarMensajeEliminacion(respuesta.mensaje, respuesta.exito);
   }
 
+  void _abrirModalEvento(Evento evento) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.2),
+      builder: (ctx) => ModalEvento(
+        eventos: [evento],
+        usuario: _usuario,
+        eventosGuardados: _eventos,
+        onEventosGuardadosActualizados: (nuevaLista) {
+          setState(() {
+            _eventos = nuevaLista;
+          });
+        },
+        mostrarBotonGuardado: false,
+      ),
+    );
+  }
   // ===========================================================================
   // MENSAJES
   // ===========================================================================
@@ -214,76 +233,83 @@ class _EventosGuardadosState extends State<EventosGuardados> {
         horizontal: 16,
         vertical: 10,
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: _cs.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: _cs.primary,
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: _cs.onPrimary.withAlpha(64),
-              blurRadius: 5,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            _imagenEvento(evento.foto),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => _abrirModalEvento(evento),
+            child: Container(
+              decoration: BoxDecoration(
+                color: _cs.surface,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: _cs.primary,
+                  width: 1,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      evento.titulo,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: _cs.primary,
+                boxShadow: [
+                  BoxShadow(
+                    color: _cs.onPrimary.withAlpha(64),
+                    blurRadius: 5,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  _imagenEvento(evento.foto),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      evento.localizacion,
-                      style: TextStyle(
-                        color: _cs.onSurface.withAlpha(178),
-                        fontSize: 14,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            evento.titulo,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: _cs.primary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            evento.localizacion,
+                            style: TextStyle(
+                              color: _cs.onSurface.withAlpha(178),
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _textoFechaEvento(evento),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: _cs.onSurface,
+                              height: 1.25,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _textoFechaEvento(evento),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: _cs.onSurface,
-                        height: 1.25,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete, color: _cs.error),
+                    onPressed: () => _borrarEvento(evento),
+                    tooltip: 'Eliminar evento',
+                  ),
+                ],
               ),
             ),
-            IconButton(
-              icon: Icon(Icons.delete, color: _cs.error),
-              onPressed: () => _borrarEvento(evento),
-              tooltip: 'Eliminar evento',
-            ),
-          ],
-        ),
+          ),
       ),
     );
   }

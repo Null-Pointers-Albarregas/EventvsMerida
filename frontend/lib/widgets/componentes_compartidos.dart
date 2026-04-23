@@ -52,8 +52,7 @@ class ModalEvento extends StatefulWidget {
   final Usuario? usuario;
   final List<Evento> eventosGuardados;
   final ValueChanged<List<Evento>> onEventosGuardadosActualizados;
-  //final bool isGuardadoInicial;
-  //final Function(bool) onCambioGuardado;
+  final bool mostrarBotonGuardado;
 
   const ModalEvento({
     super.key,
@@ -61,6 +60,7 @@ class ModalEvento extends StatefulWidget {
     required this.usuario,
     required this.eventosGuardados,
     required this.onEventosGuardadosActualizados,
+    this.mostrarBotonGuardado = true,
   });
 
   @override
@@ -417,26 +417,27 @@ class _ModalEventoState extends State<ModalEvento> {
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _gestionarGuardado,
-                  icon: Icon(
-                    estaGuardado
-                        ? Icons.bookmark
-                        : Icons.bookmark_border_outlined,
-                  ),
-                  label: Text(
-                    estaGuardado ? 'Evento guardado' : 'Guardar evento',
+        if(widget.mostrarBotonGuardado)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _gestionarGuardado,
+                    icon: Icon(
+                      estaGuardado
+                          ? Icons.bookmark
+                          : Icons.bookmark_border_outlined,
+                    ),
+                    label: Text(
+                      estaGuardado ? 'Evento guardado' : 'Guardar evento',
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
       ],
     );
   }

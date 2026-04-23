@@ -113,6 +113,7 @@ class _MapaState extends State<Mapa> {
             _eventosGuardados = nuevaLista;
           });
         },
+        mostrarBotonGuardado: true,
       ),
     );
   }
