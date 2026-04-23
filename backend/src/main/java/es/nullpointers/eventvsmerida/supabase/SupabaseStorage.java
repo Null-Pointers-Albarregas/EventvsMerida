@@ -54,6 +54,7 @@ public class SupabaseStorage {
 
     /**
      * Método que se encarga de subir la imagen a Supabase.
+     *
      * @param urlOrigen URL de la imagen que se desea almacenar.
      * @return URL de la imagen almacenadas en el bucket.
      */
@@ -62,10 +63,8 @@ public class SupabaseStorage {
         String filename;
         String contentType = "";
         String objectPath = "";
-        log.info("estoy en subirImagen");
-        log.error("TEST ERROR subirImagen");
 
-        if(urlOrigen != null) {
+        if (urlOrigen != null) {
             // Descarga con curl.
             bytes = CurlDownloader.download(urlOrigen, Duration.ofSeconds(30));
 
@@ -74,7 +73,7 @@ public class SupabaseStorage {
             }
 
             // Genera nombre de la imagen.
-            filename = normalizarNombreImagen(urlOrigen, tituloEvento, null);
+            filename = obtenerNombreImagen(urlOrigen, tituloEvento);
 
             // Content-Type: se extrae según sea la extensión de la imagen.
             contentType = contentTypeFromFilename(filename);
@@ -85,11 +84,12 @@ public class SupabaseStorage {
                 try {
                     bytes = imagen.getBytes();
 
-                    filename = sanitizarNombre(tituloEvento, MediaType.parseMediaType(imagen.getContentType()));
+                    filename = sanitizarNombre(tituloEvento, imagen.getOriginalFilename());
                     contentType = imagen.getContentType();
                     if (contentType == null || contentType.equals("application/octet-stream")) {
                         contentType = contentTypeFromFilename(filename);
-                    }                    objectPath = filename; // raíz del bucket
+                    }
+                    objectPath = filename; // raíz del bucket
                 } catch (IOException e) {
                     throw new IllegalStateException("Error al leer el contenido de la imagen: " + imagen.getOriginalFilename(), e);
                 }
@@ -122,68 +122,54 @@ public class SupabaseStorage {
     }
 
     /**
-     * Método para obtener el nombre del fichero o generar uno nuevo para evitar valores nulos.
+     * Método para obtener el nombre de la imagen desde la URL.
+     *
      * @param url URL de la imagen de origen.
-     * @param mt Tipo de imagen.
      * @return Nombre de la imagen.
      */
-    private static String normalizarNombreImagen(String url, String tituloEvento, MediaType mt) {
-        String nombreFichero = "";
+    private static String obtenerNombreImagen(String url, String tituloEvento) {
+        String nombreImagen;
 
-        if (url != null && !url.isBlank()) {
-            try {
-                String path = URI.create(url).getPath();
-                String last = (path == null) ? "" : path.substring(path.lastIndexOf('/') + 1);
-                if (!last.isBlank() && last.contains(".")) {
-                    nombreFichero = last;
-                } else {
-                    nombreFichero = url;
-                }
-            } catch (IllegalArgumentException e) {
-                nombreFichero = url;
+        try {
+            String path = URI.create(url).getPath();
+            String last = (path == null) ? "" : path.substring(path.lastIndexOf('/') + 1);
+            if (!last.isBlank() && last.contains(".")) {
+                nombreImagen = last;
+            } else {
+                nombreImagen = url;
             }
+        } catch (IllegalArgumentException e) {
+            nombreImagen = url;
         }
 
-        if (nombreFichero == null || nombreFichero.isBlank()) {
-            String ext = extensionFromMediaType(mt);
-            nombreFichero = "file-" + Instant.now().toEpochMilli() + "-" + UUID.randomUUID() + ext;
-        }
-
-        return sanitizarNombre(tituloEvento, mt);
+        return sanitizarNombre(tituloEvento, nombreImagen);
     }
 
     /**
      * Método para sanitizar el tituloEvento de la imagen, evitando espacios y caracteres no seguros y generando un tituloEvento válido.
+     *
      * @param tituloEvento Nombre de la imagen a sanetizar.
-     * @param mt Tipo de imagen.
      * @return Título de la imagen sanitizado.
      */
-    private static String sanitizarNombre(String tituloEvento, MediaType mt) {
-        String nombreImagen = (tituloEvento == null) ? "" : tituloEvento.trim();
-
+    private static String sanitizarNombre(String tituloEvento, String nombreImagen) {
         // Separar base + extensión.
         int indice = nombreImagen.lastIndexOf('.');
-        String base = indice > 0 ? nombreImagen.substring(0, indice) : nombreImagen;
-        String extension = indice > 0 ? nombreImagen.substring(indice).toLowerCase() : extensionFromMediaType(mt);
+        String extension = nombreImagen.substring(indice).toLowerCase();
 
         // Reemplazar espacios por '-'
-        base = base.replaceAll("\\s+", "-");
+        tituloEvento = tituloEvento.replaceAll("\\s+", "-");
 
         // Limpia los caracteres no seguros en rutas.
-        base = base.replaceAll("[^a-zA-Z0-9._-]", "-");
+        tituloEvento = tituloEvento.replaceAll("[^a-zA-Z0-9_-]", "-");
 
-        // Evitar tituloEvento vacío
-        if (base.isBlank()) {
-            base = "file-" + Instant.now().toEpochMilli() + "-" + UUID.randomUUID();
-        }
-
-        return base + extension;
+        return tituloEvento + extension;
     }
 
     /**
      * Método que en función de como termine la extensión, sacamos el tipo de imagen
      * la cual se incluye en las cabeceras a la hora de subir la imagen para indicarle a Suoabase
      * el tipo de imagen.
+     *
      * @param filename Imagen.
      * @return Tipo de imagen.
      */
@@ -196,6 +182,7 @@ public class SupabaseStorage {
 
     /**
      * Método que devuelve la extensión del fichero en función del tipo de imagen.
+     *
      * @param mt Tipo de imagen.
      * @return Extensión que va a utilizar la imagen.
      */
