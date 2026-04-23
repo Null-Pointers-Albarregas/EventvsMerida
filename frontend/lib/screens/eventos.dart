@@ -11,6 +11,7 @@ import '../core/router/app_routes.dart';
 import '../models/api_response.dart';
 import '../models/usuario.dart';
 import '../services/api_service.dart';
+import '../services/eventos_guardados_service.dart';
 import '../services/shared_preferences_service.dart';
 
 class Eventos extends StatefulWidget {
@@ -48,16 +49,8 @@ class _EventosState extends State<Eventos> {
   // ===========================================================================
 
   Future<void> _cargarDatosUsuarioYGuardados() async {
-    final usuario = await SharedPreferencesService.cargarUsuario();
-
-    List<Evento> guardados = [];
-    if (usuario != null) {
-      final respuestaGuardados =
-      await ApiService.obtenerEventosGuardados(usuario.email);
-      if (respuestaGuardados.exito) {
-        guardados = respuestaGuardados.datos ?? [];
-      }
-    }
+    final (usuario, guardados) =
+    await EventosGuardadosService.cargarUsuarioYEventosGuardados();
 
     if (!mounted) return;
 
@@ -120,8 +113,8 @@ class _EventosState extends State<Eventos> {
     }
     return 'Fecha: $inicioFecha - $finFecha · $inicioHora - $finHora';
   }
-
-  /*String _textoFechaHoraDetalle(Evento evento) {
+/*
+  String _textoFechaHoraDetalle(Evento evento) {
     final esMismoDia = _esMismoDia(evento.fechaInicio, evento.fechaFin);
     final inicioFecha = _formatearFecha(evento.fechaInicio);
     final finFecha = _formatearFecha(evento.fechaFin);
@@ -146,17 +139,16 @@ class _EventosState extends State<Eventos> {
 
     return 'Desde: $inicioFecha $inicioHora\nHasta: $finFecha $finHora';
   }
-
+*/
   bool _estaGuardado(Evento evento) {
-    return _eventosGuardados.any((e) => _esMismoEvento(e, evento));
-  }*/
-
-  bool _estaGuardado(Evento evento) => _eventosGuardados.any((e) => _esMismoEvento(e, evento));
+    return EventosGuardadosService.estaGuardado(_eventosGuardados, evento);
+  }
 
   // ===========================================================================
-  // LLAMADA AL MODAL COMPARTIDO
+  // MODAL
   // ===========================================================================
-  void _abrirModalEvento(Evento evento, Usuario? usuario) {
+
+  void _abrirModalEvento(Evento evento) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -165,129 +157,18 @@ class _EventosState extends State<Eventos> {
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: ModalEvento(
-          evento: evento,
-          usuario: usuario,
-          isGuardadoInicial: _estaGuardado(evento),
-          onCambioGuardado: (estaGuardado) {
+          eventos: [evento],
+          usuario: _usuario,
+          eventosGuardados: _eventosGuardados,
+          onEventosGuardadosActualizados: (nuevaLista) {
             setState(() {
-              if (estaGuardado) {
-                if (!_estaGuardado(evento)) _eventosGuardados.add(evento);
-              } else {
-                _eventosGuardados.removeWhere((e) => _esMismoEvento(e, evento));
-              }
+              _eventosGuardados = nuevaLista;
             });
           },
         ),
       ),
     );
   }
-
-  // ===========================================================================
-  // INTERFAZ (Listas y Tarjetas)
-  // ===========================================================================
-  Widget _buildAppBarAction({required IconData icon, required String tooltip}) {
-    return IconButton(
-      onPressed: null,
-      icon: Icon(icon, color: _cs.primary.withValues(alpha: 0.5)),
-      tooltip: tooltip,
-    );
-  }
-
-  Widget _buildEstadoCentro({required IconData icono, required String mensaje}) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icono, size: 42),
-            const SizedBox(height: 12),
-            Text(mensaje, textAlign: TextAlign.center),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEventoCard(Evento evento) {
-    return Card(
-      elevation: 6,
-      shadowColor: _cs.onSurface,
-      margin: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: _cs.onPrimary, width: 2)),
-      color: _cs.secondary,
-      child: InkWell(
-        onTap: () => _abrirModalEvento(evento, _usuario),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: AspectRatio(aspectRatio: 16 / 9, child: Image.network(evento.foto, fit: BoxFit.cover, alignment: Alignment.topCenter)),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(15),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(evento.titulo, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 6),
-                  Text(evento.nombreCategoria, style: const TextStyle(color: Colors.black, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 6),
-                  Text(evento.localizacion, style: const TextStyle(color: Colors.black, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 12),
-                  Text(_textoFechaHoraCard(evento), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w500, fontSize: 14, height: 1.25), maxLines: 2, overflow: TextOverflow.ellipsis),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    return Center(
-      child: FutureBuilder<ApiResponse<List<Evento>>>(
-        future: _eventos,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) return const CircularProgressIndicator();
-          if (snapshot.hasError) return _buildEstadoCentro(icono: Icons.error_outline, mensaje: 'Error: ${snapshot.error}');
-          final respuesta = snapshot.data;
-          if (respuesta == null) return _buildEstadoCentro(icono: Icons.error_outline, mensaje: 'No se han podido cargar los eventos');
-          if (!respuesta.exito) return _buildEstadoCentro(icono: Icons.error_outline, mensaje: respuesta.mensaje);
-          final eventos = respuesta.datos ?? [];
-          if (eventos.isEmpty) return _buildEstadoCentro(icono: Icons.event_busy, mensaje: 'No hay eventos disponibles');
-          return ListView.builder(
-            itemCount: eventos.length,
-            itemBuilder: (context, indice) => _buildEventoCard(eventos[indice]),
-          );
-        },
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                _buildAppBarAction(icon: Icons.search, tooltip: 'Buscar - Proximamente'),
-                _buildAppBarAction(icon: Icons.filter_alt_rounded, tooltip: 'Filtrar - Proximamente'),
-              ],
-            ),
-          ),
-        ],
-      ),
-      body: _buildBody(),
-    );
-  }
-}
-
 /*
   Future<void> _abrirEnGoogleMaps(String direccion) async {
     final limpia = direccion.trim();
@@ -692,6 +573,7 @@ class _EventosState extends State<Eventos> {
       },
     );
   }
+*/
 
   Widget _buildAppBarAction({
     required IconData icon,
@@ -740,7 +622,7 @@ class _EventosState extends State<Eventos> {
       ),
       color: _cs.secondary,
       child: InkWell(
-        onTap: () => _abrirModalEvento(evento, _usuario),
+        onTap: () => _abrirModalEvento(evento),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -897,4 +779,4 @@ class _EventosState extends State<Eventos> {
       body: _buildBody(),
     );
   }
-}*/
+}
