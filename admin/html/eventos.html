@@ -1,334 +1,534 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-
-<head>
+  <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
     <meta name="description" content="" />
     <meta name="author" content="" />
     <title>Panel de control - Eventvs Mérida</title>
-    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
     <link href="../css/styles.css" rel="stylesheet" />
-    <link rel="icon" type="image/png" href="../assets/img/logo-eventvs-merida.jpeg" />
-    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
-</head>
+    <link
+      rel="icon"
+      type="image/png"
+      href="../assets/img/logo-eventvs-merida.jpeg"
+    />
+    <script
+      src="https://use.fontawesome.com/releases/v6.3.0/js/all.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
 
-<body class="sb-nav-fixed bg-dark">
+  <body class="sb-nav-fixed bg-dark">
     <nav class="sb-topnav navbar navbar-expand bg-azul">
-        <!-- Navbar Brand-->
-        <button class="btn btn-link btn-sm order-1 order-lg-0 ms-2 me-4 me-lg-0 text-light" id="sidebarToggle"
-            href="#!"><i class="fas fa-bars"></i></button>
+      <!-- Navbar Brand-->
+      <button
+        class="btn btn-link btn-sm order-1 order-lg-0 ms-2 me-4 me-lg-0 text-light"
+        id="sidebarToggle"
+        href="#!"
+      >
+        <i class="fas fa-bars"></i>
+      </button>
 
-        <!-- Sidebar Toggle-->
-        <a class="navbar-brand ps-3 me-3 text-light" href="../index.html">Admin - Eventvs Mérida</a>
+      <!-- Sidebar Toggle-->
+      <a class="navbar-brand ps-3 me-3 text-light" href="../index.html"
+        >Admin - Eventvs Mérida</a
+      >
 
-        <!-- Navbar-->
-        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4 d-flex flex-row align-items-center"
-            style="margin-left:auto !important;">
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle text-light" id="navbarDropdown" href="#" role="button"
-                    data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
-                <ul class="dropdown-menu dropdown-menu-end text-light aria-labelledby=" navbarDropdown>
-                    <li><a class="dropdown-item" href="login.html"><i class="fa-solid fa-right-from-bracket"></i> Cerrar
-                            sesión</a></li>
-                </ul>
+      <!-- Navbar-->
+      <ul
+        class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4 d-flex flex-row align-items-center"
+        style="margin-left: auto !important"
+      >
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle text-light"
+            id="navbarDropdown"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            ><i class="fas fa-user fa-fw"></i
+          ></a>
+          <ul
+            class="dropdown-menu dropdown-menu-end text-light"
+            aria-labelledby="navbarDropdown"
+          >
+            <li>
+              <a class="dropdown-item" href="login.html"
+                ><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a
+              >
             </li>
-        </ul>
+          </ul>
+        </li>
+      </ul>
     </nav>
     <div id="layoutSidenav">
-        <div id="layoutSidenav_nav">
-            <nav class="sb-sidenav accordion bg-azul text-light" id="sidenavAccordion">
-                <div class="sb-sidenav-menu">
-                    <div class="nav">
-                        <div class="sb-sidenav-menu-heading">Inicio</div>
-                        <a class="nav-link" href="../index.html">
-                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                            Panel de control
-                        </a>
-                        <div class="sb-sidenav-menu-heading">Administración</div>
-                        <a class="nav-link" href="usuarios.html">
-                            <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                            Usuarios
-                        </a>
-
-                        <a class="nav-link" href="eventos.html">
-                            <div class="sb-nav-link-icon"><i class="fas fa-calendar-days"></i></div>
-                            Eventos
-                        </a>
-
-                        <a class="nav-link" href="organizadores.html">
-                            <div class="sb-nav-link-icon"><i class="fas fa-user-tie"></i></div>
-                            Organizadores
-                        </a>
-
-                        <a class="nav-link" href="categorias.html">
-                            <div class="sb-nav-link-icon"><i class="fas fa-tags"></i></div>
-                            Categorías
-                        </a>
-
-                        <a class="nav-link" href="roles.html">
-                            <div class="sb-nav-link-icon"><i class="fas fa-users-cog"></i></div>
-                            Roles
-                        </a>
-                    </div>
+      <div id="layoutSidenav_nav">
+        <nav
+          class="sb-sidenav accordion bg-azul text-light"
+          id="sidenavAccordion"
+        >
+          <div class="sb-sidenav-menu">
+            <div class="nav">
+              <div class="sb-sidenav-menu-heading">Inicio</div>
+              <a class="nav-link" href="../index.html">
+                <div class="sb-nav-link-icon">
+                  <i class="fas fa-tachometer-alt"></i>
                 </div>
-                <div class="sb-sidenav-footer">
-                    <div class="small">Logeado como:</div>
-                    <span id="nombreUsuario"></span>
+                Panel de control
+              </a>
+              <div class="sb-sidenav-menu-heading">Administración</div>
+              <a class="nav-link" href="usuarios.html">
+                <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
+                Usuarios
+              </a>
+
+              <a class="nav-link" href="eventos.html">
+                <div class="sb-nav-link-icon">
+                  <i class="fas fa-calendar-days"></i>
                 </div>
-            </nav>
-        </div>
-        <div id="layoutSidenav_content">
-            <main>
-                <!-- Loader -->
-                <div id="loader">
-                    <img class="w-25 d-block m-auto" src="../assets/img/logo-eventvs-merida-no-bg.png" alt="">
+                Eventos
+              </a>
+
+              <a class="nav-link" href="organizadores.html">
+                <div class="sb-nav-link-icon">
+                  <i class="fas fa-user-tie"></i>
                 </div>
+                Organizadores
+              </a>
 
-                <div class="container-fluid px-4">
-                    <h1 class="mt-4 text-light">Eventos</h1>
-                    <ol class="breadcrumb mb-4">
-                        <li class="breadcrumb-item"><a href="../index.html">Panel de control</a></li>
-                        <li class="breadcrumb-item active">Eventos</li>
-                    </ol>
-                    <div class="row justify-content-center">
-                    </div>
+              <a class="nav-link" href="categorias.html">
+                <div class="sb-nav-link-icon"><i class="fas fa-tags"></i></div>
+                Categorías
+              </a>
 
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#modalCrearEvento">
-                            Añadir evento
-                        </button>
-                    </div>
-
-                    <table class="table text-light table-custom">
-                        <thead>
-                            <th scope="col">Título</th>
-                            <th scope="col">Descripción</th>
-                            <th scope="col">Fecha de inicio</th>
-                            <th scope="col">Fecha de fin</th>
-                            <th scope="col">Localización</th>
-                            <th scope="col">Acciones</th>
-                        </thead>
-                        <tbody id="listadoEventos" class="table-bordered"></tbody>
-                    </table>
-            </main>
-
-            <footer class="py-4 bg-dark mt-auto">
-                <hr class="text-light">
-                <div class="container-fluid px-4">
-                    <div class="d-flex align-items-center justify-content-between small">
-                        <div class="text-muted">Copyright &copy; Null Pointers 2026</div>
-                        <div>
-                            <a href="#">Privacy Policy</a>
-                            &middot;
-                            <a href="#">Terms &amp; Conditions</a>
-                        </div>
-                    </div>
+              <a class="nav-link" href="roles.html">
+                <div class="sb-nav-link-icon">
+                  <i class="fas fa-users-cog"></i>
                 </div>
-            </footer>
-        </div>
+                Roles
+              </a>
+            </div>
+          </div>
+          <div class="sb-sidenav-footer">
+            <div class="small">Logeado como:</div>
+            <span id="nombreUsuario"></span>
+          </div>
+        </nav>
+      </div>
+      <div id="layoutSidenav_content">
+        <main>
+          <!-- Loader -->
+          <div id="loader">
+            <img
+              class="w-25 d-block m-auto"
+              src="../assets/img/logo-eventvs-merida-no-bg.png"
+              alt=""
+            />
+          </div>
+
+          <div class="container-fluid px-4">
+            <h1 class="mt-4 text-light">Eventos</h1>
+            <div class="d-flex justify-content-between align-items-center">
+              <ol class="breadcrumb mb-4">
+                <li class="breadcrumb-item">
+                  <a href="../index.html">Panel de control</a>
+                </li>
+                <li class="breadcrumb-item active">Eventos</li>
+              </ol>
+              <div class="d-flex justify-content-end">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalCrearEvento"
+                >
+                  Añadir evento
+                </button>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="exampleFormControlInput1" class="form-label text-light"
+                >Buscador</label
+              >
+              <input
+                type="search"
+                class="form-control"
+                id="buscador"
+                placeholder="Nombre del evento"
+              />
+            </div>
+
+            <table class="table text-light table-custom mt-4">
+              <thead>
+                <th scope="col">Título</th>
+                <th scope="col">Descripción</th>
+                <th scope="col">Fecha de inicio</th>
+                <th scope="col">Fecha de fin</th>
+                <th scope="col">Localización</th>
+                <th scope="col">Acciones</th>
+              </thead>
+              <tbody id="listadoEventos" class="table-bordered"></tbody>
+            </table>
+
+            <h3 id="eventos-vacio" class="text-light mt-5 text-center d-none">
+              En estos momentos, no hay eventos
+            </h3>
+          </div>
+        </main>
+
+        <footer class="py-4 bg-dark mt-auto">
+          <hr class="text-light" />
+          <div class="container-fluid px-4">
+            <div
+              class="d-flex align-items-center justify-content-between small"
+            >
+              <div class="text-muted">Copyright &copy; Null Pointers 2026</div>
+              <div>
+                <a href="#">Privacy Policy</a>
+                &middot;
+                <a href="#">Terms &amp; Conditions</a>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
 
     <!-- Modal -->
-    <div class="modal fade" id="modalCrearEvento" tabindex="-1" aria-labelledby="modalCrearEventoLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content bg-dark text-light">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalCrearEventoLabel">Añadir nuevo evento</h1>
-                    <button type="button" class="btn-close custom-close" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+    <div
+      class="modal fade"
+      id="modalCrearEvento"
+      tabindex="-1"
+      aria-labelledby="modalCrearEventoLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="modalCrearEventoLabel">
+              Añadir nuevo evento
+            </h1>
+            <button
+              type="button"
+              class="btn-close custom-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form
+              class="row g-3 needs-validation"
+              id="formAgregarEvento"
+              novalidate
+            >
+              <div class="col-md-6">
+                <label for="nombre" class="form-label">Título</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="titulo"
+                  name="titulo"
+                  required
+                  minlength="2"
+                  maxlength="50"
+                  pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
+                  title="Solo letras y espacios"
+                />
+                <div class="invalid-feedback">
+                  Ingresa un título válido (solo letras y espacios).
                 </div>
-                <div class="modal-body">
-                    <form class="row g-3 needs-validation" id="formAgregarEvento" novalidate>
-                        <div class="col-md-6">
-                            <label for="nombre" class="form-label">Título</label>
-                            <input type="text" class="form-control" id="titulo" name="titulo" required minlength="2"
-                                maxlength="50" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo letras y espacios">
-                            <div class="invalid-feedback">
-                                Ingresa un título válido (solo letras y espacios).
-                            </div>
 
-                            <label for="localizacionEvento" class="form-label mt-2">Localización</label>
-                            <input type="text" class="form-control" id="localizacion" required minlength="2"
-                                maxlength="50" title="Solo letras y espacios">
-                            <div class="invalid-feedback">
-                                Introduce una localización.
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="exampleFormControlTextarea1" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" rows="3"></textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="startDate">Fecha de inicio</label>
-                                    <input id="fechaInicio" class="form-control" type="date" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="startTime">Hora de inicio</label>
-                                    <input id="horaInicio" class="form-control" type="time" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="startDate">Fecha de fin</label>
-                                    <input id="fechaFin" class="form-control" type="date" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="startTime">Hora de fin</label>
-                                    <input id="horaFin" class="form-control" type="time" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="idRol" class="form-label">Organizador</label>
-                            <select class="form-select" id="organizadores">
-                                <option value="">Selecciona un organizador</option>
-                                <!-- <option value="1">Usuario</option>
+                <label for="localizacionEvento" class="form-label mt-2"
+                  >Localización</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="localizacion"
+                  required
+                  minlength="2"
+                  maxlength="50"
+                  title="Solo letras y espacios"
+                />
+                <div class="invalid-feedback">Introduce una localización.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="exampleFormControlTextarea1" class="form-label"
+                  >Descripción</label
+                >
+                <textarea
+                  class="form-control"
+                  id="descripcion"
+                  rows="3"
+                ></textarea>
+              </div>
+              <div class="col-md-6">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="startDate">Fecha de inicio</label>
+                    <input id="fechaInicio" class="form-control" type="date" />
+                  </div>
+                  <div class="col-md-6">
+                    <label for="startTime">Hora de inicio</label>
+                    <input id="horaInicio" class="form-control" type="time" />
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="startDate">Fecha de fin</label>
+                    <input id="fechaFin" class="form-control" type="date" />
+                  </div>
+                  <div class="col-md-6">
+                    <label for="startTime">Hora de fin</label>
+                    <input id="horaFin" class="form-control" type="time" />
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="idRol" class="form-label">Organizador</label>
+                <select class="form-select" id="organizadores">
+                  <option value="">Selecciona un organizador</option>
+                  <!-- <option value="1">Usuario</option>
                                                 <option value="2">Organizador</option>
                                                 <option value="2">Administrador</option> -->
-                            </select>
-                            <div class="invalid-feedback">
-                                Selecciona un rol.
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="idRol" class="form-label">Categoría</label>
-                            <select class="form-select" id="categorias" required>
-                                <option value="">Selecciona una categoría</option>
-                                <!-- <option value="1">Usuario</option>
+                </select>
+                <div class="invalid-feedback">Selecciona un rol.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="idRol" class="form-label">Categoría</label>
+                <select class="form-select" id="categorias" required>
+                  <option value="">Selecciona una categoría</option>
+                  <!-- <option value="1">Usuario</option>
                                                 <option value="2">Organizador</option>
                                                 <option value="2">Administrador</option> -->
-                            </select>
-                            <div class="invalid-feedback">
-                                Selecciona un rol.
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="formFile" class="form-label">Cartel / Imagen del evento</label>
-                            <input class="form-control" type="file" id="fotoEvento">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary bg-danger" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="formAgregarEvento" class="btn btn-primary">Agregar evento</button>
-                </div>
-            </div>
+                </select>
+                <div class="invalid-feedback">Selecciona un rol.</div>
+              </div>
+              <div class="mb-3">
+                <label for="formFile" class="form-label"
+                  >Cartel / Imagen del evento</label
+                >
+                <input class="form-control" type="file" id="fotoEvento" />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary bg-danger"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              form="formAgregarEvento"
+              class="btn btn-primary"
+            >
+              Agregar evento
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
-    <div class="modal fade" id="modalVerEvento" tabindex="-1" aria-labelledby="modalVerEventoLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content bg-dark text-light">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalVerEventoLabel">Detalle del evento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body" id="contenidoModalEvento">
-                </div>
-            </div>
+    <div
+      class="modal fade"
+      id="modalVerEvento"
+      tabindex="-1"
+      aria-labelledby="modalVerEventoLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalVerEventoLabel">
+              Detalle del evento
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <div class="modal-body" id="contenidoModalEvento"></div>
         </div>
+      </div>
     </div>
 
-    <div class="modal fade" id="modalEditarEvento" tabindex="-1" aria-labelledby="modalEditarEventoLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content bg-dark text-light">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalEditarEventoLabel">Editar evento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    <div
+      class="modal fade"
+      id="modalEditarEvento"
+      tabindex="-1"
+      aria-labelledby="modalEditarEventoLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalEditarEventoLabel">
+              Editar evento
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Cerrar"
+            ></button>
+          </div>
+          <div class="modal-body" id="contenidoModalEvento">
+            <form
+              class="row g-3 needs-validation"
+              id="formEditarEvento"
+              novalidate
+            >
+              <div class="col-md-6">
+                <label for="tituloEventoEditar" class="form-label"
+                  >Título</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="tituloEventoEditar"
+                  required
+                  minlength="2"
+                  maxlength="50"
+                  pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
+                  title="Solo letras y espacios"
+                />
+                <div class="invalid-feedback">
+                  Ingresa un título válido (solo letras y espacios).
                 </div>
-                <div class="modal-body" id="contenidoModalEvento">
-                    <form class="row g-3 needs-validation" id="formEditarEvento" novalidate>
-                        <div class="col-md-6">
-                            <label for="tituloEventoEditar" class="form-label">Título</label>
-                            <input type="text" class="form-control" id="tituloEventoEditar" required minlength="2"
-                                maxlength="50" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+" title="Solo letras y espacios">
-                            <div class="invalid-feedback">
-                                Ingresa un título válido (solo letras y espacios).
-                            </div>
-                            <label for="localizacionEditar" class="form-label mt-2">Localización</label>
-                            <input type="text" class="form-control" id="localizacionEditar" required minlength="2"
-                                maxlength="50" title="Solo letras y espacios">
-                            <div class="invalid-feedback">
-                                Introduce una localización.
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="descripcionEventoEditar" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcionEventoEditar" rows="3"></textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="fechaInicioEditar">Fecha de inicio</label>
-                                    <input id="fechaInicioEditar" class="form-control" type="date" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="horaInicioEditar">Hora de inicio</label>
-                                    <input id="horaInicioEditar" class="form-control" type="time" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="fechaFinEditar">Fecha de fin</label>
-                                    <input id="fechaFinEditar" class="form-control" type="date" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="horaFinEditar">Hora de fin</label>
-                                    <input id="horaFinEditar" class="form-control" type="time" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="idRol" class="form-label">Organizador</label>
-                            <select class="form-select" id="organizadoresEditar" required>
-                                <option value="">Selecciona un organizador</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Selecciona un organizador.
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="categoriasEditar" class="form-label">Categoría</label>
-                            <select class="form-select" id="categoriasEditar" required>
-                                <option value="">Selecciona una categoría</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Selecciona una categoría.
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="formFile" class="form-label">Cartel / Imagen del evento</label>
-                            <input class="form-control" type="file" id="formFile">
-                        </div>
-                        <div class="mb-3">
-                            <img src="" class="img-thumbnail img-evento-modal" id="imagenEvento">
-                        </div>
-                    </form>
+                <label for="localizacionEditar" class="form-label mt-2"
+                  >Localización</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="localizacionEditar"
+                  required
+                  minlength="2"
+                  maxlength="50"
+                  title="Solo letras y espacios"
+                />
+                <div class="invalid-feedback">Introduce una localización.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="descripcionEventoEditar" class="form-label"
+                  >Descripción</label
+                >
+                <textarea
+                  class="form-control"
+                  id="descripcionEventoEditar"
+                  rows="3"
+                ></textarea>
+              </div>
+              <div class="col-md-6">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="fechaInicioEditar">Fecha de inicio</label>
+                    <input
+                      id="fechaInicioEditar"
+                      class="form-control"
+                      type="date"
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label for="horaInicioEditar">Hora de inicio</label>
+                    <input
+                      id="horaInicioEditar"
+                      class="form-control"
+                      type="time"
+                    />
+                  </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary bg-danger" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="formEditarEvento" class="btn btn-primary">Guardar cambios</button>
+              </div>
+              <div class="col-md-6">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="fechaFinEditar">Fecha de fin</label>
+                    <input
+                      id="fechaFinEditar"
+                      class="form-control"
+                      type="date"
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label for="horaFinEditar">Hora de fin</label>
+                    <input
+                      id="horaFinEditar"
+                      class="form-control"
+                      type="time"
+                    />
+                  </div>
                 </div>
-            </div>
+              </div>
+              <div class="col-md-6">
+                <label for="idRol" class="form-label">Organizador</label>
+                <select class="form-select" id="organizadoresEditar" required>
+                  <option value="">Selecciona un organizador</option>
+                </select>
+                <div class="invalid-feedback">Selecciona un organizador.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="categoriasEditar" class="form-label"
+                  >Categoría</label
+                >
+                <select class="form-select" id="categoriasEditar" required>
+                  <option value="">Selecciona una categoría</option>
+                </select>
+                <div class="invalid-feedback">Selecciona una categoría.</div>
+              </div>
+              <div class="mb-3">
+                <label for="formFile" class="form-label"
+                  >Cartel / Imagen del evento</label
+                >
+                <input class="form-control" type="file" id="formFile" />
+              </div>
+              <div class="mb-3">
+                <img
+                  src=""
+                  class="img-thumbnail img-evento-modal"
+                  id="imagenEvento"
+                />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary bg-danger"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              form="formEditarEvento"
+              class="btn btn-primary"
+            >
+              Guardar cambios
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        crossorigin="anonymous"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+      crossorigin="anonymous"
+    ></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../js/scripts.js"></script>
     <script src="../js/eventos.js"></script>
-</body>
-
+  </body>
 </html>
