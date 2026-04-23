@@ -1,5 +1,8 @@
-"""Limpia el JSON de eventos y normaliza texto y fechas.
-    python saneador-caracteres.py input.json output.json """
+"""
+Limpia el JSON de eventos y normaliza texto y fechas.
+Uso:
+    python saneador-caracteres.py input.json output.json 
+"""
 
 import json
 import re
@@ -27,7 +30,7 @@ CATEGORY_CHOICES = {
 
 _KEYWORD_TO_ID = {
     "concierto": 1, "conciertos": 1, "musica": 1, "musical": 1, "jazz": 1, "orquesta": 1,
-    "festival": 2, "feria": 2, "festivales": 2, "ferias": 2, "semana santa": 2, "comercio": 2, "convivencia": 2, "recreacion": 2,
+    "festival": 2, "feria": 2, "festivales": 2, "ferias": 2, "semana santa": 2, "comercio": 2, "convivencia": 2, "recreacion": 2, "emerita lvdica": 2,
     "cine": 3, "teatro": 3, "pelicula": 3, "peliculas": 3, "obra": 3, "danza": 3,
     "exposicion": 4, "exposiciones": 4, "arte": 4, "galeria": 4, "museo": 4,
     "gastronomia": 5, "gastronomica": 5, "comida": 5, "degustacion": 5,
