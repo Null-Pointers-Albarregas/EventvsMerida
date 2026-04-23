@@ -3,6 +3,15 @@ window.addEventListener("DOMContentLoaded", async (event) => {
     cargarEventos(URL_BASE);
     obtenerCategorias(URL_BASE);
 
+    // Buscador de eventos provisional
+    document.addEventListener("keyup", e => {
+        if (e.target.matches('#buscador')) {
+            document.querySelectorAll('.evento').forEach(evento => {
+                evento.textContent.toLowerCase().includes(e.target.value) ? evento.classList.remove('filtro') : evento.classList.add('filtro');
+            })
+        }
+    });
+
     const form = document.getElementById("formAgregarEvento");
 
     form.addEventListener("submit", function (event) {
@@ -45,6 +54,19 @@ async function cargarEventos(URL_BASE) {
         });
 
         const data = await resp.json();
+
+        // Mostrar mensaje si no hay eventos y limpiar tabla
+        const eventosVacio = document.getElementById('eventos-vacio');
+        if ( data.length === 0) {
+            eventosVacio.classList.remove("d-none");
+            eventosVacio.classList.add("d-block");
+          tabla.innerHTML = "";
+            return;
+        } else {
+            eventosVacio.classList.remove("d-block");
+            eventosVacio.classList.add("d-none");
+        }
+
         data.forEach((evento) => {
             const tr = document.createElement("tr");
             const tdTitulo = document.createElement("td");
@@ -76,6 +98,7 @@ async function cargarEventos(URL_BASE) {
             tr.appendChild(tdFechaInicio);
             tr.appendChild(tdFechaFin);
             tr.appendChild(tdLocalizacion);
+            tr.classList.add("evento")
             const tdAcciones = document.createElement("td");
             const divGrupo = document.createElement("div");
             divGrupo.className = "btn-group";
@@ -99,28 +122,28 @@ async function cargarEventos(URL_BASE) {
                 <p><b>Localización:</b> ${evento.localizacion}</p>
                 ${mapa}`
 
-                    
+
             });
 
             let mapa = '';
-                    if (evento.latitud && evento.longitud) {
-                        const lat = parseFloat(evento.latitud);
-                        const lon = parseFloat(evento.longitud);
-                        const delta = 0.0002; // Menos zoom: aumentar este valor si quieres ver más área
-                        const bbox = [
-                            lon - delta, // oeste
-                            lat - delta, // sur
-                            lon + delta, // este
-                            lat + delta  // norte
-                        ].join(',');
-                        mapa = `<div style="width:100%;max-width:320px;margin:auto">
+            if (evento.latitud && evento.longitud) {
+                const lat = parseFloat(evento.latitud);
+                const lon = parseFloat(evento.longitud);
+                const delta = 0.0002; // Menos zoom: aumentar este valor si quieres ver más área
+                const bbox = [
+                    lon - delta, // oeste
+                    lat - delta, // sur
+                    lon + delta, // este
+                    lat + delta  // norte
+                ].join(',');
+                mapa = `<div style="width:100%;max-width:320px;margin:auto">
                             <iframe width="400" height="280" style="border-radius:10px;border:0;" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
                                 src="https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}">
                             </iframe>
                         </div>`;
-                    } else {
-                        mapa = '<div class="text-center text-warning">No hay coordenadas para este evento.</div>';
-                    }
+            } else {
+                mapa = '<div class="text-center text-warning">No hay coordenadas para este evento.</div>';
+            }
 
             // Botón editar
             const btnEditar = document.createElement("button");
@@ -219,7 +242,7 @@ async function subirEvento(URL_BASE, datosFormulario) {
         if (resp.status === 201) {
             mostrarAlerta("success", "Evento creado correctamente");
         } else {
-            mostrarAlerta("error", "Error al crear el evento: " + respuesta.message);
+            mostrarAlerta("error", "Error al crear el evento: " + respuesta.error);
         }
     } catch (error) {
         console.error("Error al subir el evento:", error);
