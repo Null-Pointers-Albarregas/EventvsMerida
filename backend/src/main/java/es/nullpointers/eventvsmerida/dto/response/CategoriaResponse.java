@@ -8,5 +8,6 @@ package es.nullpointers.eventvsmerida.dto.response;
  * @author Adrián Pérez
  */
 public record CategoriaResponse(
+        Long id,
         String nombre
 ) {}
