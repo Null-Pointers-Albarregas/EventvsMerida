@@ -9,7 +9,6 @@ import es.nullpointers.eventvsmerida.entity.Usuario;
 import es.nullpointers.eventvsmerida.supabase.SupabaseStorage;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 /**

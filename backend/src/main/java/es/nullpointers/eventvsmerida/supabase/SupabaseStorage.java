@@ -6,10 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriUtils;
@@ -18,9 +16,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Clase que se encarga de subir la imagen al bucket de Supabase una vez ha sido descargada con CURL.
@@ -30,19 +26,12 @@ import java.util.UUID;
 public class SupabaseStorage {
 
     private final String supabaseUrl;
-    private final String key;
-
     private final String bucket = "imagenesEvento";
-
     private final RestClient supabaseClient;
 
     // Constructor que con @Value obtiene las propiedades del application.properties
-    public SupabaseStorage(
-            @Value("${supabase.url}") String supabaseUrl,
-            @Value("${supabase.key}") String key
-    ) {
+    public SupabaseStorage(@Value("${supabase.url}") String supabaseUrl, @Value("${supabase.key}") String key) {
         this.supabaseUrl = supabaseUrl;
-        this.key = key;
 
         // Construye un RestClient para hacer la petición post.
         this.supabaseClient = RestClient.builder()
@@ -167,7 +156,7 @@ public class SupabaseStorage {
 
     /**
      * Método que en función de como termine la extensión, sacamos el tipo de imagen
-     * la cual se incluye en las cabeceras a la hora de subir la imagen para indicarle a Suoabase
+     * la cual se incluye en las cabeceras a la hora de subir la imagen para indicarle a Supabase
      * el tipo de imagen.
      *
      * @param filename Imagen.
@@ -178,18 +167,5 @@ public class SupabaseStorage {
         if (f.endsWith(".png")) return "image/png";
         if (f.endsWith(".jpg") || f.endsWith(".jpeg")) return "image/jpeg";
         return "application/octet-stream";
-    }
-
-    /**
-     * Método que devuelve la extensión del fichero en función del tipo de imagen.
-     *
-     * @param mt Tipo de imagen.
-     * @return Extensión que va a utilizar la imagen.
-     */
-    private static String extensionFromMediaType(MediaType mt) {
-        if (mt == null) return "";
-        if (MediaType.IMAGE_PNG.includes(mt)) return ".png";
-        if (MediaType.IMAGE_JPEG.includes(mt)) return ".jpg";
-        return "";
     }
 }
