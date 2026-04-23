@@ -41,7 +41,7 @@ public class EventoMapper {
         evento.setLocalizacion(request.localizacion());
         evento.setLatitud(request.latitud());
         evento.setLongitud(request.longitud());
-        evento.setFoto(storageUploader.subirImagen(request.foto(), null, null));
+        evento.setFoto(storageUploader.subirImagen(request.foto(), null, evento.getTitulo()));
         evento.setUsuario(usuario);
         evento.setCategoria(categoria);
 
