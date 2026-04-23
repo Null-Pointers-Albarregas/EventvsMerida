@@ -11853,3 +11853,7 @@ body {
 #loader img {
   animation: pulso 2s infinite;
 }
+
+.filtro {
+  display: none;
+}

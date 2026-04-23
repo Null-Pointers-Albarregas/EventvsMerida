@@ -6,7 +6,6 @@ import '../models/evento.dart';
 import '../models/usuario.dart';
 import '../services/api_service.dart';
 import '../services/eventos_guardados_service.dart';
-import '../services/shared_preferences_service.dart';
 import '../widgets/componentes_compartidos.dart';
 
 class Mapa extends StatefulWidget {
@@ -30,8 +29,6 @@ class _MapaState extends State<Mapa> {
   // Variables para gestionar el guardado y el usuario (igual que en eventos.dart)
   Usuario? _usuario;
   List<Evento> _eventosGuardados = [];
-
-  ColorScheme get _cs => Theme.of(context).colorScheme;
 
   // ===========================================================================
   // CICLO DE VIDA
@@ -78,7 +75,7 @@ class _MapaState extends State<Mapa> {
       eventosValidos.sort((a, b) => a.fechaInicio.compareTo(b.fechaInicio));
 
       // 3. Recortamos: Nos quedamos estrictamente con los 10 primeros de la lista ordenada
-      final losDiezProximos = eventosValidos.take(10).toList();
+      final losDiezProximos = eventosValidos.take(20).toList();
 
       // 4. AGRUPAMOS POR COORDENADAS
       final Map<String, List<Evento>> agrupados = {};
@@ -102,16 +99,6 @@ class _MapaState extends State<Mapa> {
   // ===========================================================================
   // FUNCIONES AUXILIARES
   // ===========================================================================
-  bool _esMismoEvento(Evento a, Evento b) {
-    return a.titulo == b.titulo &&
-        a.fechaInicio == b.fechaInicio &&
-        a.fechaFin == b.fechaFin;
-  }
-
-  bool _estaGuardado(Evento evento) {
-    return EventosGuardadosService.estaGuardado(_eventosGuardados, evento);
-  }
-
   void _abrirModalEvento(List<Evento> eventoEnLugar) {
     showDialog(
       context: context,
@@ -138,173 +125,6 @@ class _MapaState extends State<Mapa> {
       SnackBar(content: Text(mensaje)),
     );
   }
-/*
-  void _mostrarDetalleEvento(List<Evento> eventosEnLugar) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true, // Permite que el modal sea un poco más grande
-      builder: (context) {
-        return SafeArea(
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: _cs.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: _cs.onSurface.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (eventosEnLugar.length > 1)
-                   Text(
-                    '📍 ${eventosEnLugar.length} eventos en esta ubicación',
-                    style: TextStyle(color: _cs.primary, fontWeight: FontWeight.bold),
-                  ),
-                const SizedBox(height: 8),
-                // Carrusel de eventos
-                SizedBox(
-                  height: 280,
-                  child: PageView.builder(
-                    controller: PageController(viewportFraction: 0.9),
-                    itemCount: eventosEnLugar.length,
-                    itemBuilder: (context, index) {
-                      final evento = eventosEnLugar[index];
-
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Card(
-                          color: _cs.secondary.withValues(alpha: 0.3),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              Navigator.pop(context);
-                              _abrirModalEvento(evento);
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (evento.foto.isNotEmpty)
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: AspectRatio(
-                                        aspectRatio: 16 / 9,
-                                        child: Image.network(
-                                          evento.foto,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                          const Center(
-                                            child: Icon(Icons.broken_image, size: 40),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-
-                                  const SizedBox(height: 12),
-
-                                  Text(
-                                    evento.titulo,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: _cs.onSurface,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-
-                                  const SizedBox(height: 8),
-
-                                  Text(
-                                    evento.localizacion,
-                                    style: TextStyle(
-                                      color: _cs.primary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-
-                                  const SizedBox(height: 8),
-
-                                  Expanded(
-                                    child: Text(
-                                      evento.descripcion,
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: _cs.onSurface.withValues(alpha: 0.7),
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 12),
-
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: FilledButton.icon(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                        _abrirModalEvento(evento);
-                                      },
-                                      icon: const Icon(Icons.visibility_outlined),
-                                      label: const Text('Ver evento'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cerrar'),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cerrar'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-  }
-*/
 
   // ===========================================================================
   // INTERFAZ
@@ -332,7 +152,6 @@ class _MapaState extends State<Mapa> {
               height: 65,
               alignment: Alignment.topCenter,
               child: GestureDetector(
-                // Pasamos LA LISTA ENTERA al BottomSheet
               onTap: () => _abrirModalEvento(listaEventosEnEsteLugar),
                 child: PinConFoto(
                  imagePath: 'assets/images/logo-eventvs-merida.png',

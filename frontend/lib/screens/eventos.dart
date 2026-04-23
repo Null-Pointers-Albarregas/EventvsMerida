@@ -1,18 +1,12 @@
-import 'dart:ui';
-
 import 'package:eventvsmerida/models/evento.dart';
 import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import '../core/router/app_routes.dart';
 import '../models/api_response.dart';
 import '../models/usuario.dart';
 import '../services/api_service.dart';
 import '../services/eventos_guardados_service.dart';
-import '../services/shared_preferences_service.dart';
 
 class Eventos extends StatefulWidget {
   const Eventos({super.key});
@@ -31,7 +25,6 @@ class _EventosState extends State<Eventos> {
   List<Evento> _eventosGuardados = [];
 
   ColorScheme get _cs => Theme.of(context).colorScheme;
-  TextTheme get _tt => Theme.of(context).textTheme;
 
   // ===========================================================================
   // CICLO DE VIDA
@@ -66,12 +59,6 @@ class _EventosState extends State<Eventos> {
 
   bool _esMismoDia(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-
-  bool _esMismoEvento(Evento a, Evento b) {
-    return a.titulo == b.titulo &&
-        a.fechaInicio == b.fechaInicio &&
-        a.fechaFin == b.fechaFin;
   }
 
   bool _esHoraCero(DateTime fecha) {
@@ -140,9 +127,6 @@ class _EventosState extends State<Eventos> {
     return 'Desde: $inicioFecha $inicioHora\nHasta: $finFecha $finHora';
   }
 */
-  bool _estaGuardado(Evento evento) {
-    return EventosGuardadosService.estaGuardado(_eventosGuardados, evento);
-  }
 
   // ===========================================================================
   // MODAL

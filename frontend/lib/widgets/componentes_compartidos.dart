@@ -189,8 +189,6 @@ class _ModalEventoState extends State<ModalEvento> {
 
     if (!mounted) return;
 
-    if (!mounted) return;
-
     if (respuesta.exito) {
       setState(() {
         if (yaGuardado) {
@@ -203,8 +201,9 @@ class _ModalEventoState extends State<ModalEvento> {
       widget.onEventosGuardadosActualizados(_eventosGuardados);
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(respuesta.mensaje)),
+    _mostrarSnackBarResultado(
+      mensaje: respuesta.mensaje,
+      guardado: respuesta.exito ? !yaGuardado : yaGuardado,
     );
   }
 
