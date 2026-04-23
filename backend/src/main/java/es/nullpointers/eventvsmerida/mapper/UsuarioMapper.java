@@ -47,6 +47,7 @@ public class UsuarioMapper {
      * @return Objeto DTO con los datos del usuario.
      */
     public static UsuarioResponse convertirAResponse(Usuario usuario) {
+        Long id = usuario.getId();
         String nombre = usuario.getNombre();
         String apellidos = usuario.getApellidos();
         LocalDate fechaNacimiento = usuario.getFechaNacimiento();
@@ -54,6 +55,6 @@ public class UsuarioMapper {
         String telefono = usuario.getTelefono();
         String rol = usuario.getRol().getNombre();
 
-        return new UsuarioResponse(nombre, apellidos, fechaNacimiento, email, telefono, rol);
+        return new UsuarioResponse(id, nombre, apellidos, fechaNacimiento, email, telefono, rol);
     }
 }

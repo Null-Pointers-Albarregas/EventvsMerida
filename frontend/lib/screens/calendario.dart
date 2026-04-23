@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../models/evento.dart';
+import '../models/usuario.dart';
 import '../services/api_service.dart';
+import '../services/eventos_guardados_service.dart';
 
 class Calendario extends StatefulWidget {
   const Calendario({super.key});
@@ -17,7 +19,6 @@ class _CalendarioState extends State<Calendario> {
   // ===========================================================================
   // VARIABLES
   // ===========================================================================
-
   late final DateTime _primerMesPermitido;
   late final DateTime _ultimoMesPermitido;
   late final List<int> _years;
@@ -28,6 +29,9 @@ class _CalendarioState extends State<Calendario> {
   bool _cargandoEventos = true;
   String? _mensajeError;
   Map<DateTime, List<Evento>> _eventosMap = {};
+
+  Usuario? _usuario;
+  List<Evento> _eventosGuardados = [];
 
   static const List<String> _months = [
     'Enero',
@@ -49,7 +53,6 @@ class _CalendarioState extends State<Calendario> {
   // ===========================================================================
   // CICLO DE VIDA
   // ===========================================================================
-
   @override
   void initState() {
     super.initState();
@@ -66,13 +69,24 @@ class _CalendarioState extends State<Calendario> {
       _ultimoMesPermitido.year - _primerMesPermitido.year + 1,
           (index) => _primerMesPermitido.year + index,
     );
-
+    _cargarUsuarioYGuardados();
     _cargarEventos();
   }
 
   // ===========================================================================
   // CARGA DE DATOS
   // ===========================================================================
+  Future<void> _cargarUsuarioYGuardados() async {
+    final (usuario, guardados) =
+    await EventosGuardadosService.cargarUsuarioYEventosGuardados();
+
+    if (!mounted) return;
+
+    setState(() {
+      _usuario = usuario;
+      _eventosGuardados = guardados;
+    });
+  }
 
   Future<void> _cargarEventos() async {
     setState(() {
@@ -123,7 +137,6 @@ class _CalendarioState extends State<Calendario> {
   // ===========================================================================
   // FUNCIONES AUXILIARES
   // ===========================================================================
-
   DateTime _normalizarFecha(DateTime fecha) {
     return DateTime(fecha.year, fecha.month, fecha.day);
   }
@@ -287,10 +300,26 @@ class _CalendarioState extends State<Calendario> {
     });
   }
 
+  void _abrirModalEvento(Evento evento) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.2),
+      builder: (ctx) => ModalEvento(
+        eventos: [evento],
+        usuario: _usuario,
+        eventosGuardados: _eventosGuardados,
+        onEventosGuardadosActualizados: (nuevaLista) {
+          setState(() {
+            _eventosGuardados = nuevaLista;
+          });
+        },
+      ),
+    );
+  }
   // ===========================================================================
   // MENSAJES
   // ===========================================================================
-
   void _mostrarMensaje(String mensaje) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -372,6 +401,19 @@ class _CalendarioState extends State<Calendario> {
       startingDayOfWeek: StartingDayOfWeek.monday,
       eventLoader: (day) {
         final fechaNormalizada = _normalizarFecha(day);
+        final hoy = _normalizarFecha(DateTime.now());
+
+        final esMesVisible = fechaNormalizada.month == _focusedDay.month &&
+            fechaNormalizada.year == _focusedDay.year;
+
+        if (!esMesVisible) {
+          return const [];
+        }
+
+        if (fechaNormalizada.isBefore(hoy)) {
+          return const [];
+        }
+
         return _eventosMap[fechaNormalizada] ?? const [];
       },
       selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
@@ -436,6 +478,7 @@ class _CalendarioState extends State<Calendario> {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: ListTile(
+        onTap: () => _abrirModalEvento(evento),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 8,

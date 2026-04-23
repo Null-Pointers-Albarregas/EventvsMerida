@@ -131,7 +131,6 @@ class _EventosState extends State<Eventos> {
   // ===========================================================================
   // MODAL
   // ===========================================================================
-
   void _abrirModalEvento(Evento evento) {
     showDialog(
       context: context,
@@ -716,6 +715,7 @@ class _EventosState extends State<Eventos> {
           }
 
           final eventos = respuesta.datos ?? [];
+          eventos.sort((a, b) => a.fechaInicio.compareTo(b.fechaInicio));
           if (eventos.isEmpty) {
             return _buildEstadoCentro(
               icono: Icons.event_busy,
