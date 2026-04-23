@@ -36,7 +36,8 @@ public class CategoriaMapper {
      */
     public static CategoriaResponse convertirAResponse(Categoria categoria) {
         String nombre = categoria.getNombre();
+        Long id = categoria.getId();
 
-        return new CategoriaResponse(nombre);
+        return new CategoriaResponse(id, nombre);
     }
 }

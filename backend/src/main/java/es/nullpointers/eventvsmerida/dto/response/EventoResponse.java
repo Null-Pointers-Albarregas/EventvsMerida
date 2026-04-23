@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
  * @author Adrián Pérez
  */
 public record EventoResponse(
+        Long id,
         String titulo,
         String descripcion,
         LocalDateTime fechaInicio,
