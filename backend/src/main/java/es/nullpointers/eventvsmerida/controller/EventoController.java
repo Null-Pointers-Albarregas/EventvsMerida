@@ -6,14 +6,18 @@ import es.nullpointers.eventvsmerida.dto.request.EventoImagenCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.EventoResponse;
 import es.nullpointers.eventvsmerida.dto.request.EventoActualizarRequest;
 import es.nullpointers.eventvsmerida.service.EventoService;
+
 import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -109,5 +113,15 @@ public class EventoController {
     public ResponseEntity<EventoResponse> actualizarEvento (@PathVariable Long id, @Valid @RequestBody EventoActualizarRequest eventoActualizarRequest) {
         EventoResponse eventoActualizado = eventoService.actualizarEvento(id, eventoActualizarRequest);
         return ResponseEntity.ok(eventoActualizado);
+    }
+
+    // =========================
+    // Metodos Lógica de Negocio
+    // =========================
+
+    @GetMapping("/search")
+    public ResponseEntity<List<EventoResponse>> buscarEventos(@RequestParam(name = "q", required = false) String q, @RequestParam(name = "limit", defaultValue = "10") int limit) {
+        List<EventoResponse> resultados = eventoService.buscarEventos(q, limit);
+        return ResponseEntity.ok(resultados);
     }
 }
