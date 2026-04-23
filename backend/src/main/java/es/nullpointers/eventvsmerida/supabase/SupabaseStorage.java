@@ -57,7 +57,7 @@ public class SupabaseStorage {
      * @param urlOrigen URL de la imagen que se desea almacenar.
      * @return URL de la imagen almacenadas en el bucket.
      */
-    public String subirImagen(@Nullable String urlOrigen, @Nullable MultipartFile imagen, @Nullable String tituloEvento) {
+    public String subirImagen(@Nullable String urlOrigen, @Nullable MultipartFile imagen, String tituloEvento) {
         byte[] bytes = new byte[0];
         String filename;
         String contentType = "";
@@ -66,7 +66,6 @@ public class SupabaseStorage {
         log.error("TEST ERROR subirImagen");
 
         if(urlOrigen != null) {
-            log.info("entra en el if");
             // Descarga con curl.
             bytes = CurlDownloader.download(urlOrigen, Duration.ofSeconds(30));
 
@@ -75,20 +74,18 @@ public class SupabaseStorage {
             }
 
             // Genera nombre de la imagen.
-            filename = filenameFromUrlOrGenerate(urlOrigen, null);
+            filename = normalizarNombreImagen(urlOrigen, tituloEvento, null);
 
             // Content-Type: se extrae según sea la extensión de la imagen.
             contentType = contentTypeFromFilename(filename);
             objectPath = filename; // raíz del bucket
 
         } else {
-            log.info("entra en el else");
             if (imagen != null && tituloEvento != null) {
                 try {
                     bytes = imagen.getBytes();
 
-                    filename = imagen.getOriginalFilename();
-                    log.info("Filename--->{}", filename);
+                    filename = sanitizarNombre(tituloEvento, MediaType.parseMediaType(imagen.getContentType()));
                     contentType = imagen.getContentType();
                     if (contentType == null || contentType.equals("application/octet-stream")) {
                         contentType = contentTypeFromFilename(filename);
@@ -125,21 +122,62 @@ public class SupabaseStorage {
     }
 
     /**
-     * Méotodo para obtener el nombre del fichero o generar uno nuevo para evitar valores nulos.
-     * @param sourceUrl URL de la imagen de origen.
+     * Método para obtener el nombre del fichero o generar uno nuevo para evitar valores nulos.
+     * @param url URL de la imagen de origen.
      * @param mt Tipo de imagen.
      * @return Nombre de la imagen.
      */
-    private static String filenameFromUrlOrGenerate(String sourceUrl, MediaType mt) {
-        String path = URI.create(sourceUrl).getPath();
-        String last = (path == null) ? "" : path.substring(path.lastIndexOf('/') + 1);
+    private static String normalizarNombreImagen(String url, String tituloEvento, MediaType mt) {
+        String nombreFichero = "";
 
-        if (last != null && !last.isBlank() && last.contains(".")) {
-            return last;
+        if (url != null && !url.isBlank()) {
+            try {
+                String path = URI.create(url).getPath();
+                String last = (path == null) ? "" : path.substring(path.lastIndexOf('/') + 1);
+                if (!last.isBlank() && last.contains(".")) {
+                    nombreFichero = last;
+                } else {
+                    nombreFichero = url;
+                }
+            } catch (IllegalArgumentException e) {
+                nombreFichero = url;
+            }
         }
 
-        String ext = extensionFromMediaType(mt);
-        return "file-" + Instant.now().toEpochMilli() + "-" + UUID.randomUUID() + ext;
+        if (nombreFichero == null || nombreFichero.isBlank()) {
+            String ext = extensionFromMediaType(mt);
+            nombreFichero = "file-" + Instant.now().toEpochMilli() + "-" + UUID.randomUUID() + ext;
+        }
+
+        return sanitizarNombre(tituloEvento, mt);
+    }
+
+    /**
+     * Método para sanitizar el tituloEvento de la imagen, evitando espacios y caracteres no seguros y generando un tituloEvento válido.
+     * @param tituloEvento Nombre de la imagen a sanetizar.
+     * @param mt Tipo de imagen.
+     * @return Título de la imagen sanitizado.
+     */
+    private static String sanitizarNombre(String tituloEvento, MediaType mt) {
+        String nombreImagen = (tituloEvento == null) ? "" : tituloEvento.trim();
+
+        // Separar base + extensión.
+        int indice = nombreImagen.lastIndexOf('.');
+        String base = indice > 0 ? nombreImagen.substring(0, indice) : nombreImagen;
+        String extension = indice > 0 ? nombreImagen.substring(indice).toLowerCase() : extensionFromMediaType(mt);
+
+        // Reemplazar espacios por '-'
+        base = base.replaceAll("\\s+", "-");
+
+        // Limpia los caracteres no seguros en rutas.
+        base = base.replaceAll("[^a-zA-Z0-9._-]", "-");
+
+        // Evitar tituloEvento vacío
+        if (base.isBlank()) {
+            base = "file-" + Instant.now().toEpochMilli() + "-" + UUID.randomUUID();
+        }
+
+        return base + extension;
     }
 
     /**
