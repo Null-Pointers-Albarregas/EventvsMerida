@@ -18,6 +18,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
@@ -126,13 +129,27 @@ public class EventoService {
     }
 
     /**
-     * Método para eliminar un evento por su ID.
+     * Método para eliminar un evento por su ID y borrar su imagen asociada en el storage.
      *
      * @param id ID del evento a eliminar.
      */
+    @Transactional
     public void eliminarEvento(Long id) {
-        Evento evento = obtenerEventoPorIdOExcepcion(id, "Error en EventoService.eliminarEvento: No se encontró el evento con id " + id);
+        Evento evento = obtenerEventoPorIdOExcepcion(id, "...");
+        String foto = evento.getFoto();
+
         eventoRepository.delete(evento);
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    storageUploader.borrarImagenPorUrl(foto);
+                } catch (Exception ex) {
+                    log.warn("No se pudo borrar la imagen tras commit: {}", ex.getMessage());
+                }
+            }
+        });
     }
 
     /**
