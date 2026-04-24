@@ -241,6 +241,15 @@ public class EventoService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Método para contar el número total de eventos.
+     * 
+     * @return Número total de eventos.
+     */
+    public long contarEventos() {
+        return eventoRepository.count();
+    }
+
     // ==================
     // Metodos Auxiliares
     // ==================

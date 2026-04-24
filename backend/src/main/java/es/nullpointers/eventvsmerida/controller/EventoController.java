@@ -149,4 +149,15 @@ public class EventoController {
         List<EventoResponse> eventos = eventoService.obtenerEventosPorCategorias(categorias);
         return ResponseEntity.ok(eventos);
     }
+
+    /**
+     * Método GET que llama al servicio para contar el número total de eventos.
+     * 
+     * @return ResponseEntity con la cantidad total de eventos y el estado HTTP 200 (OK).
+     */
+    @GetMapping("/count")
+    public ResponseEntity<Long> contarEventos() {
+        long cantidad = eventoService.contarEventos();
+        return ResponseEntity.ok(cantidad);
+    }
 }

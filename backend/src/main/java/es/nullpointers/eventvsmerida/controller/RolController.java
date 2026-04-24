@@ -90,4 +90,19 @@ public class RolController {
         RolResponse rolActualizado = rolService.actualizarRol(id, rolActualizarRequest);
         return ResponseEntity.ok(rolActualizado);
     }
+
+    // =========================
+    // Metodos Lógica de Negocio
+    // =========================
+
+    /**
+     * Metodo GET que llama al servicio para contar la cantidad de roles existentes.
+     * 
+     * @return ResponseEntity con la cantidad de roles y el estado HTTP 200 (OK).
+     */
+    @GetMapping("/count")
+    public ResponseEntity<Long> contarRoles() {
+        long cantidad = rolService.contarRoles();
+        return ResponseEntity.ok(cantidad);
+    }
 }
