@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/router/app_routes.dart';
@@ -52,8 +53,7 @@ class ModalEvento extends StatefulWidget {
   final Usuario? usuario;
   final List<Evento> eventosGuardados;
   final ValueChanged<List<Evento>> onEventosGuardadosActualizados;
-  //final bool isGuardadoInicial;
-  //final Function(bool) onCambioGuardado;
+  final bool mostrarBotonGuardado;
 
   const ModalEvento({
     super.key,
@@ -61,6 +61,7 @@ class ModalEvento extends StatefulWidget {
     required this.usuario,
     required this.eventosGuardados,
     required this.onEventosGuardadosActualizados,
+    this.mostrarBotonGuardado = true,
   });
 
   @override
@@ -159,6 +160,23 @@ class _ModalEventoState extends State<ModalEvento> {
         margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
+    );
+  }
+
+  Future<void> _compartirEvento(Evento evento) async {
+    final texto = '''
+    ${evento.titulo}
+    
+    ${evento.localizacion}
+    
+    Fecha: ${_textoFechaHoraDetalle(evento)}
+    
+    ${evento.descripcion}
+    ''';
+
+    await Share.share(
+      texto,
+      subject: evento.titulo,
     );
   }
 
@@ -316,6 +334,11 @@ class _ModalEventoState extends State<ModalEvento> {
                 ),
               ),
               IconButton(
+                icon: const Icon(Icons.share_outlined),
+                onPressed: () => _compartirEvento(evento),
+                tooltip: 'Compartir evento',
+              ),
+              IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.of(context).pop(),
                 tooltip: 'Cerrar',
@@ -417,26 +440,27 @@ class _ModalEventoState extends State<ModalEvento> {
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _gestionarGuardado,
-                  icon: Icon(
-                    estaGuardado
-                        ? Icons.bookmark
-                        : Icons.bookmark_border_outlined,
-                  ),
-                  label: Text(
-                    estaGuardado ? 'Evento guardado' : 'Guardar evento',
+        if(widget.mostrarBotonGuardado)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _gestionarGuardado,
+                    icon: Icon(
+                      estaGuardado
+                          ? Icons.bookmark
+                          : Icons.bookmark_border_outlined,
+                    ),
+                    label: Text(
+                      estaGuardado ? 'Evento guardado' : 'Guardar evento',
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
