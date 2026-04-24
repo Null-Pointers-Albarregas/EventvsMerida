@@ -99,6 +99,13 @@ public class EventoService {
         return EventoMapper.convertirAResponse(eventoCreado);
     }
 
+    /**
+     * Método para crear un nuevo evento con archivo de imagen.
+     * 
+     * @param eventoRequest Datos del evento a crear, incluyendo el nombre del archivo de imagen.
+     * @param imagen Archivo de imagen del evento a crear.
+     * @return EventoResponse con el evento creado.
+     */
     public EventoResponse crearEventoConImagen(EventoImagenCrearRequest eventoRequest, MultipartFile imagen) {
         // Se hacen las comprobaciones necesarias para evitar errores de integridad de datos
         if (eventoRepository.existsByTituloAndFechaInicioAndFechaFin(eventoRequest.titulo(), eventoRequest.fechaInicio(), eventoRequest.fechaFin())) {
@@ -192,15 +199,55 @@ public class EventoService {
     // Metodos Lógica de Negocio
     // =========================
 
+    /**
+     * Método para buscar eventos por una consulta de texto que puede coincidir con el título, localización o categoría del evento.
+     * La búsqueda es insensible a mayúsculas y acentos, y se requiere un mínimo de 2 caracteres para realizar la búsqueda.
+     * 
+     * @param q Consulta de texto para buscar eventos.
+     * @param limit Número máximo de resultados a devolver.
+     * @return Lista de eventos que coinciden con la consulta, convertidos a response. Si la consulta es nula o tiene menos de 2 caracteres, se devuelve una lista vacía.
+     */
     public List<EventoResponse> buscarEventos(String q, int limit) {
         if (q == null || q.trim().length() < 2) {
             return Collections.emptyList();
         }
         
         Page<Evento> page = eventoRepository.searchByQuery(q, PageRequest.of(0, Math.max(1, limit)));
+
         return page.getContent().stream()
                 .map(EventoMapper::convertirAResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Método para obtener eventos que pertenecen a una o varias categorías específicas.
+     * 
+     * @param categoriaIds Lista de IDs de categorías para filtrar los eventos. Si la lista es nula o vacía, se devuelve una lista vacía.
+     * @return Lista de eventos que pertenecen a las categorías especificadas, convertidos a response. Si no se encuentran eventos para las categorías dadas, se devuelve una lista vacía.
+     */
+    public List<EventoResponse> obtenerEventosPorCategorias(List<Long> categoriaIds) {
+        if (categoriaIds == null || categoriaIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Evento> eventos = eventoRepository.findByCategoria_IdIn(categoriaIds);
+
+        if (eventos == null || eventos.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return eventos.stream()
+                .map(EventoMapper::convertirAResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Método para contar el número total de eventos.
+     * 
+     * @return Número total de eventos.
+     */
+    public long contarEventos() {
+        return eventoRepository.count();
     }
 
     // ==================

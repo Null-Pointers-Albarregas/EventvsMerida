@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/router/app_routes.dart';
@@ -162,6 +163,23 @@ class _ModalEventoState extends State<ModalEvento> {
     );
   }
 
+  Future<void> _compartirEvento(Evento evento) async {
+    final texto = '''
+    ${evento.titulo}
+    
+    ${evento.localizacion}
+    
+    Fecha: ${_textoFechaHoraDetalle(evento)}
+    
+    ${evento.descripcion}
+    ''';
+
+    await Share.share(
+      texto,
+      subject: evento.titulo,
+    );
+  }
+
   Future<void> _gestionarGuardado() async {
     final usuario = widget.usuario;
     final evento = _eventoActual;
@@ -314,6 +332,11 @@ class _ModalEventoState extends State<ModalEvento> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.share_outlined),
+                onPressed: () => _compartirEvento(evento),
+                tooltip: 'Compartir evento',
               ),
               IconButton(
                 icon: const Icon(Icons.close),

@@ -96,6 +96,19 @@ public class RolService {
         return RolMapper.convertirAResponse(rolActualizado);
     }
 
+    // =========================
+    // Metodos Lógica de Negocio
+    // =========================
+
+    /**
+     * Metodo para contar el numero total de roles.
+     * 
+     * @return Número total de roles.
+     */
+    public long contarRoles() {
+        return rolRepository.count();
+    }
+
     // ==================
     // Metodos Auxiliares
     // ==================
