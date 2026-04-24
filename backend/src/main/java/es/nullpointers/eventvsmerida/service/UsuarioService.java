@@ -143,9 +143,9 @@ public class UsuarioService {
         return UsuarioMapper.convertirAResponse(usuarioActualizado);
     }
 
-    // =================
-    // Metodos de Lógica
-    // =================
+    // ============================
+    // Metodos de Lógica de Negocio
+    // ============================
 
     /**
      * Metodo para iniciar sesión a un usuario con su email y contraseña.
@@ -163,6 +163,16 @@ public class UsuarioService {
 
         log.info("Login exitoso para el usuario con email: {}", email);
         return UsuarioMapper.convertirAResponse(usuario);
+    }
+
+    /**
+     * Metodo para contar el numero total de usuarios.
+     * 
+     * @param rolId ID del rol para filtrar los usuarios.
+     * @return Numero total de usuarios con el rol especificado.
+     */
+    public long contarUsuariosPorRol(Long rolId) {
+        return usuarioRepository.countByRol_Id(rolId);
     }
 
     // ==================

@@ -93,9 +93,9 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioActualizado);
     }
 
-    // =================
-    // Metodos de Lógica
-    // =================
+    // ============================
+    // Metodos de Lógica de Negocio
+    // ============================
 
     /**
      * Metodo POST que llama al servicio para iniciar sesión a un usuario con su email y contraseña.
@@ -107,5 +107,25 @@ public class UsuarioController {
     public ResponseEntity<UsuarioResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         UsuarioResponse usuarioLogeado = usuarioService.login(loginRequest.email(), loginRequest.password());
         return ResponseEntity.ok(usuarioLogeado);
+    }
+
+    /**
+     * Metodo GET que llama al servicio para contar el número de usuarios registrados en la plataforma.
+     * 
+     * @return ResponseEntity con la cantidad de usuarios registrados y el estado HTTP 200 (OK).
+     */
+    @GetMapping("/count/registrados")
+    public ResponseEntity<Long> contarRegistrados() {
+        return ResponseEntity.ok(usuarioService.contarUsuariosPorRol(1L));
+    }
+
+    /**
+     * Metodo GET que llama al servicio para contar el número de organizadores registrados en la plataforma.
+     * 
+     * @return ResponseEntity con la cantidad de organizadores registrados y el estado HTTP 200 (OK).
+     */
+    @GetMapping("/count/organizadores")
+    public ResponseEntity<Long> contarOrganizadores() {
+        return ResponseEntity.ok(usuarioService.contarUsuariosPorRol(2L));
     }
 }
