@@ -100,34 +100,6 @@ class _EventosState extends State<Eventos> {
     }
     return 'Fecha: $inicioFecha - $finFecha · $inicioHora - $finHora';
   }
-/*
-  String _textoFechaHoraDetalle(Evento evento) {
-    final esMismoDia = _esMismoDia(evento.fechaInicio, evento.fechaFin);
-    final inicioFecha = _formatearFecha(evento.fechaInicio);
-    final finFecha = _formatearFecha(evento.fechaFin);
-    final inicioHora = _formatearHora(evento.fechaInicio);
-    final finHora = _formatearHora(evento.fechaFin);
-    final horasIguales = inicioHora == finHora;
-    final ambasHorasCero = _esHoraCero(evento.fechaInicio) && _esHoraCero(evento.fechaFin);
-
-    if (esMismoDia) {
-      if (horasIguales && ambasHorasCero) {
-        return 'Fecha: $inicioFecha';
-      }
-      if (horasIguales) {
-        return 'Fecha: $inicioFecha\nHora: $inicioHora';
-      }
-      return 'Fecha: $inicioFecha\nHora: $inicioHora - $finHora';
-    }
-
-    if (horasIguales && ambasHorasCero) {
-      return 'Desde: $inicioFecha\nHasta: $finFecha';
-    }
-
-    return 'Desde: $inicioFecha $inicioHora\nHasta: $finFecha $finHora';
-  }
-*/
-
   // ===========================================================================
   // MODAL
   // ===========================================================================
@@ -148,6 +120,7 @@ class _EventosState extends State<Eventos> {
               _eventosGuardados = nuevaLista;
             });
           },
+          mostrarBotonGuardado: true,
         ),
       ),
     );

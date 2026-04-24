@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>Panel de control - Eventvs Mérida</title>
+    <title>Usuarios - Eventvs Mérida</title>
     <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
     <link href="../css/styles.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="../assets/img/logo-eventvs-merida.jpeg" />
@@ -43,7 +43,7 @@
                         <div class="sb-sidenav-menu-heading">Inicio</div>
                         <a class="nav-link" href="../index.html">
                             <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                            Panel de control
+                            Panel
                         </a>
                         <div class="sb-sidenav-menu-heading">Administración</div>
                         <a class="nav-link" href="usuarios.html">
@@ -83,7 +83,7 @@
                 <div class="container-fluid px-4">
                     <h1 class="mt-4 text-light">Usuarios</h1>
                     <ol class="breadcrumb mb-4">
-                        <li class="breadcrumb-item"><a href="../index.html">Panel de control</a></li>
+                        <li class="breadcrumb-item"><a href="../index.html">Panel de administración</a></li>
                         <li class="breadcrumb-item active">Usuarios</li>
                     </ol>
                     <div class="row justify-content-center">
@@ -108,19 +108,17 @@
                                         <div class="col-md-6">
                                             <label for="nombre" class="form-label">Nombre</label>
                                             <input type="text" class="form-control" id="nombre" name="nombre" required
-                                                minlength="2" maxlength="50" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
-                                                title="Solo letras y espacios">
+                                                minlength="2" maxlength="50">
                                             <div class="invalid-feedback">
-                                                Ingresa un nombre válido (solo letras y espacios).
+                                                Ingresa un nombre válido
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="apellidos" class="form-label">Apellidos</label>
                                             <input type="text" class="form-control" id="apellidos" name="apellidos"
-                                                required minlength="2" maxlength="50" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
-                                                title="Solo letras y espacios">
+                                                required minlength="2" maxlength="50">
                                             <div class="invalid-feedback">
-                                                Ingresa apellidos válidos (solo letras y espacios).
+                                                Ingresa unos apellidos válidos
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -143,9 +141,9 @@
                                             <label for="telefono" class="form-label">Teléfono</label>
                                             <input type="tel" class="form-control" id="telefono" name="telefono"
                                                 required pattern="[0-9]{9,15}" maxlength="15"
-                                                title="Solo números, mínimo 9 dígitos">
+                                                title="Solo números y 9 dígitos">
                                             <div class="invalid-feedback">
-                                                Ingresa un teléfono válido (solo números, mínimo 9 dígitos).
+                                                Ingresa un teléfono válido (solo números y 9 dígitos).
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -160,9 +158,6 @@
                                             <label for="idRol" class="form-label">Rol</label>
                                             <select class="form-select" id="roles" name="idRol" required>
                                                 <option value="">Selecciona un rol</option>
-                                                <!-- <option value="1">Usuario</option>
-                                                <option value="2">Organizador</option>
-                                                <option value="2">Administrador</option> -->
                                             </select>
                                             <div class="invalid-feedback">
                                                 Selecciona un rol.

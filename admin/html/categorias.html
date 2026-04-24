@@ -9,7 +9,7 @@
     />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>Panel de control - Eventvs Mérida</title>
+    <title>Categorías - Eventvs Mérida</title>
     <link href="../css/styles.css" rel="stylesheet" />
     <link
       rel="icon"
@@ -79,7 +79,7 @@
                 <div class="sb-nav-link-icon">
                   <i class="fas fa-tachometer-alt"></i>
                 </div>
-                Panel de control
+                Panel
               </a>
               <div class="sb-sidenav-menu-heading">Administración</div>
               <a class="nav-link" href="usuarios.html">
@@ -136,7 +136,7 @@
             <div class="d-flex justify-content-between align-items-center">
               <ol class="breadcrumb mb-4">
                 <li class="breadcrumb-item">
-                  <a href="../index.html">Panel de control</a>
+                  <a href="../index.html">Panel de administración</a>
                 </li>
                 <li class="breadcrumb-item active">Categorías</li>
               </ol>
@@ -154,6 +154,7 @@
 
             <table class="table text-light table-custom mt-4">
               <thead>
+                <th scope="col">ID</th>
                 <th scope="col">Nombre</th>
                 <th scope="col" class="text-end">Acciones</th>
               </thead>
@@ -223,12 +224,9 @@
                   required
                   minlength="2"
                   maxlength="50"
-                  pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
-                  title="Solo letras y espacios"
                 />
                 <div class="invalid-feedback">
-                  Ingresa un nombre de categoría válido (solo letras y
-                  espacios).
+                  Introduce un nombre de categoría
                 </div>
               </div>
               <div class="modal-footer">
@@ -292,12 +290,9 @@
                   required
                   minlength="2"
                   maxlength="50"
-                  pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
-                  title="Solo letras y espacios"
                 />
                 <div class="invalid-feedback">
-                  Ingresa un nombre de categoría válido (solo letras y
-                  espacios).
+                  Introduce un nombre de categoría
                 </div>
               </div>
               <div class="modal-footer">
