@@ -8,5 +8,6 @@ package es.nullpointers.eventvsmerida.dto.response;
  * @author Adrián Pérez
  */
 public record RolResponse(
+        Long id,
         String nombre
 ) {}

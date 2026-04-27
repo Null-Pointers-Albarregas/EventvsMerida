@@ -3,7 +3,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../models/evento.dart';
+import '../models/usuario.dart';
 import '../services/api_service.dart';
+import '../services/eventos_guardados_service.dart';
 import '../widgets/componentes_compartidos.dart';
 
 class Mapa extends StatefulWidget {
@@ -24,7 +26,9 @@ class _MapaState extends State<Mapa> {
   Map<String, List<Evento>> _eventosAgrupados = {};
   bool _cargando = true;
 
-  ColorScheme get _cs => Theme.of(context).colorScheme;
+  // Variables para gestionar el guardado y el usuario (igual que en eventos.dart)
+  Usuario? _usuario;
+  List<Evento> _eventosGuardados = [];
 
   // ===========================================================================
   // CICLO DE VIDA
@@ -32,11 +36,24 @@ class _MapaState extends State<Mapa> {
   @override
   void initState() {
     super.initState();
+    _cargarUsuarioYGuardados(); // Cargamos la sesión primero
     _cargarEventosParaMapa();
   }
   // ===========================================================================
   // CARGA DE DATOS
   // ===========================================================================
+  Future<void> _cargarUsuarioYGuardados() async {
+    final (usuario, guardados) =
+    await EventosGuardadosService.cargarUsuarioYEventosGuardados();
+
+    if (!mounted) return;
+
+    setState(() {
+      _usuario = usuario;
+      _eventosGuardados = guardados;
+    });
+  }
+
   Future<void> _cargarEventosParaMapa() async {
     setState(() => _cargando = true);
 
@@ -58,13 +75,13 @@ class _MapaState extends State<Mapa> {
       eventosValidos.sort((a, b) => a.fechaInicio.compareTo(b.fechaInicio));
 
       // 3. Recortamos: Nos quedamos estrictamente con los 10 primeros de la lista ordenada
-      final losDiezProximos = eventosValidos.take(10).toList();
+      final losDiezProximos = eventosValidos.take(20).toList();
 
       // 4. AGRUPAMOS POR COORDENADAS
-      Map<String, List<Evento>> agrupados = {};
-      for (var evento in losDiezProximos) {
+      final Map<String, List<Evento>> agrupados = {};
+      for (final evento in losDiezProximos) {
         // Creamos una llave única con la latitud y longitud
-        String claveUbicacion = '${evento.latitud},${evento.longitud}';
+        final claveUbicacion = '${evento.latitud},${evento.longitud}';
 
         // Si la llave no existe, crea una lista vacía. Luego añade el evento.
         agrupados.putIfAbsent(claveUbicacion, () => []).add(evento);
@@ -82,104 +99,34 @@ class _MapaState extends State<Mapa> {
   // ===========================================================================
   // FUNCIONES AUXILIARES
   // ===========================================================================
-  void _mostrarDetalleEvento(List<Evento> eventosEnLugar) {
-    showModalBottomSheet(
+  void _abrirModalEvento(List<Evento> eventoEnLugar) {
+    showDialog(
       context: context,
-      backgroundColor: _cs.surface,
-      isScrollControlled: true, // Permite que el modal sea un poco más grande
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.2),
+      builder: (ctx) => ModalEvento(
+        eventos: eventoEnLugar,
+        usuario: _usuario,
+        eventosGuardados: _eventosGuardados,
+        onEventosGuardadosActualizados: (nuevaLista) {
+          setState(() {
+            _eventosGuardados = nuevaLista;
+          });
+        },
+        mostrarBotonGuardado: true,
       ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (eventosEnLugar.length > 1)
-                  Text(
-                    '📍 ${eventosEnLugar.length} eventos en esta ubicación',
-                    style: TextStyle(color: _cs.primary, fontWeight: FontWeight.bold),
-                  ),
-                const SizedBox(height: 8),
-                // Carrusel de eventos
-                SizedBox(
-                  height: 200, // Altura fija para la tarjeta del evento
-                  child: PageView.builder(
-                    itemCount: eventosEnLugar.length,
-                    controller: PageController(viewportFraction: 0.9), // Muestra un trocito del siguiente evento
-                    itemBuilder: (context, index) {
-                      final evento = eventosEnLugar[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                        color: _cs.secondary.withValues(alpha: 0.3), // Un fondo sutil
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                evento.titulo,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: _cs.onSurface,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                evento.localizacion,
-                                style: TextStyle(color: _cs.primary, fontWeight: FontWeight.w500),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 8),
-                              Expanded(
-                                child: Text(
-                                  evento.descripcion,
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: _cs.onSurface.withValues(alpha: 0.7)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cerrar'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
-
 
   // ===========================================================================
   // MENSAJES
   // ===========================================================================
   void _mostrarMensaje(String mensaje) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensaje)),
+    );
   }
+
   // ===========================================================================
   // INTERFAZ
   // ===========================================================================
@@ -206,10 +153,10 @@ class _MapaState extends State<Mapa> {
               height: 65,
               alignment: Alignment.topCenter,
               child: GestureDetector(
-                // Pasamos LA LISTA ENTERA al BottomSheet
-              onTap: () => _mostrarDetalleEvento(listaEventosEnEsteLugar),
-                child: const PinConFoto(
+              onTap: () => _abrirModalEvento(listaEventosEnEsteLugar),
+                child: PinConFoto(
                  imagePath: 'assets/images/logo-eventvs-merida.png',
+                  cantidadEventos: listaEventosEnEsteLugar.length,
                 ),
               ),
             );
@@ -245,8 +192,9 @@ class _MapaState extends State<Mapa> {
 
 class PinConFoto extends StatelessWidget {
   final String imagePath; // Ruta a la foto (asset o URL)
+  final int cantidadEventos;
 
-  const PinConFoto({super.key, required this.imagePath});
+  const PinConFoto({super.key, required this.imagePath, required this.cantidadEventos});
 
   @override
   Widget build(BuildContext context) {
@@ -278,6 +226,27 @@ class PinConFoto extends StatelessWidget {
               ),
             ),
           ),
+          if (cantidadEventos > 1)
+            Positioned(
+              top: 2,
+              left: 2,
+              child: Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$cantidadEventos',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

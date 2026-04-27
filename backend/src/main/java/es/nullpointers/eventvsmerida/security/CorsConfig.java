@@ -8,9 +8,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig {
     private static final String[] ALLOWED_ORIGINS = {
-            "*"
-            //"https://eventvsmerida.onrender.com",
-            //"https://eventvsmerida-admin.vercel.app"
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "https://eventvsmerida-admin.vercel.app"
     };
     private static final String[] ALLOWED_METHODS = { "GET", "POST", "PUT", "DELETE", "OPTIONS" };
     private static final String[] ALLOWED_HEADERS = { "Content-Type", "Authorization", "X-Requested-With" };
@@ -23,10 +23,11 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOriginPatterns(ALLOWED_ORIGINS)
+                        .allowedOrigins(ALLOWED_ORIGINS)
                         .allowedMethods(ALLOWED_METHODS)
                         .allowedHeaders(ALLOWED_HEADERS)
                         .exposedHeaders(EXPOSED_HEADERS)
+                        .allowCredentials(true)
                         .maxAge(MAX_AGE);
             }
         };
