@@ -154,7 +154,7 @@ public class UsuarioService {
      * @param password Contraseña del usuario a autenticar.
      * @return Usuario logeado si las credenciales son correctas.
      */
-    public UsuarioResponse login(String email, String password) {
+    /*public UsuarioResponse login(String email, String password) {
         Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow(() -> new NoSuchElementException("Error en UsuarioService.login: No se encontró el usuario con email " + email));
 
         if (!passwordEncoder.matches(password, usuario.getPassword())) {
@@ -163,7 +163,7 @@ public class UsuarioService {
 
         log.info("Login exitoso para el usuario con email: {}", email);
         return UsuarioMapper.convertirAResponse(usuario);
-    }
+    }*/
 
     /**
      * Metodo para contar el numero total de usuarios.
@@ -189,5 +189,10 @@ public class UsuarioService {
      */
     public Usuario obtenerUsuarioPorIdOExcepcion(Long id, String mensajeError) {
         return usuarioRepository.findById(id).orElseThrow(() -> new NoSuchElementException(mensajeError));
+    }
+
+    public UsuarioResponse obtenerUsuarioPorEmail(String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow(() -> new NoSuchElementException("Error en UsuarioService.obtenerUsuarioPorEmail: No se encontró el usuario con email " + email));
+        return UsuarioMapper.convertirAResponse(usuario);
     }
 }

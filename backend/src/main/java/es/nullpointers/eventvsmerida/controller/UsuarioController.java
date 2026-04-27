@@ -110,7 +110,7 @@ public class UsuarioController {
      * @param loginRequest DTO con el email y la contraseña del usuario que intenta iniciar sesión.
      * @return ResponseEntity con el usuario logeado y el estado HTTP 200 (OK).
      */
-    @PostMapping("/login")
+    /*@PostMapping("/login")
     public ResponseEntity<UsuarioResponse> login(@Valid @RequestBody LoginRequest loginRequest,
             @RequestParam(name = "admin", required = false, defaultValue = "false") boolean admin,
             HttpServletRequest request) {
@@ -131,7 +131,7 @@ public class UsuarioController {
 
         UsuarioResponse usuarioLogeado = usuarioService.login(loginRequest.email(), loginRequest.password());
         return ResponseEntity.ok(usuarioLogeado);
-    }
+    }*/
 
     /**
      * Metodo GET que llama al servicio para contar el número de usuarios registrados en la plataforma.
