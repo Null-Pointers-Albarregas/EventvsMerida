@@ -9,7 +9,6 @@ import es.nullpointers.eventvsmerida.entity.Usuario;
 import es.nullpointers.eventvsmerida.supabase.SupabaseStorage;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 /**
@@ -72,6 +71,7 @@ public class EventoMapper {
      * @return Objeto DTO con los datos del evento.
      */
     public static EventoResponse convertirAResponse(Evento evento) {
+        Long id = evento.getId();
         String titulo = evento.getTitulo();
         String descripcion = evento.getDescripcion();
         LocalDateTime fechaInicio = evento.getFechaInicio();
@@ -83,6 +83,6 @@ public class EventoMapper {
         String emailOrganizador = evento.getUsuario().getEmail();
         String categoria = evento.getCategoria().getNombre();
 
-        return new EventoResponse(titulo, descripcion, fechaInicio, fechaFin, localizacion, latitud, longitud, urlFoto, emailOrganizador, categoria);
+        return new EventoResponse(id, titulo, descripcion, fechaInicio, fechaFin, localizacion, latitud, longitud, urlFoto, emailOrganizador, categoria);
     }
 }

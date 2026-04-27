@@ -10,75 +10,89 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const URL_BASE = "https://eventvsmerida.onrender.com/api/";
 
-  await cargarUsuarios(URL_BASE);
+  obtenerRoles(URL_BASE);
+});
 
-  const form = document.getElementById("formAgregarUsuario");
-  if (form) {
-    form.addEventListener(
-      "submit",
-      function (event) {
-        event.preventDefault();
-
-        const contrasenia = document.getElementById("contrasena").value;
-        const confirmarContrasenia = document.getElementById(
-          "confirmarContrasena",
-        ).value;
-
-        if (!form.checkValidity()) {
-          event.stopPropagation();
-        } else if (contrasenia !== confirmarContrasenia) {
-          event.stopPropagation();
-          mostrarAlerta("error", "Las contraseñas tienen que ser iguales");
-        } else {
-          const usuario = {
-            nombre: document.getElementById("nombre").value,
-            apellidos: document.getElementById("apellidos").value,
-            fechaNacimiento: formatearFecha(
-              document.getElementById("fechaNacimiento").value,
-            ),
-            email: document.getElementById("correo").value,
-            telefono: document.getElementById("telefono").value,
-            password: contrasenia,
-            idRol: 1,
-          };
-          subirUsuario(URL_BASE, usuario);
-        }
-
-        form.classList.add("was-validated");
+async function obtenerUsuarios(URL_BASE) {
+  try {
+    const resp = await fetch(URL_BASE + "usuarios/all", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
       },
-      false,
-    );
-  }
+      credentials: "include"
+    });
 
-  const formEditar = document.getElementById("formEditarUsuario");
-  document.getElementById("nombreUsuario").innerText = 'David';
+    if (!resp.ok) {
+      throw new Error("Error al obtener los usuarios");
+    }
 
-  formEditar.addEventListener(
-    "submit",
-    function (event) {
-      if (!formEditar.checkValidity()) {
-        event.preventDefault();
-        event.stopPropagation();
-        formEditar.classList.add("was-validated");
-      } else {
-        event.preventDefault();
-        const usuario = {
-          nombre: document.getElementById("nombre").value,
-          apellidos: document.getElementById("apellidos").value,
-          fechaNacimiento: formatearFecha(
-            document.getElementById("fechaNacimiento").value,
-          ),
-          email: document.getElementById("correo").value,
-          telefono: document.getElementById("telefono").value,
-          password: contrasenia,
-          idRol: 1,
-        };
-        editarRol(URL_BASE, formEditar.dataset.id, rol);
+    const tabla = document.getElementById("listadoUsuarios");
+
+    const data = await resp.json();
+    data.forEach((rol) => {
+      const opt = document.createElement("option");
+      
+      select.appendChild(opt);
+
+      // Limpia validaciones y campos al cerrar el modal de usuario
+      const modalUsuario = document.getElementById("modalCrearUsuario");
+      if (modalUsuario) {
+        modalUsuario.addEventListener("hidden.bs.modal", function () {
+          const form = document.getElementById("formAgregarUsuario");
+          if (form) {
+            form.classList.remove("was-validated");
+            form.reset();
+          }
+        });
       }
-      formEditar.classList.add("was-validated");
-    },
-    false,
-  );
+
+      modalUsuario.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const form = document.getElementById("formAgregarUsuario");
+        if (form.checkValidity()) {
+          mostrarAlerta("success", "Usuario creado correctamente");
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Error al cargar los roles:", error);
+  }
+}
+
+async function obtenerRoles(URL_BASE) {
+  try {
+    const resp = await fetch(URL_BASE + "roles/all", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error("Error al obtener los roles");
+    }
+
+    const select = document.getElementById("roles");
+
+    const data = await resp.json();
+    data.forEach((rol) => {
+      const opt = document.createElement("option");
+      switch (rol["nombre"]) {
+        case "Registrado":
+          opt.value = 1;
+          break;
+        case "Organizador":
+          opt.value = 2;
+          break;
+        case "Administrador":
+          opt.value = 3;
+          break;
+        default:
+          opt.value = 0;
+      }
+      opt.textContent = rol["nombre"];
+      select.appendChild(opt);
 
   // Limpia validaciones y campos al cerrar el modal de usuario
   const modalUsuario = document.getElementById("modalCrearUsuario");

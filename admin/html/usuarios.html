@@ -10,6 +10,7 @@
     <meta name="description" content="" />
     <meta name="author" content="" />
     <title>Usuarios - Eventvs Mérida</title>
+
     <link
       href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css"
       rel="stylesheet"
@@ -20,6 +21,7 @@
       type="image/png"
       href="../assets/img/logo-eventvs-merida.jpeg"
     />
+
     <script
       src="https://use.fontawesome.com/releases/v6.3.0/js/all.js"
       crossorigin="anonymous"
@@ -28,21 +30,21 @@
 
   <body class="sb-nav-fixed bg-dark auth-pending">
     <nav class="sb-topnav navbar navbar-expand bg-azul">
-      <!-- Navbar Brand-->
+      <!-- Sidebar Toggle -->
       <button
         class="btn btn-link btn-sm order-1 order-lg-0 ms-2 me-4 me-lg-0 text-light"
         id="sidebarToggle"
-        href="#!"
+        type="button"
       >
         <i class="fas fa-bars"></i>
       </button>
 
-      <!-- Sidebar Toggle-->
-      <a class="navbar-brand ps-3 me-3 text-light" href="../index.html"
-        >Admin - Eventvs Mérida</a
-      >
+      <!-- Brand -->
+      <a class="navbar-brand ps-3 me-3 text-light" href="../index.html">
+        Admin - Eventvs Mérida
+      </a>
 
-      <!-- Navbar-->
+      <!-- Navbar derecha -->
       <ul
         class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4 d-flex flex-row align-items-center"
         style="margin-left: auto !important"
@@ -55,22 +57,26 @@
             role="button"
             data-bs-toggle="dropdown"
             aria-expanded="false"
-            ><i class="fas fa-user fa-fw"></i
-          ></a>
+          >
+            <i class="fas fa-user fa-fw"></i>
+          </a>
+
           <ul
-            class="dropdown-menu dropdown-menu-end text-light"
+            class="dropdown-menu dropdown-menu-end"
             aria-labelledby="navbarDropdown"
           >
             <li>
-              <a class="dropdown-item" href="login.html"
-                ><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a
-              >
+              <a class="dropdown-item" href="login.html">
+                <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+              </a>
             </li>
           </ul>
         </li>
       </ul>
     </nav>
+
     <div id="layoutSidenav">
+      <!-- Sidebar -->
       <div id="layoutSidenav_nav">
         <nav
           class="sb-sidenav accordion bg-azul text-light"
@@ -79,15 +85,20 @@
           <div class="sb-sidenav-menu">
             <div class="nav">
               <div class="sb-sidenav-menu-heading">Inicio</div>
+
               <a class="nav-link" href="../index.html">
                 <div class="sb-nav-link-icon">
                   <i class="fas fa-tachometer-alt"></i>
                 </div>
                 Panel
               </a>
+
               <div class="sb-sidenav-menu-heading">Administración</div>
-              <a class="nav-link" href="usuarios.html">
-                <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
+
+              <a class="nav-link active" href="usuarios.html">
+                <div class="sb-nav-link-icon">
+                  <i class="fas fa-users"></i>
+                </div>
                 Usuarios
               </a>
 
@@ -106,7 +117,9 @@
               </a>
 
               <a class="nav-link" href="categorias.html">
-                <div class="sb-nav-link-icon"><i class="fas fa-tags"></i></div>
+                <div class="sb-nav-link-icon">
+                  <i class="fas fa-tags"></i>
+                </div>
                 Categorías
               </a>
 
@@ -118,442 +131,46 @@
               </a>
             </div>
           </div>
+
           <div class="sb-sidenav-footer">
             <div class="small">Logeado como:</div>
             <span id="nombreUsuario"></span>
           </div>
         </nav>
       </div>
+
+      <!-- Contenido -->
       <div id="layoutSidenav_content">
         <main>
-          <!-- Loader -->
-          <div id="loader">
-            <img
-              class="w-25 d-block m-auto"
-              src="../assets/img/logo-eventvs-merida-no-bg.png"
-              alt=""
-            />
-          </div>
-
           <div class="container-fluid px-4">
             <h1 class="mt-4 text-light">Usuarios</h1>
+
             <ol class="breadcrumb mb-4">
               <li class="breadcrumb-item">
                 <a href="../index.html">Panel de administración</a>
               </li>
               <li class="breadcrumb-item active">Usuarios</li>
             </ol>
-            <div class="row justify-content-center"></div>
 
-            <button
-              type="button"
-              class="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#modalCrearUsuario"
-            >
-              Añadir usuario
-            </button>
-
-            <!-- Modal -->
-            <div
-              class="modal fade"
-              id="modalCrearUsuario"
-              tabindex="-1"
-              aria-labelledby="modalCrearUsuarioLabel"
-              aria-hidden="true"
-            >
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content bg-dark text-light">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalCrearUsuarioLabel">
-                      Añadir nuevo usuario
-                    </h1>
-                    <button
-                      type="button"
-                      class="btn-close custom-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                  <div class="modal-body">
-                    <form
-                      class="row g-3 needs-validation"
-                      id="formAgregarUsuario"
-                      novalidate
-                    >
-                      <div class="col-md-6">
-                        <label for="nombre" class="form-label">Nombre</label>
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="nombre"
-                          name="nombre"
-                          required
-                          minlength="2"
-                          maxlength="50"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un nombre válido
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="apellidos" class="form-label"
-                          >Apellidos</label
-                        >
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="apellidos"
-                          name="apellidos"
-                          required
-                          minlength="2"
-                          maxlength="50"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa unos apellidos válidos
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="fechaNacimiento" class="form-label"
-                          >Fecha de nacimiento</label
-                        >
-                        <input
-                          type="date"
-                          class="form-control"
-                          id="fechaNacimiento"
-                          name="fechaNacimiento"
-                          required
-                          max="2026-04-14"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa una fecha válida.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="correo" class="form-label"
-                          >Correo electrónico</label
-                        >
-                        <input
-                          type="email"
-                          class="form-control"
-                          id="correo"
-                          name="correo"
-                          required
-                          maxlength="100"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un correo electrónico válido.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="telefono" class="form-label"
-                          >Teléfono</label
-                        >
-                        <input
-                          type="tel"
-                          class="form-control"
-                          id="telefono"
-                          name="telefono"
-                          required
-                          pattern="[0-9]{9,15}"
-                          maxlength="15"
-                          title="Solo números y 9 dígitos"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un teléfono válido (solo números y 9 dígitos).
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="contrasena" class="form-label"
-                          >Contraseña</label
-                        >
-                        <input
-                          type="password"
-                          class="form-control"
-                          id="contrasena"
-                          name="contrasena"
-                          required
-                          minlength="6"
-                          maxlength="30"
-                        />
-                        <div class="invalid-feedback">
-                          Las contraseñas deben coincidir.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="confirmarContrasena" class="form-label"
-                          >Confirmar contraseña</label
-                        >
-                        <input
-                          type="password"
-                          class="form-control"
-                          id="confirmarContrasena"
-                          name="confirmarContrasena"
-                          required
-                          minlength="6"
-                          maxlength="30"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa una contraseña (mínimo 6 caracteres).
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                  <div class="modal-footer">
-                    <button
-                      type="button"
-                      class="btn btn-secondary bg-danger"
-                      data-bs-dismiss="modal"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      form="formAgregarUsuario"
-                      class="btn btn-primary"
-                    >
-                      Agregar usuario
-                    </button>
-                  </div>
-                </div>
-              </div>
+            <div class="d-flex justify-content-end mb-3">
+              <button
+                type="button"
+                class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#modalCrearUsuario"
+              >
+                Añadir usuario
+              </button>
             </div>
-
-            <!-- Modal -->
-            <div
-              class="modal fade"
-              id="modalEditarUsuario"
-              tabindex="-1"
-              aria-labelledby="modalEditarUsuarioLabel"
-              aria-hidden="true"
-            >
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content bg-dark text-light">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalEditarUsuarioLabel">
-                      Editar usuario
-                    </h1>
-                    <button
-                      type="button"
-                      class="btn-close custom-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                  <div class="modal-body">
-                    <form
-                      class="row g-3 needs-validation"
-                      id="formEditarUsuario"
-                      novalidate
-                    >
-                      <div class="col-md-6">
-                        <label for="nombreEditar" class="form-label"
-                          >Nombre</label
-                        >
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="nombreEditar"
-                          name="nombreEditar"
-                          required
-                          minlength="2"
-                          maxlength="50"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un nombre válido
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="apellidosEditar" class="form-label"
-                          >Apellidos</label
-                        >
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="apellidosEditar"
-                          name="apellidosEditar"
-                          required
-                          minlength="2"
-                          maxlength="50"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa unos apellidos válidos
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="fechaNacimientoEditar" class="form-label"
-                          >Fecha de nacimiento</label
-                        >
-                        <input
-                          type="date"
-                          class="form-control"
-                          id="fechaNacimientoEditar"
-                          name="fechaNacimientoEditar"
-                          required
-                          max="2026-04-14"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa una fecha válida.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="correoEditar" class="form-label"
-                          >Correo electrónico</label
-                        >
-                        <input
-                          type="email"
-                          class="form-control"
-                          id="correoEditar"
-                          name="correoEditar"
-                          required
-                          maxlength="100"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un correo electrónico válido.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="telefonoEditar" class="form-label"
-                          >Teléfono</label
-                        >
-                        <input
-                          type="tel"
-                          class="form-control"
-                          id="telefonoEditar"
-                          name="telefonoEditar"
-                          required
-                          pattern="[0-9]{9,15}"
-                          maxlength="15"
-                          title="Solo números y 9 dígitos"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un teléfono válido (solo números y 9 dígitos).
-                        </div>
-                      </div>
-                        <div class="col-md-6 d-flex align-items-end">
-                          <button
-                            type="button"
-                            class="btn btn-primary w-100"
-                            data-bs-target="#modalEditarContrasenia"
-                            data-bs-toggle="modal"
-                          >
-                            Editar contraseña
-                          </button>
-                        </div>
-                    </form>
-                  </div>
-                  <div class="modal-footer">
-                    <button
-                      type="button"
-                      class="btn btn-secondary bg-danger"
-                      data-bs-dismiss="modal"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      form="formAgregarUsuario"
-                      class="btn btn-primary"
-                    >
-                      Editar usuario
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-             <!-- Modal -->
-            <div
-              class="modal fade"
-              id="modalEditarContrasenia"
-              tabindex="-1"
-              aria-labelledby="modalEditarContraseniaLabel"
-              aria-hidden="true"
-            >
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content bg-dark text-light">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalEditarContraseniaLabel">
-                      Editar contraseña del usuario <span id="nombreUsuario"></span>
-                    </h1>
-                    <button
-                      type="button"
-                      class="btn-close custom-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                  <div class="modal-body">
-                    <form
-                      class="row g-3 needs-validation"
-                      id="formEditarUsuario"
-                      novalidate
-                    >
-                      <div class="col-md-6">
-                        <label for="nombreEditar" class="form-label"
-                          >Contraseña</label
-                        >
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="nombreEditar"
-                          name="nombreEditar"
-                          required
-                          minlength="8"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un nombre válido
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="apellidosEditar" class="form-label"
-                          >Confirmar contraseña</label
-                        >
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="apellidosEditar"
-                          name="apellidosEditar"
-                          required
-                          minlength="8"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa unos apellidos válidos
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                  <div class="modal-footer">
-                    <button
-                      type="button"
-                      class="btn btn-secondary bg-danger"
-                      data-bs-dismiss="modal"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      form="formEditarContrasenia"
-                      class="btn btn-primary"
-                    >
-                      Editar contraseña
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
 
             <table class="table text-light table-custom mt-4">
               <thead>
                 <tr>
                   <th scope="col">ID</th>
-                  <th scope="col">Nombre</th>
-                  <th scope="col">Apellidos</th>
-                  <th scope="col">Fecha de nacimiento</th>
-                  <th scope="col">Email</th>
+                  <th scope="col">Nombre completo</th>
+                  <th scope="col">Correo</th>
                   <th scope="col">Teléfono</th>
+                  <th scope="col">Rol</th>
                   <th scope="col" class="text-end">Acciones</th>
                 </tr>
               </thead>
@@ -583,6 +200,183 @@
         </footer>
       </div>
     </div>
+
+    <!-- Modal Crear Usuario -->
+    <div
+      class="modal fade"
+      id="modalCrearUsuario"
+      tabindex="-1"
+      aria-labelledby="modalCrearUsuarioLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="modalCrearUsuarioLabel">
+              Añadir nuevo usuario
+            </h1>
+            <button
+              type="button"
+              class="btn-close custom-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <form
+              class="row g-3 needs-validation"
+              id="formAgregarUsuario"
+              novalidate
+            >
+              <div class="col-md-6">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nombre"
+                  name="nombre"
+                  required
+                  minlength="2"
+                  maxlength="50"
+                />
+                <div class="invalid-feedback">Ingresa un nombre válido.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="apellidos" class="form-label">Apellidos</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="apellidos"
+                  name="apellidos"
+                  required
+                  minlength="2"
+                  maxlength="50"
+                />
+                <div class="invalid-feedback">
+                  Ingresa unos apellidos válidos.
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="fechaNacimiento" class="form-label"
+                  >Fecha de nacimiento</label
+                >
+                <input
+                  type="date"
+                  class="form-control"
+                  id="fechaNacimiento"
+                  name="fechaNacimiento"
+                  required
+                />
+                <div class="invalid-feedback">Ingresa una fecha válida.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="correo" class="form-label"
+                  >Correo electrónico</label
+                >
+                <input
+                  type="email"
+                  class="form-control"
+                  id="correo"
+                  name="correo"
+                  required
+                  maxlength="100"
+                />
+                <div class="invalid-feedback">
+                  Ingresa un correo electrónico válido.
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="telefono" class="form-label">Teléfono</label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="telefono"
+                  name="telefono"
+                  required
+                  pattern="[0-9]{9,15}"
+                  maxlength="15"
+                  title="Solo números, entre 9 y 15 dígitos"
+                />
+                <div class="invalid-feedback">
+                  Ingresa un teléfono válido (solo números, entre 9 y 15
+                  dígitos).
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="contrasena" class="form-label">Contraseña</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="contrasena"
+                  name="contrasena"
+                  required
+                  minlength="8"
+                  maxlength="30"
+                  pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,30}$"
+                  title="La contraseña debe tener entre 8 y 30 caracteres, al menos una letra mayúscula, un número y un símbolo."
+                />
+                <div class="invalid-feedback">
+                  La contraseña debe tener mínimo 8 caracteres, una mayúscula,
+                  un número y un símbolo.
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="contrasena" class="form-label">Confirmar contraseña</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="contrasena"
+                  name="contrasena"
+                  required
+                  minlength="8"
+                  maxlength="30"
+                  pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,30}$"
+                  title="La contraseña debe tener entre 8 y 30 caracteres, al menos una letra mayúscula, un número y un símbolo."
+                />
+                <div class="invalid-feedback">
+                  La contraseña debe tener mínimo 8 caracteres, una mayúscula,
+                  un número y un símbolo.
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="roles" class="form-label">Rol</label>
+                <select class="form-select" id="roles" name="idRol" required>
+                  <option value="">Selecciona un rol</option>
+                </select>
+                <div class="invalid-feedback">Selecciona un rol.</div>
+              </div>
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary bg-danger"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              form="formAgregarUsuario"
+              class="btn btn-primary"
+            >
+              Agregar usuario
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"

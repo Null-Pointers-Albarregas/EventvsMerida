@@ -90,4 +90,19 @@ public class CategoriaController {
         CategoriaResponse categoriaActualizada = categoriaService.actualizarCategoria(id, categoriaActualizarRequest);
         return ResponseEntity.ok(categoriaActualizada);
     }
+
+    // =========================
+    // Metodos Lógica de Negocio
+    // =========================
+
+    /**
+     * Metodo GET que llama al servicio para contar el numero total de categorias.
+     * 
+     * @return ResponseEntity con la cantidad de categorias y el estado HTTP 200 (OK).
+     */
+    @GetMapping("/count")
+    public ResponseEntity<Long> contarCategorias() {
+        long cantidad = categoriaService.contarCategorias();
+        return ResponseEntity.ok(cantidad);
+    }
 }
