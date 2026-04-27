@@ -97,7 +97,7 @@ public class EventoController {
     }
 
     /**
-     * Método DELETE que llama al servicio para eliminar un evento por su ID.
+     * Método DELETE que llama al servicio para eliminar un evento por su ID y borrar su imagen asociada en el storage.
      *
      * @param id ID del evento a eliminar.
      * @return ResponseEntity con el estado HTTP 204 (No Content).

@@ -5,12 +5,18 @@ import es.nullpointers.eventvsmerida.dto.request.UsuarioActualizarRequest;
 import es.nullpointers.eventvsmerida.dto.request.UsuarioCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.UsuarioResponse;
 import es.nullpointers.eventvsmerida.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -28,6 +34,7 @@ import java.util.List;
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
     private final UsuarioService usuarioService;
+    private final AuthenticationManager authenticationManager;
 
     // ============
     // Metodos CRUD
@@ -103,11 +110,28 @@ public class UsuarioController {
      * @param loginRequest DTO con el email y la contraseña del usuario que intenta iniciar sesión.
      * @return ResponseEntity con el usuario logeado y el estado HTTP 200 (OK).
      */
-    @PostMapping("/login")
-    public ResponseEntity<UsuarioResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+    /*@PostMapping("/login")
+    public ResponseEntity<UsuarioResponse> login(@Valid @RequestBody LoginRequest loginRequest,
+            @RequestParam(name = "admin", required = false, defaultValue = "false") boolean admin,
+            HttpServletRequest request) {
+
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
+        );
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+            .anyMatch(a -> "Administrador".equalsIgnoreCase(a.getAuthority()));
+
+        if (admin && !isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo administradores pueden iniciar sesión en el panel");
+        }
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        request.getSession(true); // crea JSESSIONID para sesión basada en cookie
+
         UsuarioResponse usuarioLogeado = usuarioService.login(loginRequest.email(), loginRequest.password());
         return ResponseEntity.ok(usuarioLogeado);
-    }
+    }*/
 
     /**
      * Metodo GET que llama al servicio para contar el número de usuarios registrados en la plataforma.

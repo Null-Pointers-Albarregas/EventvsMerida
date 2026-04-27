@@ -111,6 +111,35 @@ public class SupabaseStorage {
     }
 
     /**
+     * Método que se encarga de borrar la imagen del bucket de Supabase a partir de su URL pública.
+     * 
+     * @param publicUrl URL pública de la imagen que se desea borrar. Si es null o vacía, no se realiza ninguna acción.
+     */
+    public void borrarImagenPorUrl(@Nullable String publicUrl) {
+        if (publicUrl == null || publicUrl.isBlank()) return;
+
+        String prefix = supabaseUrl + "/storage/v1/object/public/" + bucket + "/";
+        if (!publicUrl.startsWith(prefix)) {
+            log.warn("URL de imagen fuera del bucket: {}", publicUrl);
+            return;
+        }
+
+        String objectPathEncoded = publicUrl.substring(prefix.length());
+
+        try {
+            supabaseClient.delete()
+                .uri(uriBuilder -> uriBuilder
+                    .path("/storage/v1/object/{bucket}/{path}")
+                    .build(Map.of("bucket", bucket, "path", objectPathEncoded)))
+                .retrieve()
+                .toBodilessEntity();
+        } catch (Exception e) {
+            log.warn("Error borrando imagen en Supabase Storage: {}", e.getMessage());
+            throw new IllegalStateException("No se pudo borrar la imagen en el storage", e);
+        }
+    }
+
+    /**
      * Método para obtener el nombre de la imagen desde la URL.
      *
      * @param url URL de la imagen de origen.
