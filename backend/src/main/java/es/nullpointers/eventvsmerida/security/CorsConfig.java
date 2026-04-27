@@ -15,7 +15,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig {
     private static final String[] ALLOWED_ORIGINS = {
-        "https://eventvsmerida-admin.vercel.app"
+        "https://eventvsmerida-admin.vercel.app",
+        "http://127.0.0.1:5500",
+        "http://127.0.0.1:5501",
     };
     private static final String[] ALLOWED_METHODS = { "GET", "POST", "PUT", "DELETE", "OPTIONS" };
     private static final String[] ALLOWED_HEADERS = { "Content-Type", "Authorization", "X-Requested-With" };
