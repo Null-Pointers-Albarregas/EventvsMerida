@@ -4,18 +4,30 @@ import es.nullpointers.eventvsmerida.dto.request.LoginRequest;
 import es.nullpointers.eventvsmerida.dto.response.UsuarioResponse;
 import es.nullpointers.eventvsmerida.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Controlador REST que maneja las operaciones de autenticación, incluyendo inicio de sesión, 
+ * verificación de sesión activa y cierre de sesión.
+ * 
+ * @author Eva Retamar
+ * @author David Muñoz
+ * @author Adrián Pérez
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
@@ -36,22 +48,27 @@ public class AuthController {
     public ResponseEntity<UsuarioResponse> login(
             @Valid @RequestBody LoginRequest loginRequest,
             @RequestParam(name = "admin", required = false, defaultValue = "false") boolean admin,
-            HttpServletRequest request) {
-
+            HttpServletRequest request,
+            HttpServletResponse response) {
+    
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
         );
-
+    
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> "Administrador".equalsIgnoreCase(a.getAuthority()));
-
+    
         if (admin && !isAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo administradores pueden iniciar sesión en el panel");
         }
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        request.getSession(true); // crea JSESSIONID
-
+    
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+    
+        // Persistir autenticación en la sesión HTTP (clave para que /session no devuelva 401)
+        new HttpSessionSecurityContextRepository().saveContext(context, request, response);
+    
         UsuarioResponse usuarioLogeado = usuarioService.obtenerUsuarioPorEmail(loginRequest.email());
         return ResponseEntity.ok(usuarioLogeado);
     }
@@ -64,14 +81,16 @@ public class AuthController {
      */
     @GetMapping("/session")
     public ResponseEntity<Void> session(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null
+                || authentication instanceof AnonymousAuthenticationToken
+                || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok().build();
     }
 
     /**
-     * Endpoint para cerrar sesión. Limpia el contexto de seguridad y invalida la sesión HTTP.
+     * Endpoint para cerrar sesión. Limpia el contexto de seguridad e invalida la sesión HTTP.
      * 
      * @param request objeto HttpServletRequest para gestionar la sesión
      * @return ResponseEntity sin cuerpo, con estado 204 NO CONTENT después de cerrar sesión exitosamente
