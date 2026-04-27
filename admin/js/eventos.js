@@ -1,4 +1,13 @@
-window.addEventListener("DOMContentLoaded", async (event) => {
+window.addEventListener("DOMContentLoaded", async () => {
+  const sesion = await logeado();
+
+  if (sesion === 401) {
+    window.location.href = `${window.location.origin}/html/login.html`;
+    return;
+  } else if (sesion === 200){
+    document.body.classList.remove("auth-pending");
+  }
+  
   const URL_BASE = "https://eventvsmerida.onrender.com/api/";
   cargarEventos(URL_BASE);
   obtenerCategorias(URL_BASE);
@@ -88,7 +97,7 @@ window.addEventListener("DOMContentLoaded", async (event) => {
         formData.append("foto", document.getElementById("fotoEvento").files[0]);
         editarEvento(URL_BASE, formEditar.dataset.id, formData);
       }
-      form.classList.add("was-validated");
+      formEditar.classList.add("was-validated");
     },
     false,
   );
@@ -124,6 +133,7 @@ async function cargarEventos(URL_BASE) {
 
     data.forEach((evento) => {
       const tr = document.createElement("tr");
+      const tdId = document.createElement("td");
       const tdTitulo = document.createElement("td");
       const tdDescripcion = document.createElement("td");
       const tdFechaInicio = document.createElement("td");
@@ -132,9 +142,10 @@ async function cargarEventos(URL_BASE) {
       const textoTitulo = document.createElement("div");
       const textoDescripcion = document.createElement("div");
       const textoLocalizacion = document.createElement("div");
-      textoTitulo.textContent = evento["titulo"];
-      textoDescripcion.textContent = evento["descripcion"];
-      textoLocalizacion.textContent = evento["localizacion"];
+      tdId.textContent = evento.id;
+      textoTitulo.textContent = evento.titulo;
+      textoDescripcion.textContent = evento.descripcion;
+      textoLocalizacion.textContent = evento.localizacion;
       textoTitulo.classList.add("texto-3lineas");
       textoDescripcion.classList.add("descripcion-corta");
       textoLocalizacion.classList.add("texto-3lineas");
@@ -148,6 +159,7 @@ async function cargarEventos(URL_BASE) {
       tdFechaInicio.classList.add("text-light");
       tdFechaFin.classList.add("text-light");
       tdLocalizacion.classList.add("text-light");
+      tr.appendChild(tdId);
       tr.appendChild(tdTitulo);
       tr.appendChild(tdDescripcion);
       tr.appendChild(tdFechaInicio);
@@ -241,8 +253,9 @@ async function cargarEventos(URL_BASE) {
       btnEliminar.className = "btn btn-sm btn-danger";
       btnEliminar.innerHTML = '<i class="fa-solid fa-trash"></i>';
       btnEliminar.setAttribute("data-id", evento.id);
+      btnEliminar.setAttribute("data-nombre", evento.titulo);
       btnEliminar.addEventListener("click", function () {
-        eliminarEvento();
+        eliminarEvento(URL_BASE, this.dataset.id, this.dataset.nombre);
       });
 
       divGrupo.appendChild(btnVer);
@@ -332,9 +345,9 @@ async function editarEvento(URL_BASE, id, datosFormulario) {
   }
 }
 
-async function eliminarEvento(id) {
+async function eliminarEvento(URL_BASE, id, nombre) {
   Swal.fire({
-    title: "¿Estás seguro que deseas eliminar el evento?",
+    title: `¿Estás seguro que deseas eliminar el evento \"` + nombre +`\"?`,
     text: "Esta acción no puede revertirse",
     icon: "warning",
     showCancelButton: true,
@@ -342,14 +355,13 @@ async function eliminarEvento(id) {
     cancelButtonText: "Cancelar",
     confirmButtonColor: "#d33",
     confirmButtonText: "Eliminar evento",
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
       try {
         const options = {
           method: "DELETE",
         };
-        const resp = fetch(URL_BASE + "eventos/delete/" + id, options);
-        const respuesta = resp.json();
+        const resp = await fetch(URL_BASE + "eventos/delete/" + id, options);
         if (resp.status === 204) {
           mostrarAlerta("success", "Evento eliminado correctamente");
         } else {

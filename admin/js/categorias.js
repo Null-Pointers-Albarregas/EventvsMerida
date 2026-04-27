@@ -1,4 +1,13 @@
-window.addEventListener("DOMContentLoaded", async (event) => {
+window.addEventListener("DOMContentLoaded", async () => {
+  const sesion = await logeado();
+
+  if (sesion === 401) {
+    window.location.href = `${window.location.origin}/html/login.html`;
+    return;
+  } else if (sesion === 200){
+    document.body.classList.remove("auth-pending");
+  }
+  
   const URL_BASE = "https://eventvsmerida.onrender.com/api/";
   cargarCategorias(URL_BASE);
 
@@ -75,11 +84,17 @@ async function cargarCategorias(URL_BASE) {
 
     data.forEach((categoria) => {
       const tr = document.createElement("tr");
+      const tdId = document.createElement("td");
       const tdCategoria = document.createElement("td");
+      const textoId = document.createElement("div");
       const textoCategoria = document.createElement("div");
-      textoCategoria.textContent = categoria["nombre"];
+      textoId.textContent = document.createElement("div");
+      textoId.textContent = categoria.id;
+      textoCategoria.textContent = categoria.nombre;
+      tdId.appendChild(textoId);
       tdCategoria.appendChild(textoCategoria);
       tdCategoria.classList.add("text-light");
+      tr.appendChild(tdId);
       tr.appendChild(tdCategoria);
       const tdAcciones = document.createElement("td");
       const divGrupo = document.createElement("div");
@@ -141,7 +156,7 @@ async function subirCategoria(URL_BASE, datosCategoria) {
       mostrarAlerta("success", "Categoría creada correctamente");
 
       const modal = bootstrap.Modal.getInstance(
-        document.getElementById("modalEditarCategoria"),
+        document.getElementById("modalCrearCategoria"),
       );
       modal.hide();
     } else {
@@ -149,6 +164,8 @@ async function subirCategoria(URL_BASE, datosCategoria) {
     }
   } catch (error) {
     console.error("Error al subir la categoría:", error);
+  } finally {
+    cargarCategorias(URL_BASE);
   }
 }
 
@@ -193,13 +210,13 @@ async function eliminarCategoria(URL_BASE, id, categoria) {
     cancelButtonText: "Cancelar",
     confirmButtonColor: "#d33",
     confirmButtonText: "Eliminar categoría",
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
       try {
         const options = {
           method: "DELETE",
         };
-        const resp = fetch(URL_BASE + "categorias/delete/" + id, options);
+        const resp = await fetch(URL_BASE + "categorias/delete/" + id, options);
         if (resp.status === 204) {
           mostrarAlerta("success", "Evento eliminado correctamente");
         } else {
@@ -209,7 +226,9 @@ async function eliminarCategoria(URL_BASE, id, categoria) {
           );
         }
       } catch (error) {
-        console.error("Error al eliminar el evento:", error);
+        console.error("Error al eliminar la cataegoría:", error);
+      } finally {
+        cargarCategorias(URL_BASE);
       }
     }
   });
