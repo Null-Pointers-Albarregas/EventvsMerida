@@ -18,14 +18,13 @@ window.addEventListener("DOMContentLoaded", async (event) => {
     }, false);
 });
 
-
-
 async function login(datos) {
-    URL = "https://eventvsmerida.onrender.com/api/usuarios/login";
+    const URL = "https://eventvsmerida.onrender.com/api/auth/login?admin=true";
 
     try {
         const respuesta = await fetch(URL, {
             method: "POST",
+            credentials: "include",
             body: JSON.stringify(datos),
             headers: {
                 "Content-Type": "application/json; charset=UTF-8",
@@ -36,7 +35,7 @@ async function login(datos) {
             const nombreUsuario = datos["email"].split("@")[0];
             localStorage.setItem("nombreUsuario", nombreUsuario)
             window.location.href = "../index.html"
-        } else if (respuesta.status === 400 || respuesta.status === 401 || respuesta.status === 404){
+        } else if (respuesta.status === 400 || respuesta.status === 401 || respuesta.status === 403 || respuesta.status === 404 || respuesta.status === 500){
             mostrarAlerta("error", "Usuario o contraseña incorrectos")
         } 
         else {
