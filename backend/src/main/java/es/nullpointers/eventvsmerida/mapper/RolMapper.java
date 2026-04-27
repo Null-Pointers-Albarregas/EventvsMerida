@@ -36,7 +36,8 @@ public class RolMapper {
      */
     public static RolResponse convertirAResponse(Rol rol) {
         String nombre = rol.getNombre();
+        Long id = rol.getId();
 
-        return new RolResponse(nombre);
+        return new RolResponse(id, nombre);
     }
 }

@@ -10,6 +10,7 @@ import java.time.LocalDate;
  * @author Adrián Pérez
  */
 public record UsuarioResponse (
+        Long id,
         String nombre,
         String apellidos,
         LocalDate fechaNacimiento,

@@ -96,6 +96,19 @@ public class CategoriaService {
         return CategoriaMapper.convertirAResponse(categoriaActualizada);
     }
 
+    // =========================
+    // Metodos Lógica de Negocio
+    // =========================
+
+    /**
+     * Metodo para contar el numero total de categorias.
+     * 
+     * @return Numero total de categorias.
+     */
+    public long contarCategorias() {
+        return categoriaRepository.count();
+    }
+
     // ==================
     // Metodos Auxiliares
     // ==================

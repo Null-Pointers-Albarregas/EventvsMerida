@@ -1,13 +1,14 @@
 package es.nullpointers.eventvsmerida.controller;
 
-import es.nullpointers.eventvsmerida.dto.request.LoginRequest;
 import es.nullpointers.eventvsmerida.dto.request.UsuarioActualizarRequest;
 import es.nullpointers.eventvsmerida.dto.request.UsuarioCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.UsuarioResponse;
 import es.nullpointers.eventvsmerida.service.UsuarioService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -93,19 +94,27 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioActualizado);
     }
 
-    // =================
-    // Metodos de Lógica
-    // =================
+    // ============================
+    // Metodos de Lógica de Negocio
+    // ============================
 
     /**
-     * Metodo POST que llama al servicio para iniciar sesión a un usuario con su email y contraseña.
-     *
-     * @param loginRequest DTO con el email y la contraseña del usuario que intenta iniciar sesión.
-     * @return ResponseEntity con el usuario logeado y el estado HTTP 200 (OK).
+     * Metodo GET que llama al servicio para contar el número de usuarios registrados en la plataforma.
+     * 
+     * @return ResponseEntity con la cantidad de usuarios registrados y el estado HTTP 200 (OK).
      */
-    @PostMapping("/login")
-    public ResponseEntity<UsuarioResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        UsuarioResponse usuarioLogeado = usuarioService.login(loginRequest.email(), loginRequest.password());
-        return ResponseEntity.ok(usuarioLogeado);
+    @GetMapping("/count/registrados")
+    public ResponseEntity<Long> contarRegistrados() {
+        return ResponseEntity.ok(usuarioService.contarUsuariosPorRol(1L));
+    }
+
+    /**
+     * Metodo GET que llama al servicio para contar el número de organizadores registrados en la plataforma.
+     * 
+     * @return ResponseEntity con la cantidad de organizadores registrados y el estado HTTP 200 (OK).
+     */
+    @GetMapping("/count/organizadores")
+    public ResponseEntity<Long> contarOrganizadores() {
+        return ResponseEntity.ok(usuarioService.contarUsuariosPorRol(2L));
     }
 }

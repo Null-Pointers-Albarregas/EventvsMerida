@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'dart:ui';
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/router/app_routes.dart';
@@ -46,20 +46,22 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 // ===========================================================================
-// 2. MODAL DE DETALLE DEL EVENTO (ModalEvento)
+// 2. MODAL DE DETALLE DEL EVENTO
 // ===========================================================================
 class ModalEvento extends StatefulWidget {
-  final Evento evento;
+  final List<Evento> eventos;
   final Usuario? usuario;
-  final bool isGuardadoInicial;
-  final Function(bool) onCambioGuardado;
+  final List<Evento> eventosGuardados;
+  final ValueChanged<List<Evento>> onEventosGuardadosActualizados;
+  final bool mostrarBotonGuardado;
 
   const ModalEvento({
     super.key,
-    required this.evento,
+    required this.eventos,
     required this.usuario,
-    required this.isGuardadoInicial,
-    required this.onCambioGuardado,
+    required this.eventosGuardados,
+    required this.onEventosGuardadosActualizados,
+    this.mostrarBotonGuardado = true,
   });
 
   @override
@@ -67,7 +69,10 @@ class ModalEvento extends StatefulWidget {
 }
 
 class _ModalEventoState extends State<ModalEvento> {
-  late bool _estaGuardado;
+  late final PageController _pageController;
+  int _indiceActual = 0;
+  late List<Evento> _eventosGuardados;
+  //late bool _estaGuardado;
 
   ColorScheme get _cs => Theme.of(context).colorScheme;
   TextTheme get _tt => Theme.of(context).textTheme;
@@ -75,7 +80,20 @@ class _ModalEventoState extends State<ModalEvento> {
   @override
   void initState() {
     super.initState();
-    _estaGuardado = widget.isGuardadoInicial;
+    _pageController = PageController();
+    _eventosGuardados = List.from(widget.eventosGuardados);
+  }
+
+  Evento get _eventoActual => widget.eventos[_indiceActual];
+
+  bool _esMismoEvento(Evento a, Evento b) {
+    return a.titulo == b.titulo &&
+        a.fechaInicio == b.fechaInicio &&
+        a.fechaFin == b.fechaFin;
+  }
+
+  bool _estaGuardado(Evento evento) {
+    return _eventosGuardados.any((e) => _esMismoEvento(e, evento));
   }
 
   // --- Funciones auxiliares de formato de fecha ---
@@ -110,11 +128,19 @@ class _ModalEventoState extends State<ModalEvento> {
 
     try {
       final ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
+
       if (!ok && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo abrir Google Maps')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo abrir Google Maps')),
+        );
       }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo abrir Google Maps')));
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir Google Maps')),
+      );
     }
   }
 
@@ -137,26 +163,73 @@ class _ModalEventoState extends State<ModalEvento> {
     );
   }
 
+  Future<void> _compartirEvento(Evento evento) async {
+    final texto = '''
+    ${evento.titulo}
+    
+    ${evento.localizacion}
+    
+    Fecha: ${_textoFechaHoraDetalle(evento)}
+    
+    ${evento.descripcion}
+    ''';
+
+    await Share.share(
+      texto,
+      subject: evento.titulo,
+    );
+  }
+
   Future<void> _gestionarGuardado() async {
-    if (widget.usuario == null) {
+    final usuario = widget.usuario;
+    final evento = _eventoActual;
+
+    if (usuario == null) {
       _mostrarModalNoLogeado();
       return;
     }
 
-    setState(() => _estaGuardado = !_estaGuardado);
-    widget.onCambioGuardado(_estaGuardado);
+    final yaGuardado = _estaGuardado(evento);
 
-    final respuesta = _estaGuardado
-        ? await ApiService.guardarEventoUsuario(widget.usuario!.email, widget.evento.titulo, widget.evento.fechaInicio, widget.evento.fechaFin)
-        : await ApiService.eliminarEventoUsuario(widget.usuario!.email, widget.evento.titulo, widget.evento.fechaInicio, widget.evento.fechaFin);
+    final respuesta = yaGuardado
+        ? await ApiService.eliminarEventoUsuario(
+      usuario.email,
+      evento.titulo,
+      evento.fechaInicio,
+      evento.fechaFin,
+    )
+        : await ApiService.guardarEventoUsuario(
+      usuario.email,
+      evento.titulo,
+      evento.fechaInicio,
+      evento.fechaFin,
+    );
 
-    if (mounted) _mostrarSnackBarResultado(mensaje: respuesta.mensaje, guardado: _estaGuardado);
+    if (!mounted) return;
+
+    if (respuesta.exito) {
+      setState(() {
+        if (yaGuardado) {
+          _eventosGuardados.removeWhere((e) => _esMismoEvento(e, evento));
+        } else {
+          _eventosGuardados.add(evento);
+        }
+      });
+
+      widget.onEventosGuardadosActualizados(_eventosGuardados);
+    }
+
+    _mostrarSnackBarResultado(
+      mensaje: respuesta.mensaje,
+      guardado: respuesta.exito ? !yaGuardado : yaGuardado,
+    );
   }
 
   // --- Modal para usuarios no registrados ---
   void _mostrarModalNoLogeado() {
     showDialog<void>(
       context: context,
+      barrierDismissible: true,
       barrierColor: Colors.black.withValues(alpha: 0.3),
       builder: (ctx) {
         return Dialog(
@@ -170,27 +243,64 @@ class _ModalEventoState extends State<ModalEvento> {
                 backgroundColor: _cs.surface.withValues(alpha: 0.98),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(Icons.info_outline, color: _cs.primary),
                         const SizedBox(width: 8),
-                        Expanded(child: Text('Inicia sesión o regístrate', style: _tt.titleMedium?.copyWith(fontWeight: FontWeight.bold))),
-                        IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(ctx).pop()),
+                        Expanded(
+                          child: Text(
+                            'Inicia sesión o regístrate',
+                            style: _tt.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text('Para poder guardar un evento, tienes que iniciar sesión o registrarte.', style: _tt.bodyMedium),
+                    Text(
+                      'Para poder guardar un evento, tienes que iniciar sesión o registrarte.',
+                        style: _tt.bodyMedium
+                    ),
                   ],
                 ),
                 actions: [
                   Row(
                     children: [
-                      Expanded(child: FilledButton(onPressed: () { Navigator.of(ctx).pop(); context.go(AppRoutes.registro); }, child: const Text('Registrarse'))),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                            context.go(AppRoutes.registro);
+                          },
+                          child: const Text('Registrarse'),
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      Expanded(child: FilledButton(onPressed: () { Navigator.of(ctx).pop(); context.go(AppRoutes.login); }, child: const Text('Iniciar sesión', overflow: TextOverflow.ellipsis))),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                            context.go(AppRoutes.login);
+                          },
+                          child: const Text(
+                            'Iniciar sesión',
+                            overflow: TextOverflow.ellipsis
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -202,91 +312,203 @@ class _ModalEventoState extends State<ModalEvento> {
     );
   }
 
-  // --- Diseño del Modal Principal ---
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
+  Widget _buildContenidoEvento(Evento evento) {
+    final estaGuardado = _estaGuardado(evento);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Positioned.fill(child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8), child: Container(color: Colors.transparent))),
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
-              child: Material(
-                color: _cs.surface,
-                borderRadius: BorderRadius.circular(16),
-                elevation: 12,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 4, 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  evento.titulo,
+                  style: _tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.share_outlined),
+                onPressed: () => _compartirEvento(evento),
+                tooltip: 'Compartir evento',
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: 'Cerrar',
+              ),
+            ],
+          ),
+        ),
+        if (widget.eventos.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              '${_indiceActual + 1} de ${widget.eventos.length} eventos en esta ubicación',
+              style: _tt.bodySmall?.copyWith(
+                color: _cs.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: 320,
+                    maxWidth: constraints.maxWidth,
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    alignment: Alignment.topCenter,
+                    child: Image.network(
+                      evento.foto,
+                      errorBuilder: (_, __, ___) => const SizedBox(
+                        height: 180,
+                        child: Center(
+                          child: Icon(Icons.broken_image, size: 40),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _abrirEnGoogleMaps(evento.localizacion),
+                  icon: const Icon(Icons.place_outlined, size: 18),
+                  label: Text(
+                    evento.localizacion,
+                    style: _tt.bodyMedium?.copyWith(
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    alignment: Alignment.centerLeft,
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 4, 0),
-                      child: Row(
-                        children: [
-                          Expanded(child: Text(widget.evento.titulo, style: _tt.titleMedium?.copyWith(fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis)),
-                          IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 320),
-                          child: FittedBox(fit: BoxFit.contain, alignment: Alignment.topCenter, child: Image.network(widget.evento.foto)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    const Icon(Icons.event_note, size: 18),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            TextButton.icon(
-                              onPressed: () => _abrirEnGoogleMaps(widget.evento.localizacion),
-                              icon: const Icon(Icons.place_outlined, size: 18, color: Colors.white),
-                              label: Text(widget.evento.localizacion, style: _tt.bodyMedium?.copyWith(decoration: TextDecoration.underline)),
-                              style: TextButton.styleFrom(alignment: Alignment.centerLeft, padding: EdgeInsets.zero),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                const Icon(Icons.event_note, size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(_textoFechaHoraDetalle(widget.evento), style: _tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.35))),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Text('Descripción', style: _tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 4),
-                            Text(widget.evento.descripcion, style: _tt.bodyMedium),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: _gestionarGuardado,
-                          icon: Icon(_estaGuardado ? Icons.bookmark : Icons.bookmark_border_outlined),
-                          label: Text(_estaGuardado ? 'Evento guardado' : 'Guardar evento'),
+                      child: Text(
+                        _textoFechaHoraDetalle(evento),
+                        style: _tt.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 16),
+                Text(
+                  'Descripción',
+                  style: _tt.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  evento.descripcion,
+                  style: _tt.bodyMedium,
+                ),
+              ],
             ),
           ),
         ),
+        if(widget.mostrarBotonGuardado)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _gestionarGuardado,
+                    icon: Icon(
+                      estaGuardado
+                          ? Icons.bookmark
+                          : Icons.bookmark_border_outlined,
+                    ),
+                    label: Text(
+                      estaGuardado ? 'Evento guardado' : 'Guardar evento',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
+    );
+  }
+
+  // --- Diseño del Modal Principal ---
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 500,
+                  maxHeight: 700,
+                ),
+                child: Material(
+                  color: _cs.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  elevation: 12,
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: widget.eventos.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _indiceActual = index;
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      return _buildContenidoEvento(widget.eventos[index]);
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

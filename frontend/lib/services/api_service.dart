@@ -49,7 +49,7 @@ class ApiService {
 
   /// POST /api/usuarios/login
   static Future<ApiResponse<Usuario>> iniciarSesion(String email, String password) async {
-    final respuesta = await _post('/usuarios/login', {'email': email, 'password': password,});
+    final respuesta = await _post('/auth/login', {'email': email, 'password': password,});
 
     if (respuesta == null) {
       return ApiResponse<Usuario>.sinConexion(
