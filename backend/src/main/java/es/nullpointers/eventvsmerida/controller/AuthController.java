@@ -52,7 +52,7 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         request.getSession(true); // crea JSESSIONID
 
-        UsuarioResponse usuarioLogeado = usuarioService.login(loginRequest.email(), loginRequest.password());
+        UsuarioResponse usuarioLogeado = usuarioService.obtenerUsuarioPorEmail(loginRequest.email());
         return ResponseEntity.ok(usuarioLogeado);
     }
 
