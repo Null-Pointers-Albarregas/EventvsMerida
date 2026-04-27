@@ -21,27 +21,31 @@ window.addEventListener("DOMContentLoaded", async (event) => {
 
 
 async function login(datos) {
-    URL = "https://eventvsmerida.onrender.com/api/usuarios/login";
+    URL = "https://eventvsmerida.onrender.com/api/usuarios/login?admin=true";
 
     try {
         const respuesta = await fetch(URL, {
             method: "POST",
             body: JSON.stringify(datos),
+            credentials: "include",
             headers: {
-                "Content-Type": "application/json; charset=UTF-8",
+                "Content-Type": "application/json",
             },
         });
 
         if (respuesta.status >= 200 && respuesta.status < 300) {
             const nombreUsuario = datos["email"].split("@")[0];
-            localStorage.setItem("nombreUsuario", nombreUsuario)
+            //localStorage.setItem("nombreUsuario", nombreUsuario)
             window.location.href = "../index.html"
-        } else if (respuesta.status === 400 || respuesta.status === 401 || respuesta.status === 404){
+        } else if (respuesta.status === 400 || respuesta.status === 401 || respuesta.status === 404 || respuesta.status === 500){
             mostrarAlerta("error", "Usuario o contraseña incorrectos")
-        } 
+        } else if (respuesta.status === 403) {
+            mostrarAlerta("error", "No estás autorizado para acceder")
+        }
         else {
+            mostrarAlerta("error", "Ha ocurrido un problema inesperado")
             const errorTexto = await respuesta.text();
-            throw new Error(`Error ${respuesta.status}: ${errorTexto}`);
+            console.error(`Error ${respuesta.status}: ${errorTexto}`);
         }
     } catch (error) {
         if (error.name === "TypeError") {
