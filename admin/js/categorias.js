@@ -66,6 +66,7 @@ async function cargarCategorias(URL_BASE) {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     const data = await resp.json();

@@ -282,6 +282,7 @@ async function obtenerCategorias(URL_BASE) {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     if (!resp.ok) {

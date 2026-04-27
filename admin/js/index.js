@@ -18,9 +18,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 async function cargarDashboard(URL_BASE) {
   try {
     const [usuarios, eventos, organizadores] = await Promise.all([
-      fetch(URL_BASE + "usuarios/count/registrados").then((r) => r.text()),
+      fetch(URL_BASE + "usuarios/count/registered", {credentials: "include"}).then((r) => r.text()),
       fetch(URL_BASE + "eventos/count").then((r) => r.text()),
-      fetch(URL_BASE + "usuarios/count/organizadores").then((r) => r.text()),
+      fetch(URL_BASE + "usuarios/count/organizers", {credentials: "include"}).then((r) => r.text()),
     ]);
 
     document.getElementById("numUsuarios").textContent = usuarios;
