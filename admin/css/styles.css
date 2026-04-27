@@ -11857,3 +11857,5 @@ body {
 .filtro {
   display: none;
 }
+
+body.auth-pending { visibility: hidden; }

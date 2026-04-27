@@ -1,4 +1,13 @@
-window.addEventListener("DOMContentLoaded", async (event) => {
+window.addEventListener("DOMContentLoaded", async () => {
+  const sesion = await logeado();
+
+  if (sesion === 401) {
+    window.location.href = `${window.location.origin}/html/login.html`;
+    return;
+  } else if (sesion === 200){
+    document.body.classList.remove("auth-pending");
+  }
+  
   const URL_BASE = "https://eventvsmerida.onrender.com/api/";
 
   obtenerRoles(URL_BASE);
@@ -108,4 +117,4 @@ async function obtenerRoles(URL_BASE) {
   } catch (error) {
     console.error("Error al cargar los roles:", error);
   }
-}
+});
