@@ -33,7 +33,7 @@ async function login(datos) {
 
         if (respuesta.status >= 200 && respuesta.status < 300) {
             const nombreUsuario = datos["email"].split("@")[0];
-            //localStorage.setItem("nombreUsuario", nombreUsuario)
+            localStorage.setItem("nombreUsuario", nombreUsuario)
             window.location.href = "../index.html"
         } else if (respuesta.status === 400 || respuesta.status === 401 || respuesta.status === 403 || respuesta.status === 404 || respuesta.status === 500){
             mostrarAlerta("error", "Usuario o contraseña incorrectos")
