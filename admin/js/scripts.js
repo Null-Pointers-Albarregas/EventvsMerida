@@ -82,3 +82,20 @@ async function cerrarSesion() {
     console.error("Error en scripts.js", error);
   }
 }
+
+async function logeado() {
+  const URL = "https://eventvsmerida.onrender.com/api/auth/session";
+
+  try {
+    const respuesta = await fetch(URL, {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    return respuesta.status;
+  } catch (error) {
+    console.error("Error en scripts.js", error);
+    return 500;
+  }
+}
