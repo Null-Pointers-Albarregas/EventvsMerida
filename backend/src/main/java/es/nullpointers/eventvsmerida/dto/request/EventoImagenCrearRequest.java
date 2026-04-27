@@ -31,9 +31,6 @@ public record EventoImagenCrearRequest(
         Double latitud,
         Double longitud,
 
-//        @NotBlank
-//        MultipartFile foto,
-
         @NotNull
         long idUsuario,
 
