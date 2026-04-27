@@ -103,7 +103,7 @@ public class UsuarioController {
      * 
      * @return ResponseEntity con la cantidad de usuarios registrados y el estado HTTP 200 (OK).
      */
-    @GetMapping("/count/registrados")
+    @GetMapping("/count/registered")
     public ResponseEntity<Long> contarRegistrados() {
         return ResponseEntity.ok(usuarioService.contarUsuariosPorRol(1L));
     }
@@ -113,8 +113,30 @@ public class UsuarioController {
      * 
      * @return ResponseEntity con la cantidad de organizadores registrados y el estado HTTP 200 (OK).
      */
-    @GetMapping("/count/organizadores")
+    @GetMapping("/count/organizers")
     public ResponseEntity<Long> contarOrganizadores() {
         return ResponseEntity.ok(usuarioService.contarUsuariosPorRol(2L));
+    }
+
+    /**
+     * Metodo GET que llama al servicio para obtener la lista de usuarios registrados en la plataforma.
+     * 
+     * @return ResponseEntity con la lista de usuarios registrados y el estado HTTP 200 (OK).
+     */
+    @GetMapping("/registered")
+    public ResponseEntity<List<UsuarioResponse>> obtenerUsuariosRegistrados() {
+        List<UsuarioResponse> usuarios = usuarioService.obtenerUsuariosPorRol(1L);
+        return ResponseEntity.ok(usuarios);
+    }
+
+    /**
+     * Metodo GET que llama al servicio para obtener la lista de organizadores registrados en la plataforma.
+     * 
+     * @return ResponseEntity con la lista de organizadores registrados y el estado HTTP 200 (OK).
+     */
+    @GetMapping("/organizers")
+    public ResponseEntity<List<UsuarioResponse>> obtenerUsuariosOrganizadores() {
+        List<UsuarioResponse> usuarios = usuarioService.obtenerUsuariosPorRol(2L);
+        return ResponseEntity.ok(usuarios);
     }
 }

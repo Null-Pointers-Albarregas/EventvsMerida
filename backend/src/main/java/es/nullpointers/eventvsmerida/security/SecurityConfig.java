@@ -2,6 +2,7 @@ package es.nullpointers.eventvsmerida.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -31,6 +32,13 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Bean para el AuthenticationManager, que se utiliza para gestionar la autenticación de los usuarios.
+     *
+     * @param config la configuración de autenticación proporcionada por Spring Security.
+     * @return un AuthenticationManager que se puede utilizar para autenticar a los usuarios.
+     * @throws Exception si ocurre un error al obtener el AuthenticationManager de la configuración.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -39,24 +47,60 @@ public class SecurityConfig {
     /**
      * Configura la cadena de filtros de seguridad para la aplicación.
      *
+     * Reglas aplicadas (resumen):
+     * - POST/PUT/DELETE sobre /api/eventos/** => Administrador u Organizador
+     * - GET /api/categorias/{id} y /api/categorias/all => Administrador u Organizador
+     * - POST/PUT/DELETE de categorías (add/update/delete) => solo Administrador
+     * - GET específicos de usuarios => solo Administrador
+     * - /api/roles/** y Swagger => solo Administrador
+     * - Resto de rutas => público
+     *
      * @param http el objeto HttpSecurity utilizado para configurar la seguridad HTTP.
      * @return un SecurityFilterChain que define las reglas de seguridad para las solicitudes HTTP.
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/api/usuarios/all"
-                        ).hasAuthority("Administrador")
-                        .anyRequest().permitAll()
-                )
-                .formLogin(Customizer.withDefaults());
+            .csrf(AbstractHttpConfigurer::disable)
+            .cors(Customizer.withDefaults())
+            .authorizeHttpRequests(auth -> auth
+
+                // Eventos: mutaciones (POST/PUT/DELETE) -> Administrador u Organizador
+                .requestMatchers(HttpMethod.POST, "/api/eventos/**").hasAnyAuthority("Administrador", "Organizador")
+                .requestMatchers(HttpMethod.PUT,  "/api/eventos/**").hasAnyAuthority("Administrador", "Organizador")
+                .requestMatchers(HttpMethod.DELETE, "/api/eventos/**").hasAnyAuthority("Administrador", "Organizador")
+
+                // Categorías:
+                // GET /api/categorias/{id} y GET /api/categorias/all -> Administrador u Organizador
+                .requestMatchers(HttpMethod.GET, "/api/categorias/*", "/api/categorias/all").hasAnyAuthority("Administrador", "Organizador")
+                // Resto de categorías (add, update, delete) -> solo Administrador
+                .requestMatchers(HttpMethod.POST,   "/api/categorias/add").hasAuthority("Administrador")
+                .requestMatchers(HttpMethod.PUT,    "/api/categorias/update/*").hasAuthority("Administrador")
+                .requestMatchers(HttpMethod.DELETE, "/api/categorias/delete/*").hasAuthority("Administrador")
+
+                // Usuarios: proteger solo los GETs específicos -> solo Administrador
+                .requestMatchers(HttpMethod.GET,
+                    "/api/usuarios/*",
+                    "/api/usuarios/registered",
+                    "/api/usuarios/organizers",
+                    "/api/usuarios/count/registered",
+                    "/api/usuarios/count/organizers",
+                    "/api/usuarios/all"
+                ).hasAuthority("Administrador")
+
+                // Roles y swagger: solo Administrador
+                .requestMatchers(
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**",
+                    "/api/roles/**"
+                ).hasAuthority("Administrador")
+
+                // Resto de rutas públicas
+                .anyRequest().permitAll()
+            )
+            .formLogin(Customizer.withDefaults());
+
         return http.build();
     }
 }

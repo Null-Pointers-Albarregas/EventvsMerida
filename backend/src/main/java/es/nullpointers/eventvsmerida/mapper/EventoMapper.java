@@ -47,6 +47,17 @@ public class EventoMapper {
         return evento;
     }
 
+    /**
+     * Metodo que convierte un objeto EventoImagenCrearRequest a una entidad Evento, subiendo la imagen al bucket de Supabase.
+     * Se utiliza para crear un evento con una imagen subida por el usuario.
+     * 
+     * @param request Objeto DTO con los datos del evento a crear, sin la URL de la imagen.
+     * @param imagen Archivo de imagen subido por el usuario para el evento.
+     * @param usuario Usuario organizador del evento.
+     * @param categoria Categoria del evento.
+     * @param storageUploader Para subir la imagen al bucket de Supabase y obtener la URL de la imagen subida.
+     * @return Entidad Evento creada a partir del DTO, la imagen subida y las entidades relacionadas.
+     */
     public static Evento convertirAEntidadEventoImagen(EventoImagenCrearRequest request, MultipartFile imagen, Usuario usuario, Categoria categoria, SupabaseStorage storageUploader) {
         Evento evento = new Evento();
 
