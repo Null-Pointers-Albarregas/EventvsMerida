@@ -1,4 +1,13 @@
-window.addEventListener("DOMContentLoaded", async (event) => {
+window.addEventListener("DOMContentLoaded", async () => {
+  const sesion = await logeado();
+
+  if (sesion === 401) {
+    window.location.href = `${window.location.origin}/html/login.html`;
+    return;
+  } else if (sesion === 200){
+    document.body.classList.remove("auth-pending");
+  }
+  
   const URL_BASE = "https://eventvsmerida.onrender.com/api/";
   cargarEventos(URL_BASE);
   obtenerCategorias(URL_BASE);

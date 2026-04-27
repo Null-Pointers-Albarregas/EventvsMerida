@@ -1,4 +1,13 @@
-window.addEventListener("DOMContentLoaded", async (event) => {
+window.addEventListener("DOMContentLoaded", async () => {
+  const sesion = await logeado();
+
+  if (sesion === 401) {
+    window.location.href = `${window.location.origin}/html/login.html`;
+    return;
+  } else if (sesion === 200){
+    document.body.classList.remove("auth-pending");
+  }
+
   const URL_BASE = "https://eventvsmerida.onrender.com/api/";
   cargarRoles(URL_BASE);
 
@@ -154,67 +163,5 @@ async function subirRol(URL_BASE, datosCategoria) {
     }
   } catch (error) {
     console.error("Error al subir el rol:", error);
-  } finally {
-    cargarRoles(URL_BASE);
   }
-}
-
-async function editarRol(URL_BASE, id, datosRol) {
-  try {
-    const options = {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(datosRol),
-    };
-    const resp = await fetch(URL_BASE + "roles/update/" + id, options);
-    const respuesta = await resp.json();
-    if (resp.status === 200) {
-      mostrarAlerta("success", "Rol editado correctamente");
-
-      const modal = bootstrap.Modal.getInstance(
-        document.getElementById("modalEditarRol"),
-      );
-      modal.hide();
-    } else {
-      mostrarAlerta("error", "Error al editar el rol: " + respuesta.error);
-    }
-  } catch (error) {
-    console.error("Error al editar el rol:", error);
-  } finally {
-    cargarRoles(URL_BASE);
-  }
-}
-
-async function eliminarRol(URL_BASE, id, rol) {
-  Swal.fire({
-    title: '¿Estás seguro que deseas eliminar el rol "' + rol + '"?',
-    text: "Esta acción no puede revertirse",
-    icon: "warning",
-    showCancelButton: true,
-    cancelButtonColor: "#3085d6",
-    cancelButtonText: "Cancelar",
-    confirmButtonColor: "#d33",
-    confirmButtonText: "Eliminar rol",
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        const options = {
-          method: "DELETE",
-        };
-        const resp = await fetch(URL_BASE + "roles/delete/" + id, options);
-        const respuesta = resp.text();
-        if (resp.status === 204) {
-          mostrarAlerta("success", "Rol eliminado correctamente");
-        } else {
-          mostrarAlerta("error", "Error al eliminar el rol: " + resp.error);
-        }
-      } catch (error) {
-        console.error("Error al eliminar el rol:", error);
-      } finally {
-        cargarRoles(URL_BASE);
-      }
-    }
-  });
 }

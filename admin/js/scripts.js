@@ -1,14 +1,4 @@
-/*!
- * Start Bootstrap - SB Admin v7.0.7 (https://startbootstrap.com/template/sb-admin)
- * Copyright 2013-2023 Start Bootstrap
- * Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-sb-admin/blob/master/LICENSE)
- */
-//
-// Scripts
-//
-
 window.addEventListener("DOMContentLoaded", async (event) => {
-  //logeado();
   // Toggle the side navigation
   const sidebarToggle = document.body.querySelector("#sidebarToggle");
   if (sidebarToggle) {
@@ -65,21 +55,30 @@ function mostrarAlerta(tipo, mensaje) {
   });
 })();
 
+function obtenerNombreUsuario() {
+  return localStorage.getItem("nombreUsuario");
+}
 
-// function obtenerNombreUsuario() {
-//   return localStorage.getItem("nombreUsuario");
-// }
+async function cerrarSesion() {
+  const URL = "https://eventvsmerida.onrender.com/api/auth/logout";
 
-// function logeado() {
-//   const nombreUsuario = obtenerNombreUsuario();
-//   if (!nombreUsuario && window.location.pathname !== "/html/login.html") {
-//     window.location.href = `${window.location.origin}/html/login.html`;
-//   } else {
-//     document.getElementById("nombreUsuario").innerText = nombreUsuario;
-//   }
-// }
+  try {
+    const respuesta = await fetch(URL, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+    });
 
-// function cerrarSesion() {
-//   localStorage.removeItem("nombreUsuario");
-//   window.location.href = `${window.location.origin}/html/login.html`;
-// }
+    if (respuesta.ok) {
+      sessionStorage.clear();
+      localStorage.removeItem("nombreUsuario");
+      window.location.href = `${window.location.origin}/html/login.html`;
+    } else {
+      console.warn('Logout falló, status:', respuesta.status);
+    }
+  } catch (error) {
+    console.error("Error en scripts.js", error);
+  }
+}

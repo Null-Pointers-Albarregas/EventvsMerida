@@ -9,10 +9,8 @@ import es.nullpointers.eventvsmerida.mapper.UsuarioMapper;
 import es.nullpointers.eventvsmerida.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -148,24 +146,6 @@ public class UsuarioService {
     // ============================
 
     /**
-     * Metodo para iniciar sesión a un usuario con su email y contraseña.
-     *
-     * @param email    Email del usuario a autenticar.
-     * @param password Contraseña del usuario a autenticar.
-     * @return Usuario logeado si las credenciales son correctas.
-     */
-    /*public UsuarioResponse login(String email, String password) {
-        Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow(() -> new NoSuchElementException("Error en UsuarioService.login: No se encontró el usuario con email " + email));
-
-        if (!passwordEncoder.matches(password, usuario.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
-        }
-
-        log.info("Login exitoso para el usuario con email: {}", email);
-        return UsuarioMapper.convertirAResponse(usuario);
-    }*/
-
-    /**
      * Metodo para contar el numero total de usuarios.
      * 
      * @param rolId ID del rol para filtrar los usuarios.
@@ -173,6 +153,23 @@ public class UsuarioService {
      */
     public long contarUsuariosPorRol(Long rolId) {
         return usuarioRepository.countByRol_Id(rolId);
+    }
+
+    /**
+     * Metodo para obtener una lista de usuarios filtrada por rol.
+     * 
+     * @param rolId ID del rol para filtrar los usuarios.
+     * @return Lista de usuarios con el rol especificado.
+     */
+    public List<UsuarioResponse> obtenerUsuariosPorRol(Long rolId) {
+        List<Usuario> usuarios = usuarioRepository.findAllByRol_Id(rolId);
+        List<UsuarioResponse> usuariosResponse = new ArrayList<>();
+
+        for (Usuario usuario : usuarios) {
+            usuariosResponse.add(UsuarioMapper.convertirAResponse(usuario));
+        }
+
+        return usuariosResponse;
     }
 
     // ==================
