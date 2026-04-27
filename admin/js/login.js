@@ -26,7 +26,6 @@ async function login(datos) {
             method: "POST",
             credentials: "include",
             body: JSON.stringify(datos),
-            credentials: "include",
             headers: {
                 "Content-Type": "application/json",
             },

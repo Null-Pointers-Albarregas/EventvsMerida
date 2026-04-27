@@ -7,4 +7,4 @@ window.addEventListener("DOMContentLoaded", async () => {
   } else if (sesion === 200){
     document.body.classList.remove("auth-pending");
   }
-})
+});
