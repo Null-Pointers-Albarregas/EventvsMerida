@@ -58,6 +58,42 @@ La relación se regirá por la legislación española. Para cualquier controvers
     );
   }
 
+  Widget _buildHeader() {
+    return SafeArea(
+      top: true,
+      left: false,
+      right: false,
+      bottom: false,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 8.0),
+        color: _cs.primary,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back, color: _cs.surface),
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
+            ),
+            Center(
+              child: Text(
+                'Términos y Servicios',
+                style: TextStyle(
+                  color: _cs.surface,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ===========================================================================
   // BUILD
   // ===========================================================================
@@ -66,12 +102,12 @@ La relación se regirá por la legislación española. Para cualquier controvers
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _cs.surface,
-      appBar: AppBar(
-        title: const Text('Términos y Servicios'),
-        backgroundColor: _cs.primary,
-        foregroundColor: _cs.surface,
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(child: _contenidoTerminos()),
+        ],
       ),
-      body: _contenidoTerminos(),
     );
   }
 }

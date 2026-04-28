@@ -12,6 +12,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -124,6 +128,19 @@ public class EventoController {
     // =========================
     // Metodos Lógica de Negocio
     // =========================
+
+    /**
+     * Método GET que llama al servicio para obtener eventos paginados.
+     * 
+     * @param pageable Objeto Pageable que contiene la información de paginación y ordenación de los eventos a obtener. Se puede configurar con parámetros como page, size, sort, etc.
+     * @return ResponseEntity con la página de eventos y el estado HTTP 200 (OK).
+     */
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<EventoResponse>> obtenerEventosPaginados(
+        @PageableDefault(page = 0, size = 20, sort = "fechaInicio", direction = Sort.Direction.ASC) Pageable pageable) {
+        Page<EventoResponse> pagina = eventoService.obtenerEventosPaginados(pageable);
+        return ResponseEntity.ok(pagina);
+    }
 
     /**
      * Método GET que llama al servicio para buscar eventos por una consulta de texto.

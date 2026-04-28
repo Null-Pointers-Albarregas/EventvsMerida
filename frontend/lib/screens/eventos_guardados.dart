@@ -121,6 +121,7 @@ class _EventosGuardadosState extends State<EventosGuardados> {
       ),
     );
   }
+
   // ===========================================================================
   // MENSAJES
   // ===========================================================================
@@ -165,41 +166,82 @@ class _EventosGuardadosState extends State<EventosGuardados> {
   // INTERFAZ
   // ===========================================================================
 
-  Widget _cabecera() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-      color: _cs.primary,
-      child: Column(
-        children: [
-          CircleAvatar(
-            backgroundColor: _cs.surface.withValues(alpha: 0.9),
-            radius: 45,
-            child: Icon(Icons.person, color: _cs.primary, size: 45),
-          ),
-          const SizedBox(height: 8),
-        ],
+  Widget _buildHeader() {
+    return SafeArea(
+      top: true,
+      left: false,
+      right: false,
+      bottom: false,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 8),
+        color: _cs.primary,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: Icon(Icons.arrow_back, color: _cs.surface),
+                    onPressed: () {
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.of(context).maybePop();
+                      }
+                    },
+                  ),
+                ),
+                Center(
+                  child: Text(
+                    'Eventos guardados',
+                    style: TextStyle(
+                      color: _cs.surface,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            CircleAvatar(
+              backgroundColor: _cs.surface.withValues(alpha: 0.9),
+              radius: 45,
+              child: Icon(Icons.person, color: _cs.primary, size: 45),
+            ),
+
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
 
   Widget _contenidoVacio() {
-    return Column(
-      children: [
-        _cabecera(),
-        Expanded(
-          child: Center(
-            child: Text(
-              'No tienes eventos guardados',
-              style: TextStyle(
-                color: _cs.onSurface,
-                fontSize: 16,
-              ),
-              textAlign: TextAlign.center,
-            ),
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.event_busy,
+            size: 64,
+            color: _cs.primary,
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          Text(
+            'No tienes eventos guardados',
+            style: TextStyle(
+              color: _cs.onSurface,
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
@@ -233,96 +275,84 @@ class _EventosGuardadosState extends State<EventosGuardados> {
         horizontal: 16,
         vertical: 10,
       ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () => _abrirModalEvento(evento),
-            child: Container(
-              decoration: BoxDecoration(
-                color: _cs.surface,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: _cs.primary,
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _cs.onPrimary.withAlpha(64),
-                    blurRadius: 5,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () => _abrirModalEvento(evento),
+          child: Container(
+            decoration: BoxDecoration(
+              color: _cs.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: _cs.primary,
+                width: 1,
               ),
-              child: Row(
-                children: [
-                  _imagenEvento(evento.foto),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            evento.titulo,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: _cs.primary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+              boxShadow: [
+                BoxShadow(
+                  color: _cs.onPrimary.withAlpha(64),
+                  blurRadius: 5,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                _imagenEvento(evento.foto),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          evento.titulo,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: _cs.primary,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            evento.localizacion,
-                            style: TextStyle(
-                              color: _cs.onSurface.withAlpha(178),
-                              fontSize: 14,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          evento.localizacion,
+                          style: TextStyle(
+                            color: _cs.onSurface.withAlpha(178),
+                            fontSize: 14,
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _textoFechaEvento(evento),
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: _cs.onSurface,
-                              height: 1.25,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _textoFechaEvento(evento),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: _cs.onSurface,
+                            height: 1.25,
                           ),
-                        ],
-                      ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.delete, color: _cs.error),
-                    onPressed: () => _borrarEvento(evento),
-                    tooltip: 'Eliminar evento',
-                  ),
-                ],
-              ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete, color: _cs.error),
+                  onPressed: () => _borrarEvento(evento),
+                  tooltip: 'Eliminar evento',
+                ),
+              ],
             ),
           ),
+        ),
       ),
-    );
-  }
-
-  Widget _listaEventos() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        _cabecera(),
-        const SizedBox(height: 16),
-        ..._eventos.map(_tarjetaEvento),
-        const SizedBox(height: 16),
-      ],
     );
   }
 
@@ -334,18 +364,22 @@ class _EventosGuardadosState extends State<EventosGuardados> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _cs.surface,
-      appBar: AppBar(
-        backgroundColor: _cs.primary,
-        foregroundColor: _cs.surface,
-        centerTitle: true,
-        title: const Text('Eventos guardados'),
-        elevation: 2,
-      ),
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
-          : _eventos.isEmpty
-          ? _contenidoVacio()
-          : _listaEventos(),
+          : Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: _eventos.isEmpty
+                ? _contenidoVacio()
+                : ListView.builder(
+              padding: const EdgeInsets.only(top: 16, bottom: 16),
+              itemCount: _eventos.length,
+              itemBuilder: (context, index) => _tarjetaEvento(_eventos[index]),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

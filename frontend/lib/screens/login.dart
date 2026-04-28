@@ -148,12 +148,17 @@ class _LoginState extends State<Login> {
   // INTERFAZ
   // ===========================================================================
 
-  Widget _buildHeader(double headerHeight) {
-    return Container(
-      color: _cs.primary,
-      width: double.infinity,
-      height: headerHeight,
-      child: Center(
+  Widget _buildHeader() {
+    return SafeArea(
+      top: true,
+      left: false,
+      right: false,
+      bottom: false,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 35.0),
+        color: _cs.primary,
+        alignment: Alignment.center,
         child: Text(
           'Iniciar sesión',
           style: TextStyle(
@@ -276,6 +281,7 @@ class _LoginState extends State<Login> {
               color: _cs.onSurface,
               fontWeight: FontWeight.bold,
               decoration: TextDecoration.underline,
+              decorationThickness: 1.5,
             ),
           ),
         ),
@@ -290,7 +296,6 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final headerHeight = size.height * 0.18;
     final logoWidth = size.width * 0.70;
 
     return Scaffold(
@@ -298,7 +303,7 @@ class _LoginState extends State<Login> {
       body: Column(
         children: [
           // CABECERA
-          _buildHeader(headerHeight),
+          _buildHeader(),
 
           // CUERPO PRINCIPAL
           Expanded(

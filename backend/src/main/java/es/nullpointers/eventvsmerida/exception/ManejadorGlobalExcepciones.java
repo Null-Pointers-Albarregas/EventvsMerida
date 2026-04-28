@@ -4,6 +4,9 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -161,6 +164,37 @@ public class ManejadorGlobalExcepciones {
                 .body(new ErrorResponse(mensajeError));
     }
 
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> manejadorAuthenticationException(AuthenticationException e) {
+        String origen = obtenerClaseMetodoDesdeStackTrace(e.getStackTrace());
+        String detalle = e.getMessage() != null ? e.getMessage() : "Credenciales inválidas";
+        String mensajeError = "Error de autenticación en " + origen + ": " + detalle;
+        log.info(mensajeError);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(mensajeError));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> manejadorAccessDeniedException(AccessDeniedException e) {
+        String origen = obtenerClaseMetodoDesdeStackTrace(e.getStackTrace());
+        String detalle = e.getMessage() != null ? e.getMessage() : "Acceso denegado";
+        String mensajeError = "Acceso denegado en " + origen + ": " + detalle;
+        log.warn(mensajeError);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(mensajeError));
+    }
+
+    /**
+     * Maneja la excepción en caso de que se quiera insertar una imagen que ya está almacenada.
+     * 
+     * @param e Excepción capturada.
+     * @return Respuesta HTTP con el código 409.
+     */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> manejadorResponseStatus(ResponseStatusException e) {
+        String mensaje = e.getReason() != null ? e.getReason() : e.getMessage();
+        log.error("Error en " + obtenerClaseMetodoDesdeStackTrace(e.getStackTrace()) + ": " + mensaje);
+        return ResponseEntity.status(e.getStatusCode()).body(new ErrorResponse(mensaje));
+    }
+
     /**
      * Maneja cualquier otra excepción no específica.
      *
@@ -174,18 +208,6 @@ public class ManejadorGlobalExcepciones {
         return ResponseEntity
                 .internalServerError()
                 .body(new ErrorResponse(mensajeError));
-    }
-
-    /**
-     * Maneja la excepción en caso de que se quiera insertar una imagen que ya está almacenada.
-     * @param e Excepción capturada.
-     * @return Respuesta HTTP con el código 409.
-     */
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErrorResponse> manejadorResponseStatus(ResponseStatusException e) {
-        String mensaje = e.getReason() != null ? e.getReason() : e.getMessage();
-        log.error("Error en " + obtenerClaseMetodoDesdeStackTrace(e.getStackTrace()) + ": " + mensaje);
-        return ResponseEntity.status(e.getStatusCode()).body(new ErrorResponse(mensaje));
     }
 
     // ================

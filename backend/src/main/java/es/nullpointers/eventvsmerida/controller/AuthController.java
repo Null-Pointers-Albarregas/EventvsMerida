@@ -18,7 +18,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.access.AccessDeniedException;
 
 /**
  * Controlador REST que maneja las operaciones de autenticación, incluyendo inicio de sesión, 
@@ -59,14 +59,13 @@ public class AuthController {
                 .anyMatch(a -> "Administrador".equalsIgnoreCase(a.getAuthority()));
     
         if (admin && !isAdmin) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo administradores pueden iniciar sesión en el panel");
+            throw new AccessDeniedException("Solo administradores pueden iniciar sesión");
         }
     
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
     
-        // Persistir autenticación en la sesión HTTP (clave para que /session no devuelva 401)
         new HttpSessionSecurityContextRepository().saveContext(context, request, response);
     
         UsuarioResponse usuarioLogeado = usuarioService.obtenerUsuarioPorEmail(loginRequest.email());

@@ -299,12 +299,17 @@ class _RegistroState extends State<Registro> {
     );
   }
 
-  Widget _buildHeader(double headerHeight) {
-    return Container(
-      color: _cs.primary,
-      width: double.infinity,
-      height: headerHeight,
-      child: Center(
+  Widget _buildHeader() {
+    return SafeArea(
+      top: true,
+      left: false,
+      right: false,
+      bottom: false,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 35.0),
+        color: _cs.primary,
+        alignment: Alignment.center,
         child: Text(
           'Crear cuenta',
           style: TextStyle(
@@ -481,6 +486,7 @@ class _RegistroState extends State<Registro> {
               color: _cs.onSurface,
               fontWeight: FontWeight.bold,
               decoration: TextDecoration.underline,
+              decorationThickness: 1.5
             ),
           ),
         ),
@@ -492,6 +498,7 @@ class _RegistroState extends State<Registro> {
     return Form(
       key: _formKey,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildFilaNombreApellidos(),
           _buildCampoTexto(
@@ -539,8 +546,10 @@ class _RegistroState extends State<Registro> {
           color: _cs.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         ),
-        child: SingleChildScrollView(
-          child: _buildFormulario(),
+        child: Center(
+          child: SingleChildScrollView(
+            child: _buildFormulario(),
+          ),
         ),
       ),
     );
@@ -552,13 +561,10 @@ class _RegistroState extends State<Registro> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final headerHeight = size.height * 0.18;
-
     return Scaffold(
       body: Column(
         children: [
-          _buildHeader(headerHeight),
+          _buildHeader(),
           _buildBody(),
         ],
       ),
