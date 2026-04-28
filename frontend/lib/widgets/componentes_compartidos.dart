@@ -374,6 +374,7 @@ class _ModalEventoState extends State<ModalEvento> {
                     child: FadeInImage.assetNetwork(
                       placeholder: 'assets/images/loader-eventvs.gif',
                       image: evento.foto,
+                      placeholderFit: BoxFit.contain,
                     ),
                   ),
                 );
