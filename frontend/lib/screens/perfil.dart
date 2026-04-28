@@ -86,8 +86,10 @@ class _PerfilState extends State<Perfil> {
 
   Widget _buildCabeceraNoLogueado() {
     return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(height: 20),
         Text(
           'Regístrate o inicia sesión',
           style: TextStyle(
@@ -96,7 +98,7 @@ class _PerfilState extends State<Perfil> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -125,8 +127,10 @@ class _PerfilState extends State<Perfil> {
 
   Widget _buildCabeceraLogueado() {
     return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(height: 20),
         CircleAvatar(
           backgroundColor: _cs.surface.withValues(alpha: 0.9),
           radius: 32,
@@ -150,11 +154,17 @@ class _PerfilState extends State<Perfil> {
   }
 
   Widget _buildCabecera() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-      color: _cs.primary,
-      child: _usuario == null ? _buildCabeceraNoLogueado() : _buildCabeceraLogueado(),
+    return SafeArea(
+      top: true,
+      left: false,
+      right: false,
+      bottom: false,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+        color: _cs.primary,
+        child: _usuario == null ? _buildCabeceraNoLogueado() : _buildCabeceraLogueado(),
+      ),
     );
   }
 
@@ -175,15 +185,13 @@ class _PerfilState extends State<Perfil> {
 
     return Column(
       children: [
-        if (isRegistrado)
-          _buildItem(Icons.account_circle, 'Cuenta', onTap: () => context.push(AppRoutes.cuenta)),
-
-        _buildModoOscuro(),
-
         if (isRegistrado) ...[
+          _buildItem(Icons.account_circle, 'Cuenta', onTap: () => context.push(AppRoutes.cuenta)),
           _buildItem(Icons.bookmark_border, 'Eventos guardados', onTap: () => context.push(AppRoutes.eventosGuardados),),
           _buildItem(Icons.notifications, 'Preferencias de notificaciones'),
         ],
+
+        _buildModoOscuro(),
       ],
     );
   }
@@ -203,11 +211,16 @@ class _PerfilState extends State<Perfil> {
 
   @override
   Widget build(BuildContext context) {
+    final double bottomPad = MediaQuery.of(context).padding.bottom;
+
     return Column(
       children: [
         _buildCabecera(),
+
+        // Lista de contenido
         Expanded(
           child: ListView(
+            padding: EdgeInsets.only(top: 24.0, bottom: 16.0 + bottomPad),
             children: [
               _buildSeccionTitulo('PREFERENCIAS'),
               _buildPreferencias(),
@@ -223,33 +236,39 @@ class _PerfilState extends State<Perfil> {
               ),
               _buildSeccionTitulo('INFORMACIÓN LEGAL'),
               _buildLegal(),
-              const SizedBox(height: 80),
-              Align(
-                alignment: .centerRight,
-                child: Padding(
-                  padding: const EdgeInsetsGeometry.only(right: 24.0),
-                  child: Column(
-                    crossAxisAlignment: .end,
-                    children: [
-                      Image.asset(
-                        'assets/images/logo-eventvs-merida-no-bg.png',
-                        height: 30,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Verión 1.0.0',
-                        style: TextStyle(
-                          color: _cs.onSurface,
-                          fontSize: 10,
-                          fontWeight: .w500,
-                        ),
-                      ),
-                    ],
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+
+        // Footer fijo: logo + versión
+        SafeArea(
+          top: false,
+          bottom: true,
+          left: false,
+          right: false,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(right: 24.0, bottom: 8.0, top: 8.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Image.asset(
+                  'assets/images/logo-eventvs-merida-no-bg.png',
+                  height: 30,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Versión 1.0.0',
+                  style: TextStyle(
+                    color: _cs.onSurface,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
-            ],
+              ],
+            ),
           ),
         ),
       ],
