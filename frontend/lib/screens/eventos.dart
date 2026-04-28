@@ -453,10 +453,12 @@ class _EventosState extends State<Eventos> {
               ),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
-                child: Image.network(
-                  evento.foto,
+                child: FadeInImage.assetNetwork(
+                  placeholder: 'assets/images/loader-eventvs.gif',
+                  image: evento.foto,
                   fit: BoxFit.cover,
                   alignment: Alignment.topCenter,
+                  placeholderFit: BoxFit.cover,
                 ),
               ),
             ),
@@ -516,17 +518,13 @@ class _EventosState extends State<Eventos> {
         topLeft: Radius.circular(18),
         bottomLeft: Radius.circular(18),
       ),
-      child: Image.network(
-        foto,
+      child: FadeInImage.assetNetwork(
+        placeholder: 'assets/images/loader-eventvs.gif',
+        image: foto,
         width: 100,
         height: 110,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Container(
-          width: 100,
-          height: 110,
-          color: _cs.secondary.withAlpha(51),
-          child: Icon(Icons.image, color: _cs.primary),
-        ),
+        placeholderFit: BoxFit.cover,
       ),
     );
   }
