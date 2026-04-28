@@ -170,8 +170,9 @@ class ApiService {
       }
     }
 
-    return _manejarError<List<Evento>>(respuesta!);
+    return _manejarError<List<Evento>>(respuesta);
   }
+
   // ============================================================================
   // USUARIO-EVENTOS
   // ============================================================================

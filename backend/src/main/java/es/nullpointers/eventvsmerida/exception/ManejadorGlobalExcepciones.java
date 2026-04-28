@@ -57,15 +57,38 @@ public class ManejadorGlobalExcepciones {
      * @param e La excepción capturada.
      * @return Una respuesta HTTP 404 Not Found.
      */
-    @ExceptionHandler(NoSuchElementException.class)
+    /*@ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ErrorResponse> manejadorNoSuchElementException(NoSuchElementException e) {
         String mensajeError = e.getMessage();
         log.error(mensajeError);
         return ResponseEntity
                 .status(404)
                 .body(new ErrorResponse(mensajeError));
+    }*/
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ErrorResponse> manejadorNoSuchElementException(NoSuchElementException e) {
+        String mensajeTecnico = e.getMessage();
+        log.error(mensajeTecnico);
+
+        String mensajeUsuario = limpiarMensajeTecnico(mensajeTecnico);
+
+        return ResponseEntity
+                .status(404)
+                .body(new ErrorResponse(mensajeUsuario));
     }
 
+    private String limpiarMensajeTecnico(String mensaje) {
+        if (mensaje == null || mensaje.isBlank()) {
+            return "No se encontró el recurso solicitado";
+        }
+
+        if (mensaje.contains(":")) {
+            return mensaje.substring(mensaje.indexOf(":") + 1).trim();
+        }
+
+        return mensaje;
+    }
+    
     /**
      * Maneja la excepción MethodArgumentNotValidException.
      * Se lanza cuando la validación de los argumentos de un método falla,
@@ -74,12 +97,28 @@ public class ManejadorGlobalExcepciones {
      * @param e La excepción capturada.
      * @return Una respuesta HTTP 400 Bad Request.
      */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    /*@ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> manejadorMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         String mensaje = e.getMessage();
         String errores = construirErroresValidacion(e);
         String mensajeError = obtenerMensajePersonalizado(mensaje, errores);
         log.error(mensajeError);
+        return ResponseEntity
+                .badRequest()
+                .body(new ErrorResponse(mensajeError));
+    }*/
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> manejadorMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        String mensajeError = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(FieldError::getDefaultMessage)
+                .findFirst()
+                .orElse("Datos inválidos");
+
+        log.error(mensajeError);
+
         return ResponseEntity
                 .badRequest()
                 .body(new ErrorResponse(mensajeError));

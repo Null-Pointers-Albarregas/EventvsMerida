@@ -9,8 +9,10 @@ import es.nullpointers.eventvsmerida.mapper.UsuarioMapper;
 import es.nullpointers.eventvsmerida.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +73,20 @@ public class UsuarioService {
      */
     public UsuarioResponse crearUsuario(UsuarioCrearRequest usuarioRequest) {
         // Se hacen las comprobaciones necesarias para evitar errores de integridad de datos
+        if (usuarioRepository.existsByEmail(usuarioRequest.email())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Ya existe un usuario registrado con ese correo"
+            );
+        }
+
+        if (usuarioRepository.existsByTelefono(usuarioRequest.telefono())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Ya existe un usuario registrado con ese teléfono"
+            );
+        }
+
         Rol rol = rolService.obtenerRolPorIdOExcepcion(usuarioRequest.idRol(), "Error en UsuarioService.crearUsuario: No se encontró el rol con id " + usuarioRequest.idRol());
 
         // Se convierte el DTO a entidad y se codifica la contraseña
@@ -118,10 +134,28 @@ public class UsuarioService {
         }
 
         if (usuarioRequest.email() != null) {
+            Usuario usuarioConEmail = usuarioRepository.findByEmail(usuarioRequest.email()).orElse(null);
+
+            if (usuarioConEmail != null && !usuarioConEmail.getId().equals(usuarioExistente.getId())) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Ya existe otro usuario registrado con ese correo"
+                );
+            }
+
             usuarioExistente.setEmail(usuarioRequest.email());
         }
 
         if (usuarioRequest.telefono() != null) {
+            Usuario usuarioConTelefono = usuarioRepository.findByTelefono(usuarioRequest.telefono()).orElse(null);
+
+            if (usuarioConTelefono != null && !usuarioConTelefono.getId().equals(usuarioExistente.getId())) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Ya existe otro usuario registrado con ese teléfono"
+                );
+            }
+
             usuarioExistente.setTelefono(usuarioRequest.telefono());
         }
 

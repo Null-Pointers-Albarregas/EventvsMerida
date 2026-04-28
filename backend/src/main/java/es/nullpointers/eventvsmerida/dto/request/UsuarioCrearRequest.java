@@ -13,30 +13,30 @@ import java.time.LocalDate;
  * @author Adrián Pérez
  */
 public record UsuarioCrearRequest(
-        @NotBlank
+        @NotBlank(message = "El nombre es obligatorio")
         String nombre,
 
-        @NotBlank
+        @NotBlank(message = "Los apellidos son obligatorios")
         String apellidos,
 
-        @NotNull
+        @NotNull(message = "La fecha de nacimiento es obligatoria")
         @EdadValida
         @PastOrPresent(message = "La fecha de nacimiento no puede ser futura")
         @JsonFormat(pattern = "dd/MM/yyyy")
         LocalDate fechaNacimiento,
 
-        @NotBlank
-        @Email
+        @NotBlank(message = "El correo es obligatorio")
+        @Email(message = "El correo no tiene un formato válido")
         String email,
 
-        @NotBlank
+        @NotBlank(message = "El teléfono es obligatorio")
         @Pattern(
                 regexp = "^[679]\\d{8}$",
                 message = "El teléfono debe tener 9 dígitos y empezar por 6, 7 o 9"
         )
         String telefono,
 
-        @NotBlank
+        @NotBlank(message = "La contraseña es obligatoria")
         @Pattern(
                 regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$",
                 message = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número"

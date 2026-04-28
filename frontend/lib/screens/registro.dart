@@ -102,21 +102,21 @@ class _RegistroState extends State<Registro> {
     if (label == 'Correo') {
       final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
       if (!emailRegex.hasMatch(texto)) {
-        return 'Introduce un email valido';
+        return 'Introduce un email válido';
       }
     }
 
     if (label == 'Numero de telefono') {
       final phoneRegex = RegExp(r'^[679]\d{8}$');
       if (!phoneRegex.hasMatch(texto)) {
-        return 'Debe tener 9 digitos y empezar por 6, 7 o 9';
+        return 'Debe tener 9 dígitos y empezar por 6, 7 o 9';
       }
     }
 
-    if (label == 'Contrasena') {
+    if (label == 'Contraseña') {
       final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$');
       if (!passwordRegex.hasMatch(texto)) {
-        return 'Debe tener 8 caracteres, mayuscula, minuscula y numero';
+        return 'Debe tener 8 carácteres, mayúscula, minúscula y número';
       }
     }
 
