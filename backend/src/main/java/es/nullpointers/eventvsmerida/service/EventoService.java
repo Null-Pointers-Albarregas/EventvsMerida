@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -215,6 +216,16 @@ public class EventoService {
     // =========================
     // Metodos Lógica de Negocio
     // =========================
+
+    /**
+     * Método para obtener eventos paginados.
+     * 
+     * @param pageable Objeto Pageable que contiene la información de paginación y ordenación de los eventos a obtener. Se puede configurar con parámetros como page, size, sort, etc.
+     * @return Page<EventoResponse> con la página de eventos y el estado HTTP 200 (OK).
+     */
+    public Page<EventoResponse> obtenerEventosPaginados(Pageable pageable) {
+        return eventoRepository.findAll(pageable).map(EventoMapper::convertirAResponse);
+    }
 
     /**
      * Método para buscar eventos por una consulta de texto que puede coincidir con el título, localización o categoría del evento.

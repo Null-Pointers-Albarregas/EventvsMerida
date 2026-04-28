@@ -8,7 +8,6 @@ class Privacidad extends StatefulWidget {
 }
 
 class _PrivacidadState extends State<Privacidad> {
-
   // ===========================================================================
   // VARIABLES
   // ===========================================================================
@@ -63,6 +62,42 @@ Esta política puede actualizarse en el futuro. Te notificaremos si hay cambios 
     );
   }
 
+  Widget _buildHeader() {
+    return SafeArea(
+      top: true,
+      left: false,
+      right: false,
+      bottom: false,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 8.0),
+        color: _cs.primary,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back, color: _cs.surface),
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
+            ),
+            Center(
+              child: Text(
+                'Política de Privacidad',
+                style: TextStyle(
+                  color: _cs.surface,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ===========================================================================
   // BUILD
   // ===========================================================================
@@ -71,12 +106,12 @@ Esta política puede actualizarse en el futuro. Te notificaremos si hay cambios 
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _cs.surface,
-      appBar: AppBar(
-        title: const Text('Política de Privacidad'),
-        backgroundColor: _cs.primary,
-        foregroundColor: _cs.surface,
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(child: _contenidoPrivacidad()),
+        ],
       ),
-      body: _contenidoPrivacidad(),
     );
   }
 }

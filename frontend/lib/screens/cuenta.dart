@@ -127,23 +127,62 @@ class _CuentaState extends State<Cuenta> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-      color: _cs.primary,
-      child: Column(
-        children: [
-          CircleAvatar(
-            backgroundColor: _cs.surface.withValues(alpha: 230),
-            radius: 45,
-            child: Icon(
-              Icons.person,
-              color: _cs.primary,
-              size: 45,
+    return SafeArea(
+      top: true,
+      left: false,
+      right: false,
+      bottom: false,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        color: _cs.primary,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: Icon(Icons.arrow_back, color: _cs.surface),
+                    onPressed: () {
+                      if (Navigator.of(context).canPop()) {
+                        context.pop();
+                      } else {
+                        Navigator.of(context).maybePop();
+                      }
+                    },
+                  ),
+                ),
+                Center(
+                  child: Text(
+                    'Cuenta',
+                    style: TextStyle(
+                      color: _cs.surface,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-        ],
+
+            const SizedBox(height: 12),
+
+            CircleAvatar(
+              backgroundColor: _cs.surface.withValues(alpha: 230),
+              radius: 45,
+              child: Icon(
+                Icons.person,
+                color: _cs.primary,
+                size: 45,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
@@ -176,13 +215,6 @@ class _CuentaState extends State<Cuenta> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _cs.surface,
-      appBar: AppBar(
-        backgroundColor: _cs.primary,
-        foregroundColor: _cs.surface,
-        centerTitle: true,
-        title: const Text('Cuenta'),
-        elevation: 2,
-      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.zero,
         child: Column(
