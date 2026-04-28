@@ -70,10 +70,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT,  "/api/eventos/**").hasAnyAuthority("Administrador", "Organizador")
                 .requestMatchers(HttpMethod.DELETE, "/api/eventos/**").hasAnyAuthority("Administrador", "Organizador")
 
-                // Categorías:
-                // GET /api/categorias/{id} y GET /api/categorias/all -> Administrador u Organizador
-                .requestMatchers(HttpMethod.GET, "/api/categorias/*", "/api/categorias/all").hasAnyAuthority("Administrador", "Organizador")
-                // Resto de categorías (add, update, delete) -> solo Administrador
+                // Categorías: (add, update, delete) -> solo Administrador
                 .requestMatchers(HttpMethod.POST,   "/api/categorias/add").hasAuthority("Administrador")
                 .requestMatchers(HttpMethod.PUT,    "/api/categorias/update/*").hasAuthority("Administrador")
                 .requestMatchers(HttpMethod.DELETE, "/api/categorias/delete/*").hasAuthority("Administrador")
