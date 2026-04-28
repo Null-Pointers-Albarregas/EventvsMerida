@@ -134,6 +134,43 @@ class ApiService {
     return _manejarError<List<Evento>>(respuesta);
   }
 
+  /// GET /api/eventos/search?q="Query"&limit="Límite"
+  static Future<ApiResponse<List<Evento>>> buscarEventos(String query) async {
+    if (query.trim().isEmpty) {
+      return ApiResponse<List<Evento>>.exito(
+        datos: const [],
+        mensaje: 'Introduce un término de búsqueda para encontrar eventos.',
+        codigoEstado: 200,
+      );
+    }
+
+    final uri = Uri.parse('$baseUrl/eventos/search').replace(
+      queryParameters: {'q': query, 'limit': '10'},
+    );
+    final respuesta = await _getUri(uri);
+
+    if (respuesta!.statusCode == 200) {
+      try {
+        final lista = jsonDecode(respuesta.body) as List<dynamic>;
+        final eventos = lista
+            .map((item) => Evento.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        return ApiResponse<List<Evento>>.exito(
+          datos: eventos,
+          mensaje: 'Eventos encontrados cargados correctamente',
+          codigoEstado: 200,
+        );
+      } catch (_) {
+        return ApiResponse<List<Evento>>.error(
+          mensaje: 'No se pudieron leer los eventos',
+          codigoEstado: 200,
+        );
+      }
+    }
+
+    return _manejarError<List<Evento>>(respuesta!);
+  }
   // ============================================================================
   // USUARIO-EVENTOS
   // ============================================================================
