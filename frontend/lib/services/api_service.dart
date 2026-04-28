@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import '../models/api_response.dart';
 import '../models/evento.dart';
 import '../models/usuario.dart';
+import '../models/categoria.dart';
 
 class ApiService {
   static const String baseUrl = 'https://eventvsmerida.onrender.com/api';
@@ -262,6 +263,43 @@ class ApiService {
     }
 
     return _manejarError<void>(respuesta);
+  }
+
+  // ============================================================================
+  // CATEGORÍAS
+  // ============================================================================
+
+  /// GET /api/categorias/all
+  static Future<ApiResponse<List<Categoria>>> obtenerCategorias() async {
+    final respuesta = await _get('/categorias/all');
+
+    if (respuesta == null) {
+      return ApiResponse<List<Categoria>>.sinConexion(
+        mensaje: _mensajeSinConexion,
+      );
+    }
+
+    if (respuesta.statusCode == 200) {
+      try {
+        final lista = jsonDecode(respuesta.body) as List<dynamic>;
+        final categorias = lista
+            .map((item) => Categoria.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        return ApiResponse<List<Categoria>>.exito(
+          datos: categorias,
+          mensaje: 'Categorías cargadas correctamente',
+          codigoEstado: 200,
+        );
+      } catch (_) {
+        return ApiResponse<List<Categoria>>.error(
+          mensaje: 'No se pudieron leer las categorías',
+          codigoEstado: 200,
+        );
+      }
+    }
+
+    return _manejarError<List<Categoria>>(respuesta);
   }
 
   // ============================================================================
