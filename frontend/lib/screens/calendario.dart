@@ -424,6 +424,10 @@ class _CalendarioState extends State<Calendario> {
           _focusedDay = _normalizarFecha(focusedDay);
         });
       },
+      daysOfWeekStyle: DaysOfWeekStyle(
+        weekdayStyle: TextStyle(color: _cs.onSurface.withValues(alpha: 128)),
+        weekendStyle: TextStyle(color: _cs.onSurface.withValues(alpha: 128)),
+      ),
       calendarStyle: CalendarStyle(
         todayDecoration: BoxDecoration(
           color: _cs.secondary,
@@ -437,10 +441,12 @@ class _CalendarioState extends State<Calendario> {
           color: _cs.primary,
           shape: BoxShape.circle,
         ),
+          markerMargin: const EdgeInsets.only(top: 3.8),
         markersAlignment: Alignment.bottomCenter,
         markersMaxCount: 1,
         selectedTextStyle: TextStyle(color: _cs.surface),
         todayTextStyle: TextStyle(color: _cs.surface),
+        weekendTextStyle: TextStyle(color: _cs.onSurface.withValues(alpha: 128))
       ),
     );
   }
