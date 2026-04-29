@@ -291,9 +291,9 @@ class ApiService {
           mensaje: 'Categorías cargadas correctamente',
           codigoEstado: 200,
         );
-      } catch (_) {
+      } catch (e) {
         return ApiResponse<List<Categoria>>.error(
-          mensaje: 'No se pudieron leer las categorías',
+          mensaje: 'No se pudieron leer las categorías: ${e.toString()}',
           codigoEstado: 200,
         );
       }

@@ -418,7 +418,7 @@ class _RegistroState extends State<Registro> {
         const SizedBox(width: 10),
         Expanded(
           child: _buildCampoTexto(
-            'Ano',
+            'Año',
             controller: _anioController,
             keyboardType: TextInputType.number,
           ),
