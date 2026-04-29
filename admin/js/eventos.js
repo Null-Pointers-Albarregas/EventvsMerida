@@ -17,9 +17,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   obtenerCategorias();
 
   // Buscador de eventos provisional
-  document.addEventListener("keyup", (e) => {
+  document.addEventListener("input", (e) => {
     if (e.target.matches("#buscador")) {
-      buscarEvento(e.target.value);
+      if (e.target.value.trim() === "") {
+        cargarEventos();
+      } else {
+        buscarEvento(e.target.value);
+        document.getElementById("textoBusqueda").textContent = e.target.value;
+      }
     }
   });
 
@@ -122,7 +127,7 @@ async function cargarEventos() {
     );
 
     const data = await resp.json();
-    mostrarEventos(data["content"]);
+    mostrarEventos(data["content"], data["totalPages"]);
   } catch (error) {
     console.error("Error al cargar los eventos:", error);
   } finally {
@@ -164,7 +169,7 @@ async function buscarEvento(textoBusqueda) {
   }
 }
 
-function mostrarEventos(data) {
+function mostrarEventos(data, numeroPaginas = 0) {
   const tabla = document.getElementById("listadoEventos");
 
   // Mostrar mensaje si no hay eventos y limpiar tabla
@@ -314,9 +319,7 @@ function mostrarEventos(data) {
     tabla.appendChild(tr);
   });
 
-  cantidadPaginacion = data["totalPages"] ?? 0;
-  console.log(cantidadPaginacion);
-  cargarPaginacion(cantidadPaginacion, paginaActual);
+  cargarPaginacion(numeroPaginas, paginaActual);
 }
 
 function cargarPaginacion(totalPaginas, paginaActual) {

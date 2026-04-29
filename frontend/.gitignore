@@ -33,10 +33,15 @@ migrate_working_dir/
 /build/
 /coverage/
 
-# Generated plugin registrants
-**/generated_plugin_registrant.cc
-**/generated_plugins.cmake
-**/GeneratedPluginRegistrant.swift
+# Flutter generated plugin registrants
+**/flutter/generated_plugin_registrant.*
+**/flutter/generated_plugins.*
+**/Flutter/GeneratedPluginRegistrant.*
+**/generated_plugin_registrant.*
+**/generated_plugins.*
+/linux/flutter/generated_plugin_registrant.*
+/windows/flutter/generated_plugin_registrant.*
+/macos/Flutter/GeneratedPluginRegistrant.*
 
 # Symbolication related
 app.*.symbols

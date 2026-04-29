@@ -1,593 +1,363 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
-    <title>Usuarios - Eventvs Mérida</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css"
-      rel="stylesheet"
-    />
-    <link href="../css/styles.css" rel="stylesheet" />
-    <link
-      rel="icon"
-      type="image/png"
-      href="../assets/img/logo-eventvs-merida.jpeg"
-    />
-    <script
-      src="https://use.fontawesome.com/releases/v6.3.0/js/all.js"
-      crossorigin="anonymous"
-    ></script>
-  </head>
 
-  <body class="sb-nav-fixed bg-dark auth-pending">
-    <nav class="sb-topnav navbar navbar-expand bg-azul">
-      <!-- Navbar Brand-->
-      <button
-        class="btn btn-link btn-sm order-1 order-lg-0 ms-2 me-4 me-lg-0 text-light"
-        id="sidebarToggle"
-        href="#!"
-      >
-        <i class="fas fa-bars"></i>
-      </button>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <title>Usuarios - Eventvs Mérida</title>
+  <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+  <link href="../css/styles.css" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="../assets/img/logo-eventvs-merida.jpeg" />
+  <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+</head>
 
-      <!-- Sidebar Toggle-->
-      <a class="navbar-brand ps-3 me-3 text-light" href="../index.html"
-        >Admin - Eventvs Mérida</a
-      >
+<body class="sb-nav-fixed bg-dark auth-pending">
+  <nav class="sb-topnav navbar navbar-expand bg-azul">
+    <!-- Navbar Brand-->
+    <button class="btn btn-link btn-sm order-1 order-lg-0 ms-2 me-4 me-lg-0 text-light" id="sidebarToggle" href="#!">
+      <i class="fas fa-bars"></i>
+    </button>
 
-      <!-- Navbar-->
-      <ul
-        class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4 d-flex flex-row align-items-center"
-        style="margin-left: auto !important"
-      >
-        <li class="nav-item dropdown">
-          <a
-            class="nav-link dropdown-toggle text-light"
-            id="navbarDropdown"
-            href="#"
-            role="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            ><i class="fas fa-user fa-fw"></i
-          ></a>
-          <ul
-            class="dropdown-menu dropdown-menu-end text-light"
-            aria-labelledby="navbarDropdown"
-          >
-            <li>
-              <a class="dropdown-item" onclick="cerrarSesion()" href="#!"
-                ><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a
-              >
-            </li>
-          </ul>
-        </li>
-      </ul>
-    </nav>
-    <div id="layoutSidenav">
-      <div id="layoutSidenav_nav">
-        <nav
-          class="sb-sidenav accordion bg-azul text-light"
-          id="sidenavAccordion"
-        >
-          <div class="sb-sidenav-menu">
-            <div class="nav">
-              <div class="sb-sidenav-menu-heading">Inicio</div>
-              <a class="nav-link" href="../index.html">
-                <div class="sb-nav-link-icon">
-                  <i class="fas fa-tachometer-alt"></i>
-                </div>
-                Panel
-              </a>
-              <div class="sb-sidenav-menu-heading">Administración</div>
-              <a class="nav-link" href="usuarios.html">
-                <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                Usuarios
-              </a>
+    <!-- Sidebar Toggle-->
+    <a class="navbar-brand ps-3 me-3 text-light" href="../index.html">Admin - Eventvs Mérida</a>
 
-              <a class="nav-link" href="eventos.html">
-                <div class="sb-nav-link-icon">
-                  <i class="fas fa-calendar-days"></i>
-                </div>
-                Eventos
-              </a>
-
-              <a class="nav-link" href="organizadores.html">
-                <div class="sb-nav-link-icon">
-                  <i class="fas fa-user-tie"></i>
-                </div>
-                Organizadores
-              </a>
-
-              <a class="nav-link" href="categorias.html">
-                <div class="sb-nav-link-icon"><i class="fas fa-tags"></i></div>
-                Categorías
-              </a>
-
-              <a class="nav-link" href="roles.html">
-                <div class="sb-nav-link-icon">
-                  <i class="fas fa-users-cog"></i>
-                </div>
-                Roles
-              </a>
-            </div>
-          </div>
-          <div class="sb-sidenav-footer">
-            <div class="small">Logeado como:</div>
-            <span id="nombreUsuario"></span>
-          </div>
-        </nav>
-      </div>
-      <div id="layoutSidenav_content">
-        <main>
-          <!-- Loader -->
-          <div id="loader">
-            <img
-              src="../assets/img/logo-eventvs-merida-no-bg.png"
-              alt=""
-            />
-          </div>
-
-          <div class="container-fluid px-4">
-            <h1 class="mt-4 text-light">Usuarios</h1>
-            <ol class="breadcrumb mb-4">
-              <li class="breadcrumb-item">
-                <a href="../index.html">Panel de administración</a>
-              </li>
-              <li class="breadcrumb-item active">Usuarios</li>
-            </ol>
-             <div class="d-flex justify-content-end">
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  data-bs-toggle="modal"
-                  data-bs-target="#modalCrearUsuario"
-                >
-                  Añadir usuario
-                </button>
+    <!-- Navbar-->
+    <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4 d-flex flex-row align-items-center"
+      style="margin-left: auto !important">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-light" id="navbarDropdown" href="#" role="button"
+          data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+        <ul class="dropdown-menu dropdown-menu-end text-light" aria-labelledby="navbarDropdown">
+          <li>
+            <a class="dropdown-item" onclick="cerrarSesion()" href="#!"><i class="fa-solid fa-right-from-bracket"></i>
+              Cerrar sesión</a>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+  <div id="layoutSidenav">
+    <div id="layoutSidenav_nav">
+      <nav class="sb-sidenav accordion bg-azul text-light" id="sidenavAccordion">
+        <div class="sb-sidenav-menu">
+          <div class="nav">
+            <div class="sb-sidenav-menu-heading">Inicio</div>
+            <a class="nav-link" href="../index.html">
+              <div class="sb-nav-link-icon">
+                <i class="fas fa-tachometer-alt"></i>
               </div>
-            <div class="row justify-content-center"></div>
+              Panel
+            </a>
+            <div class="sb-sidenav-menu-heading">Administración</div>
+            <a class="nav-link" href="usuarios.html">
+              <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
+              Usuarios
+            </a>
 
-            <!-- Modal -->
-            <div
-              class="modal fade"
-              id="modalCrearUsuario"
-              tabindex="-1"
-              aria-labelledby="modalCrearUsuarioLabel"
-              aria-hidden="true"
-            >
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content bg-dark text-light">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalCrearUsuarioLabel">
-                      Añadir nuevo usuario
-                    </h1>
-                    <button
-                      type="button"
-                      class="btn-close custom-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                  <div class="modal-body">
-                    <form
-                      class="row g-3 needs-validation"
-                      id="formAgregarUsuario"
-                      novalidate
-                    >
-                      <div class="col-md-6">
-                        <label for="nombre" class="form-label">Nombre</label>
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="nombre"
-                          name="nombre"
-                          required
-                          minlength="2"
-                          maxlength="50"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un nombre válido
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="apellidos" class="form-label"
-                          >Apellidos</label
-                        >
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="apellidos"
-                          name="apellidos"
-                          required
-                          minlength="2"
-                          maxlength="50"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa unos apellidos válidos
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="fechaNacimiento" class="form-label"
-                          >Fecha de nacimiento</label
-                        >
-                        <input
-                          type="date"
-                          class="form-control"
-                          id="fechaNacimiento"
-                          name="fechaNacimiento"
-                          required
-                          max="2026-04-14"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa una fecha válida.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="correo" class="form-label"
-                          >Correo electrónico</label
-                        >
-                        <input
-                          type="email"
-                          class="form-control"
-                          id="correo"
-                          name="correo"
-                          required
-                          maxlength="100"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un correo electrónico válido.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="telefono" class="form-label"
-                          >Teléfono</label
-                        >
-                        <input
-                          type="tel"
-                          class="form-control"
-                          id="telefono"
-                          name="telefono"
-                          required
-                          pattern="[0-9]{9,15}"
-                          maxlength="15"
-                          title="Solo números y 9 dígitos"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un teléfono válido (solo números y 9 dígitos).
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="contrasena" class="form-label"
-                          >Contraseña</label
-                        >
-                        <input
-                          type="password"
-                          class="form-control"
-                          id="contrasena"
-                          name="contrasena"
-                          pattern="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número"
-                          required
-                        />
-                        <div class="invalid-feedback">
-                          La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="confirmarContrasena" class="form-label"
-                          >Confirmar contraseña</label
-                        >
-                        <input
-                          type="password"
-                          class="form-control"
-                          id="confirmarContrasena"
-                          name="confirmarContrasena"
-                          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
-                          required
-                        />
-                        <div class="invalid-feedback">
-                          La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                  <div class="modal-footer">
-                    <button
-                      type="button"
-                      class="btn btn-secondary bg-danger"
-                      data-bs-dismiss="modal"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      form="formAgregarUsuario"
-                      class="btn btn-primary"
-                    >
-                      Agregar usuario
-                    </button>
-                  </div>
-                </div>
+            <a class="nav-link" href="eventos.html">
+              <div class="sb-nav-link-icon">
+                <i class="fas fa-calendar-days"></i>
               </div>
-            </div>
+              Eventos
+            </a>
 
-            <!-- Modal -->
-            <div
-              class="modal fade"
-              id="modalEditarUsuario"
-              tabindex="-1"
-              aria-labelledby="modalEditarUsuarioLabel"
-              aria-hidden="true"
-            >
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content bg-dark text-light">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalEditarUsuarioLabel">
-                      Editar usuario
-                    </h1>
-                    <button
-                      type="button"
-                      class="btn-close custom-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                  <div class="modal-body">
-                    <form
-                      class="row g-3 needs-validation"
-                      id="formEditarUsuario"
-                      novalidate
-                    >
-                      <div class="col-md-6">
-                        <label for="nombreEditar" class="form-label"
-                          >Nombre</label
-                        >
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="nombreEditar"
-                          name="nombreEditar"
-                          required
-                          minlength="2"
-                          maxlength="50"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un nombre válido
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="apellidosEditar" class="form-label"
-                          >Apellidos</label
-                        >
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="apellidosEditar"
-                          name="apellidosEditar"
-                          required
-                          minlength="2"
-                          maxlength="50"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa unos apellidos válidos
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="fechaNacimientoEditar" class="form-label"
-                          >Fecha de nacimiento</label
-                        >
-                        <input
-                          type="date"
-                          class="form-control"
-                          id="fechaNacimientoEditar"
-                          name="fechaNacimientoEditar"
-                          required
-                          max="2026-04-14"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa una fecha válida.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="correoEditar" class="form-label"
-                          >Correo electrónico</label
-                        >
-                        <input
-                          type="email"
-                          class="form-control"
-                          id="correoEditar"
-                          name="correoEditar"
-                          required
-                          maxlength="100"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un correo electrónico válido.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="telefonoEditar" class="form-label"
-                          >Teléfono</label
-                        >
-                        <input
-                          type="tel"
-                          class="form-control"
-                          id="telefonoEditar"
-                          name="telefonoEditar"
-                          required
-                          pattern="[0-9]{9,15}"
-                          maxlength="15"
-                          title="Solo números y 9 dígitos"
-                        />
-                        <div class="invalid-feedback">
-                          Ingresa un teléfono válido (solo números y 9 dígitos).
-                        </div>
-                      </div>
-                        <div class="col-md-6 d-flex align-items-end">
-                          <button
-                            type="button"
-                            class="btn btn-primary w-100"
-                            data-bs-target="#modalEditarContrasenia"
-                            data-bs-toggle="modal"
-                          >
-                            Editar contraseña
-                          </button>
-                        </div>
-                    </form>
-                  </div>
-                  <div class="modal-footer">
-                    <button
-                      type="button"
-                      class="btn btn-secondary bg-danger"
-                      data-bs-dismiss="modal"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      form="formAgregarUsuario"
-                      class="btn btn-primary"
-                    >
-                      Editar usuario
-                    </button>
-                  </div>
-                </div>
+            <a class="nav-link" href="organizadores.html">
+              <div class="sb-nav-link-icon">
+                <i class="fas fa-user-tie"></i>
               </div>
-            </div>
+              Organizadores
+            </a>
 
-             <!-- Modal -->
-            <div
-              class="modal fade"
-              id="modalEditarContrasenia"
-              tabindex="-1"
-              aria-labelledby="modalEditarContraseniaLabel"
-              aria-hidden="true"
-            >
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content bg-dark text-light">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalEditarContraseniaLabel">
-                      Editar contraseña del usuario <span id="nombreUsuario"></span>
-                    </h1>
-                    <button
-                      type="button"
-                      class="btn-close custom-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                  <div class="modal-body">
-                    <form
-                      class="row g-3 needs-validation"
-                      id="formEditarUsuario"
-                      novalidate
-                    >
-                      <div class="col-md-6">
-                        <label for="nombreEditar" class="form-label"
-                          >Contraseña</label
-                        >
-                        <input
-                          type="password"
-                          class="form-control"
-                          id="nombreEditar"
-                          name="nombreEditar"
-                          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
-                          required
-                        />
-                        <div class="invalid-feedback">
-                          La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="apellidosEditar" class="form-label"
-                          >Confirmar contraseña</label
-                        >
-                        <input
-                          type="password"
-                          class="form-control"
-                          id="apellidosEditar"
-                          name="apellidosEditar"
-                          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
-                          required
-                        />
-                        <div class="invalid-feedback">
-                          La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                  <div class="modal-footer">
-                    <button
-                      type="button"
-                      class="btn btn-secondary bg-danger"
-                      data-bs-dismiss="modal"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      form="formEditarContrasenia"
-                      class="btn btn-primary"
-                    >
-                      Editar contraseña
-                    </button>
-                  </div>
-                </div>
+            <a class="nav-link" href="categorias.html">
+              <div class="sb-nav-link-icon"><i class="fas fa-tags"></i></div>
+              Categorías
+            </a>
+
+            <a class="nav-link" href="roles.html">
+              <div class="sb-nav-link-icon">
+                <i class="fas fa-users-cog"></i>
               </div>
-            </div>
-
-
-
-            <table class="table text-light table-custom mt-4">
-              <thead>
-                <tr>
-                  <th scope="col">ID</th>
-                  <th scope="col">Nombre</th>
-                  <th scope="col">Apellidos</th>
-                  <th scope="col">Fecha de nacimiento</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Teléfono</th>
-                  <th scope="col" class="text-end">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="listadoUsuarios" class="table-bordered"></tbody>
-            </table>
-
-            <h3 id="usuarios-vacio" class="text-light mt-5 text-center d-none">
-              En estos momentos, no hay usuarios
-            </h3>
+              Roles
+            </a>
           </div>
-        </main>
-
-        <footer class="py-4 bg-dark mt-auto">
-          <hr class="text-light" />
-          <div class="container-fluid px-4">
-            <div
-              class="d-flex align-items-center justify-content-between small"
-            >
-              <div class="text-muted">Copyright &copy; Null Pointers 2026</div>
-              <div>
-                <a href="#">Privacy Policy</a>
-                &middot;
-                <a href="#">Terms &amp; Conditions</a>
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
+        </div>
+        <div class="sb-sidenav-footer">
+          <div class="small">Logeado como:</div>
+          <span id="nombreUsuario"></span>
+        </div>
+      </nav>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-      crossorigin="anonymous"
-    ></script>
-    <script src="../js/scripts.js"></script>
-    <script src="../js/usuarios.js"></script>
-    <!-- <script src="../js/datatables-simple-demo.js"></script> -->
-  </body>
+    <div id="layoutSidenav_content">
+      <main>
+        <!-- Loader -->
+        <div id="loader">
+          <img src="../assets/img/logo-eventvs-merida-no-bg.png" alt="" />
+        </div>
+
+        <div class="container-fluid px-4">
+          <h1 class="mt-4 text-light">Usuarios</h1>
+          <ol class="breadcrumb mb-4">
+            <li class="breadcrumb-item">
+              <a href="../index.html">Panel de administración</a>
+            </li>
+            <li class="breadcrumb-item active">Usuarios</li>
+          </ol>
+          <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearUsuario">
+              Añadir usuario
+            </button>
+          </div>
+          <div class="row justify-content-center"></div>
+
+          <!-- Modal -->
+          <div class="modal fade" id="modalCrearUsuario" tabindex="-1" aria-labelledby="modalCrearUsuarioLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="modalCrearUsuarioLabel">
+                    Añadir nuevo usuario
+                  </h1>
+                  <button type="button" class="btn-close custom-close" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form class="row g-3 needs-validation" id="formAgregarUsuario" novalidate>
+                    <div class="col-md-6">
+                      <label for="nombre" class="form-label">Nombre</label>
+                      <input type="text" class="form-control" id="nombre" name="nombre" required minlength="2"
+                        maxlength="50" />
+                      <div class="invalid-feedback">
+                        Ingresa un nombre válido
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="apellidos" class="form-label">Apellidos</label>
+                      <input type="text" class="form-control" id="apellidos" name="apellidos" required minlength="2"
+                        maxlength="50" />
+                      <div class="invalid-feedback">
+                        Ingresa unos apellidos válidos
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="fechaNacimiento" class="form-label">Fecha de nacimiento</label>
+                      <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" required
+                        max="2026-04-14" />
+                      <div class="invalid-feedback">
+                        Ingresa una fecha válida.
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="correo" class="form-label">Correo electrónico</label>
+                      <input type="email" class="form-control" id="correo" name="correo" required maxlength="100" />
+                      <div class="invalid-feedback">
+                        Ingresa un correo electrónico válido.
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="telefono" class="form-label">Teléfono</label>
+                      <input type="tel" class="form-control" id="telefono" name="telefono" required
+                        pattern="[0-9]{9,15}" maxlength="15" title="Solo números y 9 dígitos" />
+                      <div class="invalid-feedback">
+                        Ingresa un teléfono válido (solo números y 9 dígitos).
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="contrasena" class="form-label">Contraseña</label>
+                      <input type="password" class="form-control" id="contrasena" name="contrasena"
+                        pattern="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número"
+                        required />
+                      <div class="invalid-feedback">
+                        La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="confirmarContrasena" class="form-label">Confirmar contraseña</label>
+                      <input type="password" class="form-control" id="confirmarContrasena" name="confirmarContrasena"
+                        pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" required />
+                      <div class="invalid-feedback">
+                        La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary bg-danger" data-bs-dismiss="modal">
+                    Cancelar
+                  </button>
+                  <button type="submit" form="formAgregarUsuario" class="btn btn-primary">
+                    Agregar usuario
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal -->
+          <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="modalEditarUsuarioLabel">
+                    Editar usuario
+                  </h1>
+                  <button type="button" class="btn-close custom-close" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form class="row g-3 needs-validation" id="formEditarUsuario" novalidate>
+                    <div class="col-md-6">
+                      <label for="nombreEditar" class="form-label">Nombre</label>
+                      <input type="text" class="form-control" id="nombreEditar" name="nombreEditar" required
+                        minlength="2" maxlength="50" />
+                      <div class="invalid-feedback">
+                        Ingresa un nombre válido
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="apellidosEditar" class="form-label">Apellidos</label>
+                      <input type="text" class="form-control" id="apellidosEditar" name="apellidosEditar" required
+                        minlength="2" maxlength="50" />
+                      <div class="invalid-feedback">
+                        Ingresa unos apellidos válidos
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="fechaNacimientoEditar" class="form-label">Fecha de nacimiento</label>
+                      <input type="date" class="form-control" id="fechaNacimientoEditar" name="fechaNacimientoEditar"
+                        required max="2026-04-14" />
+                      <div class="invalid-feedback">
+                        Ingresa una fecha válida.
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="correoEditar" class="form-label">Correo electrónico</label>
+                      <input type="email" class="form-control" id="correoEditar" name="correoEditar" required
+                        maxlength="100" />
+                      <div class="invalid-feedback">
+                        Ingresa un correo electrónico válido.
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="telefonoEditar" class="form-label">Teléfono</label>
+                      <input type="tel" class="form-control" id="telefonoEditar" name="telefonoEditar" required
+                        pattern="[0-9]{9,15}" maxlength="15" title="Solo números y 9 dígitos" />
+                      <div class="invalid-feedback">
+                        Ingresa un teléfono válido (solo números y 9 dígitos).
+                      </div>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                      <button type="button" class="btn btn-primary w-100" data-bs-target="#modalEditarContrasenia"
+                        data-bs-toggle="modal">
+                        Editar contraseña
+                      </button>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary bg-danger" data-bs-dismiss="modal">
+                    Cancelar
+                  </button>
+                  <button type="submit" form="formAgregarUsuario" class="btn btn-primary">
+                    Editar usuario
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal -->
+          <div class="modal fade" id="modalEditarContrasenia" tabindex="-1"
+            aria-labelledby="modalEditarContraseniaLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="modalEditarContraseniaLabel">
+                    Editar contraseña del usuario <span id="nombreUsuario"></span>
+                  </h1>
+                  <button type="button" class="btn-close custom-close" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form class="row g-3 needs-validation" id="formEditarUsuario" novalidate>
+                    <div class="col-md-6">
+                      <label for="nombreEditar" class="form-label">Contraseña</label>
+                      <input type="password" class="form-control" id="nombreEditar" name="nombreEditar"
+                        pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" required />
+                      <div class="invalid-feedback">
+                        La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="apellidosEditar" class="form-label">Confirmar contraseña</label>
+                      <input type="password" class="form-control" id="apellidosEditar" name="apellidosEditar"
+                        pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" required />
+                      <div class="invalid-feedback">
+                        La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary bg-danger" data-bs-dismiss="modal">
+                    Cancelar
+                  </button>
+                  <button type="submit" form="formEditarContrasenia" class="btn btn-primary">
+                    Editar contraseña
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+          <table class="table text-light table-custom mt-4">
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Apellidos</th>
+                <th scope="col">Fecha de nacimiento</th>
+                <th scope="col">Email</th>
+                <th scope="col">Teléfono</th>
+                <th scope="col" class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="listadoUsuarios" class="table-bordered"></tbody>
+          </table>
+
+          <h3 id="usuarios-vacio" class="text-light mt-5 text-center d-none">
+            En estos momentos, no hay usuarios
+          </h3>
+        </div>
+      </main>
+      
+      <footer class="pb-3 bg-dark mt-auto">
+        <hr class="text-light" />
+        <div class="container-fluid px-4">
+          <div class="d-flex align-items-center justify-content-between small">
+            <div class="text-muted">Copyright &copy; Null Pointers 2026</div>
+            <div>
+              <a href="#">Privacy Policy</a>
+              &middot;
+              <a href="#">Terms &amp; Conditions</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
+  <script src="../js/scripts.js"></script>
+  <script src="../js/usuarios.js"></script>
+  <!-- <script src="../js/datatables-simple-demo.js"></script> -->
+</body>
+
 </html>

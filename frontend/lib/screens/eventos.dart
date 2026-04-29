@@ -498,7 +498,7 @@ class _EventosState extends State<Eventos> {
               child: AspectRatio(
                 aspectRatio: 16 / 9,
                 child: FadeInImage.assetNetwork(
-                  placeholder: 'assets/images/loader-eventvs.gif',
+                  placeholder: 'assets/images/icono.gif',
                   image: evento.foto,
                   fit: BoxFit.cover,
                   alignment: Alignment.topCenter,
@@ -563,7 +563,7 @@ class _EventosState extends State<Eventos> {
         bottomLeft: Radius.circular(18),
       ),
       child: FadeInImage.assetNetwork(
-        placeholder: 'assets/images/loader-eventvs.gif',
+        placeholder: 'assets/images/icono.gif',
         image: foto,
         width: 100,
         height: 110,
