@@ -172,6 +172,43 @@ class ApiService {
 
     return _manejarError<List<Evento>>(respuesta!);
   }
+
+  /// GET /api/eventos/filter-by-categories?categorias=1&categorias=2...
+  static Future<ApiResponse<List<Evento>>> obtenerEventosFiltradosPorCategorias(List<int> categorias) async {
+    final queryString = categorias.map((c) => 'categorias=$c').join('&');
+    final uri = Uri.parse('$baseUrl/eventos/filter-by-categories?$queryString');
+
+    final respuesta = await _getUri(uri);
+
+    if (respuesta == null) {
+      return ApiResponse<List<Evento>>.sinConexion(
+        mensaje: _mensajeSinConexion,
+      );
+    }
+
+    if (respuesta.statusCode == 200) {
+      try {
+        final lista = jsonDecode(respuesta.body) as List<dynamic>;
+        final eventos = lista
+            .map((item) => Evento.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        return ApiResponse<List<Evento>>.exito(
+          datos: eventos,
+          mensaje: 'Eventos filtrados cargados correctamente',
+          codigoEstado: 200,
+        );
+      } catch (e) {
+        return ApiResponse<List<Evento>>.error(
+          mensaje: 'No se pudieron leer los eventos filtrados: ${e.toString()}',
+          codigoEstado: 200,
+        );
+      }
+    }
+
+    return _manejarError<List<Evento>>(respuesta);
+  }
+
   // ============================================================================
   // USUARIO-EVENTOS
   // ============================================================================
