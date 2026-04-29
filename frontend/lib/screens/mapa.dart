@@ -75,11 +75,11 @@ class _MapaState extends State<Mapa> {
       eventosValidos.sort((a, b) => a.fechaInicio.compareTo(b.fechaInicio));
 
       // 3. Recortamos: Nos quedamos estrictamente con los 10 primeros de la lista ordenada
-      final losDiezProximos = eventosValidos.take(20).toList();
+      final losVeinteProximos = eventosValidos.take(20).toList();
 
       // 4. AGRUPAMOS POR COORDENADAS
       final Map<String, List<Evento>> agrupados = {};
-      for (final evento in losDiezProximos) {
+      for (final evento in losVeinteProximos) {
         // Creamos una llave única con la latitud y longitud
         final claveUbicacion = '${evento.latitud},${evento.longitud}';
 
@@ -114,6 +114,7 @@ class _MapaState extends State<Mapa> {
           });
         },
         mostrarBotonGuardado: true,
+        mostrarFlechasDeslizamiento: true,
       ),
     );
   }
@@ -191,7 +192,7 @@ class _MapaState extends State<Mapa> {
 // ===========================================================================
 
 class PinConFoto extends StatelessWidget {
-  final String imagePath; // Ruta a la foto (asset o URL)
+  final String imagePath;
   final int cantidadEventos;
 
   const PinConFoto({super.key, required this.imagePath, required this.cantidadEventos});
@@ -207,21 +208,19 @@ class PinConFoto extends StatelessWidget {
       child: Stack(
         alignment: Alignment.topCenter,
         children: [
-          // 1. El icono del pin clásico de fondo (Se pone azul o naranja automático)
           Icon(
             Icons.location_on,
             size: 65,
             color: _cs.primary,
           ),
 
-          // 2. La foto posicionada en el centro de la "cabeza" del pin
           Positioned(
-            top: 8, // Bajamos la foto un poquito para que encaje en el círculo del icono
+            top: 8,
             right: 6,
             child: CircleAvatar(
               radius: 17,
               child: CircleAvatar(
-                radius: 16, // La imagen real un poquito más pequeña
+                radius: 16,
                 backgroundImage: AssetImage(imagePath),
               ),
             ),
@@ -231,8 +230,7 @@ class PinConFoto extends StatelessWidget {
               top: 2,
               left: 2,
               child: Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.red,
                   borderRadius: BorderRadius.circular(12),

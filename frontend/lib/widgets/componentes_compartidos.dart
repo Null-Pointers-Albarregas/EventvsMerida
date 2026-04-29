@@ -53,6 +53,7 @@ class ModalEvento extends StatefulWidget {
   final List<Evento> eventosGuardados;
   final ValueChanged<List<Evento>> onEventosGuardadosActualizados;
   final bool mostrarBotonGuardado;
+  final bool mostrarFlechasDeslizamiento;
 
   const ModalEvento({
     super.key,
@@ -61,6 +62,7 @@ class ModalEvento extends StatefulWidget {
     required this.eventosGuardados,
     required this.onEventosGuardadosActualizados,
     this.mostrarBotonGuardado = true,
+    this.mostrarFlechasDeslizamiento = false,
   });
 
   @override
@@ -117,6 +119,24 @@ class _ModalEventoState extends State<ModalEvento> {
     }
     if (horasIguales && ambasHorasCero) return 'Desde: $inicioFecha\nHasta: $finFecha';
     return 'Desde: $inicioFecha $inicioHora\nHasta: $finFecha $finHora';
+  }
+
+  void _irAlSiguienteEvento() {
+    if (_indiceActual >= widget.eventos.length - 1) return;
+
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _irAlEventoAnterior() {
+    if (_indiceActual <= 0) return;
+
+    _pageController.previousPage(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   // --- Acciones ---
@@ -282,6 +302,7 @@ class _ModalEventoState extends State<ModalEvento> {
                         child: FilledButton(
                           onPressed: () {
                             Navigator.of(ctx).pop();
+                            Navigator.of(context).pop();
                             context.go(AppRoutes.registro);
                           },
                           child: const Text('Registrarse'),
@@ -292,6 +313,7 @@ class _ModalEventoState extends State<ModalEvento> {
                         child: FilledButton(
                           onPressed: () {
                             Navigator.of(ctx).pop();
+                            Navigator.of(context).pop();
                             context.go(AppRoutes.login);
                           },
                           child: const Text(
@@ -494,18 +516,65 @@ class _ModalEventoState extends State<ModalEvento> {
                   color: _cs.surface,
                   borderRadius: BorderRadius.circular(16),
                   elevation: 12,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: widget.eventos.length,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _indiceActual = index;
-                      });
-                    },
-                    itemBuilder: (context, index) {
-                      return _buildContenidoEvento(widget.eventos[index]);
-                    },
-                  ),
+                  child: Stack(
+                    children: [
+                      PageView.builder(
+                        controller: _pageController,
+                        itemCount: widget.eventos.length,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _indiceActual = index;
+                          });
+                        },
+                        itemBuilder: (context, index) {
+                          return _buildContenidoEvento(widget.eventos[index]);
+                        },
+                      ),
+                      if (widget.mostrarFlechasDeslizamiento &&
+                          widget.eventos.length > 1 &&
+                          _indiceActual < widget.eventos.length - 1)
+                        Positioned(
+                          right: 8,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: IconButton(
+                              onPressed: _irAlSiguienteEvento,
+                              icon: Icon(
+                                Icons.chevron_right,
+                                color: _cs.surface,
+                                size: 32,
+                              ),
+                              style: IconButton.styleFrom(
+                                backgroundColor: _cs.primary.withAlpha(90),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      if (widget.mostrarFlechasDeslizamiento &&
+                          widget.eventos.length > 1 &&
+                          _indiceActual > 0)
+                        Positioned(
+                          left: 8,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: IconButton(
+                              onPressed: _irAlEventoAnterior,
+                              icon: Icon(
+                                Icons.chevron_left,
+                                color: _cs.surface,
+                                size: 32,
+                              ),
+                              style: IconButton.styleFrom(
+                                backgroundColor: _cs.primary.withAlpha(90),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  )
                 ),
               ),
             ),
