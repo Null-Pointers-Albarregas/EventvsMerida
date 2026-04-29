@@ -170,7 +170,7 @@ class ApiService {
       }
     }
 
-    return _manejarError<List<Evento>>(respuesta!);
+    return _manejarError<List<Evento>>(respuesta);
   }
 
   /// GET /api/eventos/filter-by-categories?categorias=1&categorias=2...

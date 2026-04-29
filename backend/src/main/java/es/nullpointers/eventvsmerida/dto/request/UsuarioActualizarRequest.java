@@ -22,7 +22,7 @@ public record UsuarioActualizarRequest(
         @JsonFormat(pattern = "dd/MM/yyyy")
         LocalDate fechaNacimiento,
 
-        @Email
+        @Email(message = "El correo no tiene un formato válido")
         String email,
 
         @Pattern(
