@@ -367,13 +367,21 @@ class _ModalEventoState extends State<ModalEvento> {
                     maxHeight: 320,
                     maxWidth: constraints.maxWidth,
                   ),
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    alignment: Alignment.topCenter,
-                    child: FadeInImage.assetNetwork(
-                      placeholder: 'assets/images/loader-eventvs.gif',
-                      image: evento.foto,
-                      placeholderFit: BoxFit.contain,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 340, // Puedes aumentar este valor para que sea aún más grande
+                        child: FadeInImage.assetNetwork(
+                          placeholder: 'assets/images/icono.gif',
+                          image: evento.foto,
+                          fit: BoxFit.contain,
+                          placeholderFit: BoxFit.contain,
+                          alignment: Alignment.center,
+                        ),
+                      ),
                     ),
                   ),
                 );
