@@ -444,12 +444,12 @@ class _ModalEventoState extends State<ModalEvento> {
                   child: FilledButton.icon(
                     onPressed: _gestionarGuardado,
                     icon: Icon(
-                      estaGuardado
-                          ? Icons.bookmark
-                          : Icons.bookmark_border_outlined,
+                      estaGuardado ? Icons.bookmark : Icons.bookmark_border_outlined,
+                      color: _cs.surface,
                     ),
                     label: Text(
                       estaGuardado ? 'Evento guardado' : 'Guardar evento',
+                      style: _tt.bodyMedium?.copyWith(color: _cs.surface),
                     ),
                   ),
                 ),
