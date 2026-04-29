@@ -11850,7 +11850,7 @@ body.loading * {
 
   justify-content: center;
   align-items: flex-start;
-  padding-top: 15em;
+  padding-top: 20%;
 }
 
 #loader img {
