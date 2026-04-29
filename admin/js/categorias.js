@@ -57,9 +57,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 async function cargarCategorias(URL_BASE) {
   const tabla = document.getElementById("listadoCategorias");
   const loader = document.getElementById("loader");
+  const body = document.querySelector("body");
 
   try {
     loader.style.display = "flex";
+    body.classList.add("loading");
 
     const resp = await fetch(URL_BASE + "categorias/all", {
       method: "GET",
@@ -139,6 +141,7 @@ async function cargarCategorias(URL_BASE) {
     console.error("Error al cargar las categorías:", error);
   } finally {
     loader.style.display = "none";
+    body.classList.remove("loading");
   }
 }
 
