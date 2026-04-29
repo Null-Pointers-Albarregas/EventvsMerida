@@ -654,7 +654,7 @@ class _EventosState extends State<Eventos> {
           }
 
           if (tipo == 'busqueda') {
-            const double itemHeight = 140;
+            const double itemHeight = 110;
             final int visibleCount = eventos.length < 3 ? eventos.length : 3;
             final double maxHeight = itemHeight * visibleCount;
 
