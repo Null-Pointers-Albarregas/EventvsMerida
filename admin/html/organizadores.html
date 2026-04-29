@@ -129,7 +129,6 @@
           <!-- Loader -->
           <div id="loader">
             <img
-              class="w-25 d-block m-auto"
               src="../assets/img/logo-eventvs-merida-no-bg.png"
               alt=""
             />
@@ -273,12 +272,11 @@
                           class="form-control"
                           id="contrasena"
                           name="contrasena"
+                          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
                           required
-                          minlength="6"
-                          maxlength="30"
                         />
                         <div class="invalid-feedback">
-                          Las contraseñas deben coincidir.
+                          La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
                         </div>
                       </div>
                       <div class="col-md-6">
@@ -290,12 +288,11 @@
                           class="form-control"
                           id="confirmarContrasena"
                           name="confirmarContrasena"
+                          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
                           required
-                          minlength="6"
-                          maxlength="30"
                         />
                         <div class="invalid-feedback">
-                          Ingresa una contraseña (mínimo 6 caracteres).
+                          La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
                         </div>
                       </div>
                     </form>
@@ -487,7 +484,7 @@
                   <div class="modal-body">
                     <form
                       class="row g-3 needs-validation"
-                      id="formEditarOrganizador"
+                      id="formEditarContrasenia"
                       novalidate
                     >
                       <div class="col-md-6">
@@ -495,15 +492,15 @@
                           >Contraseña</label
                         >
                         <input
-                          type="text"
+                          type="password"
                           class="form-control"
                           id="nombreEditar"
                           name="nombreEditar"
+                          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
                           required
-                          minlength="8"
                         />
                         <div class="invalid-feedback">
-                          Ingresa un nombre válido
+                          La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
                         </div>
                       </div>
                       <div class="col-md-6">
@@ -511,15 +508,15 @@
                           >Confirmar contraseña</label
                         >
                         <input
-                          type="text"
+                          type="password"
                           class="form-control"
                           id="apellidosEditar"
                           name="apellidosEditar"
+                          pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
                           required
-                          minlength="8"
                         />
                         <div class="invalid-feedback">
-                          Ingresa unos apellidos válidos
+                          La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
                         </div>
                       </div>
                     </form>
