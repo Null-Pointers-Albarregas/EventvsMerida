@@ -371,14 +371,10 @@ class _ModalEventoState extends State<ModalEvento> {
                   child: FittedBox(
                     fit: BoxFit.contain,
                     alignment: Alignment.topCenter,
-                    child: Image.network(
-                      evento.foto,
-                      errorBuilder: (_, __, ___) => const SizedBox(
-                        height: 180,
-                        child: Center(
-                          child: Icon(Icons.broken_image, size: 40),
-                        ),
-                      ),
+                    child: FadeInImage.assetNetwork(
+                      placeholder: 'assets/images/loader-eventvs.gif',
+                      image: evento.foto,
+                      placeholderFit: BoxFit.contain,
                     ),
                   ),
                 );

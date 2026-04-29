@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../models/api_response.dart';
 import '../models/usuario.dart';
+import '../models/categoria.dart';
 import '../services/api_service.dart';
 import '../services/eventos_guardados_service.dart';
 
@@ -31,6 +32,8 @@ class _EventosState extends State<Eventos> {
   Timer? _debounce;
   final _inputBusquedaController = TextEditingController();
   bool _modalBusquedaAbierto = false;
+  late Future<ApiResponse<List<Categoria>>> _categorias;
+  final Set<int> _categoriasSeleccionadas = {};
 
   ColorScheme get _cs => Theme.of(context).colorScheme;
 
@@ -43,6 +46,7 @@ class _EventosState extends State<Eventos> {
     super.initState();
     _eventos = ApiService.obtenerEventos();
     _eventosEncontrados = ApiService.buscarEventos(_textoBusqueda);
+    _categorias = ApiService.obtenerCategorias();
     _cargarDatosUsuarioYGuardados();
   }
 
@@ -210,6 +214,189 @@ class _EventosState extends State<Eventos> {
     );
   }
 
+  void _abrirModalFiltros() {
+    showDialog(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.15),
+      builder: (ctx) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: true,
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+            ),
+            Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 48),
+              child: StatefulBuilder(
+                builder: (contextModal, setStateModal) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _cs.surface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Filtrar por categoría',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: _cs.onSurface,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.close, color: _cs.primary),
+                              onPressed: () => Navigator.of(context, rootNavigator: true).maybePop(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        FutureBuilder<ApiResponse<List<Categoria>>>(
+                          future: _categorias,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 24),
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            }
+                            if (snapshot.hasError) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 24),
+                                child: Text('Error: ${snapshot.error}', textAlign: TextAlign.center),
+                              );
+                            }
+                            final resp = snapshot.data;
+                            if (resp == null || !resp.exito) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 24),
+                                child: Text(resp?.mensaje ?? 'No se pudieron cargar las categorías', textAlign: TextAlign.center),
+                              );
+                            }
+                            final lista = resp.datos ?? const [];
+
+                            return ConstrainedBox(
+                              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+                              child: ListView.separated(
+                                shrinkWrap: true,
+                                itemCount: lista.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 6),
+                                itemBuilder: (context, index) {
+                                  final cat = lista[index];
+                                  final seleccionado = _categoriasSeleccionadas.contains(cat.id);
+                                  return Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12),
+                                      onTap: () {
+                                        setStateModal(() {
+                                          if (seleccionado) {
+                                            _categoriasSeleccionadas.remove(cat.id);
+                                          } else {
+                                            _categoriasSeleccionadas.add(cat.id);
+                                          }
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: _cs.surface,
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(color: seleccionado ? _cs.primary : _cs.onSurface.withAlpha(24)),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 36,
+                                              height: 36,
+                                              decoration: BoxDecoration(
+                                                color: _cs.primary.withAlpha(40),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Center(
+                                                child: Icon(Icons.label, size: 18, color: _cs.primary),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                cat.nombre,
+                                                style: TextStyle(
+                                                  fontSize: 15,
+                                                  color: _cs.onSurface,
+                                                ),
+                                              ),
+                                            ),
+                                            Checkbox(
+                                              value: seleccionado,
+                                              onChanged: (v) {
+                                                setStateModal(() {
+                                                  if (v == true) {
+                                                    _categoriasSeleccionadas.add(cat.id);
+                                                  } else {
+                                                    _categoriasSeleccionadas.remove(cat.id);
+                                                  }
+                                                });
+                                              },
+                                              activeColor: _cs.primary,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context, rootNavigator: true).maybePop();
+                              setState(() {
+                                // Aquí aplicaría el filtro. Por ahora solo guardamos la selección.
+                                // Ejemplo futuro:
+                                // _eventos = ApiService.obtenerEventosFiltradosPorCategorias(_categoriasSeleccionadas.toList());
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _cs.primary,
+                              foregroundColor: _cs.onPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: const Text('Aplicar filtros'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // ===========================================================================
   // INTERFAZ
   // ===========================================================================
@@ -266,10 +453,12 @@ class _EventosState extends State<Eventos> {
               ),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
-                child: Image.network(
-                  evento.foto,
+                child: FadeInImage.assetNetwork(
+                  placeholder: 'assets/images/loader-eventvs.gif',
+                  image: evento.foto,
                   fit: BoxFit.cover,
                   alignment: Alignment.topCenter,
+                  placeholderFit: BoxFit.cover,
                 ),
               ),
             ),
@@ -329,17 +518,13 @@ class _EventosState extends State<Eventos> {
         topLeft: Radius.circular(18),
         bottomLeft: Radius.circular(18),
       ),
-      child: Image.network(
-        foto,
+      child: FadeInImage.assetNetwork(
+        placeholder: 'assets/images/loader-eventvs.gif',
+        image: foto,
         width: 100,
         height: 110,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Container(
-          width: 100,
-          height: 110,
-          color: _cs.secondary.withAlpha(51),
-          child: Icon(Icons.image, color: _cs.primary),
-        ),
+        placeholderFit: BoxFit.cover,
       ),
     );
   }
@@ -469,7 +654,7 @@ class _EventosState extends State<Eventos> {
           }
 
           if (tipo == 'busqueda') {
-            const double itemHeight = 140;
+            const double itemHeight = 110;
             final int visibleCount = eventos.length < 3 ? eventos.length : 3;
             final double maxHeight = itemHeight * visibleCount;
 
@@ -558,7 +743,8 @@ class _EventosState extends State<Eventos> {
                 ),
                 _buildAppBarAction(
                   icon: Icons.filter_alt_rounded,
-                  tooltip: 'Filtrar - Proximamente',
+                  tooltip: 'Filtrar',
+                  onPressed: _abrirModalFiltros,
                 ),
               ],
             ),
