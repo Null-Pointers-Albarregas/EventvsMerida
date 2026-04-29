@@ -35,7 +35,10 @@ async function login(datos) {
             const nombreUsuario = datos["email"].split("@")[0];
             localStorage.setItem("nombreUsuario", nombreUsuario)
             window.location.href = "../index.html"
-        } else if (respuesta.status === 400 || respuesta.status === 401 || respuesta.status === 403 || respuesta.status === 404 || respuesta.status === 500){
+        } else if (respuesta.status === 400 ) {
+            mostrarAlerta("error", "El correo y/o la contraseña no pueden estar vacíos")
+        }
+         else if (respuesta.status === 401 || respuesta.status === 404 || respuesta.status === 500){
             mostrarAlerta("error", "Usuario o contraseña incorrectos")
         } else if (respuesta.status === 403) {
             mostrarAlerta("error", "No estás autorizado para acceder")

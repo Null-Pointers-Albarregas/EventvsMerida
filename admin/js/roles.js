@@ -57,9 +57,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 async function cargarRoles(URL_BASE) {
   const tabla = document.getElementById("listadoRoles");
   const loader = document.getElementById("loader");
+  const body = document.querySelector("body");
 
   try {
     loader.style.display = "flex";
+    body.classList.add("loading");
 
     const resp = await fetch(URL_BASE + "roles/all", {
       method: "GET",
@@ -138,6 +140,7 @@ async function cargarRoles(URL_BASE) {
     console.error("Error al cargar los roles:", error);
   } finally {
     loader.style.display = "none";
+    body.classList.remove("loading");
   }
 }
 

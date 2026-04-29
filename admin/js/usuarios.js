@@ -108,11 +108,11 @@ async function cargarUsuarios(URL_BASE) {
     document.getElementById("listadoUsuarios") ||
     document.getElementById("listadUsuarios");
   const loader = document.getElementById("loader");
+  const body = document.querySelector("body");
 
   try {
-    if (loader) {
-      loader.style.display = "flex";
-    }
+    loader.style.display = "flex";
+    body.classList.add("loading");
 
     const resp = await fetch(URL_BASE + "usuarios/registered", {
       method: "GET",
@@ -227,6 +227,7 @@ async function cargarUsuarios(URL_BASE) {
   } finally {
     if (loader) {
       loader.style.display = "none";
+      body.classList.remove("loading");
     }
   }
 }
@@ -257,7 +258,7 @@ async function subirUsuario(URL_BASE, datosFormulario) {
 
 async function eliminarUsuario(URL_BASE, id, nombre) {
   Swal.fire({
-    title: `¿Estás seguro que deseas eliminar el usuario \"` + nombre +`\"?`,
+    title: `¿Estás seguro que deseas eliminar el usuario \"` + nombre + `\"?`,
     text: "Esta acción no puede revertirse",
     icon: "warning",
     showCancelButton: true,
