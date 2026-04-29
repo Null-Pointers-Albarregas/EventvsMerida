@@ -175,9 +175,9 @@ class _CalendarioState extends State<Calendario> {
     final finalizaHoy = _esMismoDia(evento.fechaFin, diaSeleccionado);
     final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
 
-    if (finalizaHoy) return 0; // primero los que finalizan
-    if (iniciaHoy) return 1; // después los que inician
-    return 2; // luego los que están en curso
+    if (finalizaHoy) return 0;
+    if (iniciaHoy) return 1;
+    return 2;
   }
 
   int _horaReferencia(Evento evento, DateTime diaSeleccionado) {
@@ -193,6 +193,14 @@ class _CalendarioState extends State<Calendario> {
   List<Evento> _eventosDelDiaSeleccionado() {
     final fechaSeleccionada = _selectedDay ?? _focusedDay;
     final fechaNormalizada = _normalizarFecha(fechaSeleccionada);
+    final hoy = _normalizarFecha(DateTime.now());
+
+    final esMesVisible = fechaNormalizada.month == _focusedDay.month &&
+        fechaNormalizada.year == _focusedDay.year;
+
+    if (!esMesVisible || fechaNormalizada.isBefore(hoy)) {
+      return [];
+    }
 
     final lista = List<Evento>.from(_eventosMap[fechaNormalizada] ?? []);
 
@@ -294,9 +302,17 @@ class _CalendarioState extends State<Calendario> {
       return;
     }
 
+    final hoy = _normalizarFecha(DateTime.now());
+    final nuevoMes = DateTime(nuevaFecha.year, nuevaFecha.month, 1);
+
     setState(() {
       _focusedDay = nuevaFecha;
-      _selectedDay = nuevaFecha;
+
+      if (nuevaFecha.year == hoy.year && nuevoMes.month == hoy.month) {
+        _selectedDay = hoy;
+      } else {
+        _selectedDay = nuevoMes;
+      }
     });
   }
 
@@ -417,8 +433,19 @@ class _CalendarioState extends State<Calendario> {
 
         return _eventosMap[fechaNormalizada] ?? const [];
       },
+      enabledDayPredicate: (day) {
+        final fechaNormalizada = _normalizarFecha(day);
+
+        return fechaNormalizada.month == _focusedDay.month &&
+            fechaNormalizada.year == _focusedDay.year;
+      },
       selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
       onDaySelected: (selectedDay, focusedDay) {
+        final hoy = _normalizarFecha(DateTime.now());
+        final fechaSeleccionada = _normalizarFecha(selectedDay);
+
+        if (fechaSeleccionada.isBefore(hoy)) return;
+
         setState(() {
           _selectedDay = _normalizarFecha(selectedDay);
           _focusedDay = _normalizarFecha(focusedDay);
@@ -429,6 +456,23 @@ class _CalendarioState extends State<Calendario> {
         weekendStyle: TextStyle(color: _cs.onSurface.withValues(alpha: 128)),
       ),
       calendarStyle: CalendarStyle(
+        outsideDaysVisible: true,
+
+        // Días normales del mes visible
+        defaultTextStyle: TextStyle(
+          color: _cs.onSurface,
+        ),
+
+        // Fines de semana del mes visible
+        weekendTextStyle: TextStyle(
+          color: _cs.onSurface,
+        ),
+
+        // Días de otros meses
+        outsideTextStyle: TextStyle(
+          color: _cs.onSurface.withValues(alpha: 0.35),
+        ),
+
         todayDecoration: BoxDecoration(
           color: _cs.secondary,
           shape: BoxShape.circle,
@@ -441,12 +485,11 @@ class _CalendarioState extends State<Calendario> {
           color: _cs.primary,
           shape: BoxShape.circle,
         ),
-          markerMargin: const EdgeInsets.only(top: 3.8),
+        markerMargin: const EdgeInsets.only(top: 3.8),
         markersAlignment: Alignment.bottomCenter,
         markersMaxCount: 1,
         selectedTextStyle: TextStyle(color: _cs.surface),
         todayTextStyle: TextStyle(color: _cs.surface),
-        weekendTextStyle: TextStyle(color: _cs.onSurface.withValues(alpha: 128))
       ),
     );
   }
