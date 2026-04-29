@@ -15,7 +15,6 @@ import '../services/api_service.dart';
 // 1. BARRA SUPERIOR (CustomAppBar)
 // ===========================================================================
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  // Parámetro opcional por si en alguna pantalla quieres poner botones (como la lupa de buscar)
   final List<Widget>? actions;
 
   const CustomAppBar({super.key, this.actions});
