@@ -353,6 +353,7 @@ class _EventosState extends State<Eventos> {
                                                 });
                                               },
                                               activeColor: _cs.primary,
+                                              checkColor: _cs.surface,
                                             ),
                                           ],
                                         ),
@@ -371,14 +372,16 @@ class _EventosState extends State<Eventos> {
                             onPressed: () {
                               Navigator.of(context, rootNavigator: true).maybePop();
                               setState(() {
-                                // Aquí aplicaría el filtro. Por ahora solo guardamos la selección.
-                                // Ejemplo futuro:
-                                // _eventos = ApiService.obtenerEventosFiltradosPorCategorias(_categoriasSeleccionadas.toList());
+                                if (_categoriasSeleccionadas.isEmpty) {
+                                  _eventos = ApiService.obtenerEventos();
+                                } else {
+                                  _eventos = ApiService.obtenerEventosFiltradosPorCategorias(_categoriasSeleccionadas.toList());
+                                }
                               });
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _cs.primary,
-                              foregroundColor: _cs.onPrimary,
+                              foregroundColor: _cs.surface,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
@@ -401,22 +404,63 @@ class _EventosState extends State<Eventos> {
   // INTERFAZ
   // ===========================================================================
 
-  Widget _buildAppBarAction({
-    required IconData icon,
-    required String tooltip,
-    VoidCallback? onPressed,
-  }) {
-    return IconButton(
-      onPressed: onPressed,
-      icon: Icon(icon, color: _cs.primary),
-      tooltip: tooltip,
+  Widget _buildAppBarAction({required IconData icon, required String tooltip, VoidCallback? onPressed, int badgeCount = 0,}) {
+    if (badgeCount <= 0) {
+      return IconButton(
+        onPressed: onPressed,
+        icon: Icon(icon, color: _cs.primary),
+        tooltip: tooltip,
+      );
+    }
+
+    final String text = badgeCount > 9 ? '9+' : badgeCount.toString();
+    const double badgeHeight = 14.0;
+    const double badgeWidth = 22.0;
+    const double fontSize = 10.0;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          onPressed: onPressed,
+          icon: Icon(icon, color: _cs.primary),
+          tooltip: tooltip,
+        ),
+        Positioned(
+          right: 0,
+          top: 6,
+          child: Container(
+            width: badgeWidth,
+            height: badgeHeight,
+            decoration: BoxDecoration(
+              color: _cs.primary,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: _cs.surface, width: 1.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              text,
+              style: TextStyle(
+                color: _cs.surface,
+                fontSize: fontSize,
+                fontWeight: FontWeight.w700,
+                height: 1.0,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildEstadoCentro({
-    required IconData icono,
-    required String mensaje,
-  }) {
+  Widget _buildEstadoCentro({required IconData icono, required String mensaje,}) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -454,7 +498,7 @@ class _EventosState extends State<Eventos> {
               child: AspectRatio(
                 aspectRatio: 16 / 9,
                 child: FadeInImage.assetNetwork(
-                  placeholder: 'assets/images/loader-eventvs.gif',
+                  placeholder: 'assets/images/icono.gif',
                   image: evento.foto,
                   fit: BoxFit.cover,
                   alignment: Alignment.topCenter,
@@ -519,7 +563,7 @@ class _EventosState extends State<Eventos> {
         bottomLeft: Radius.circular(18),
       ),
       child: FadeInImage.assetNetwork(
-        placeholder: 'assets/images/loader-eventvs.gif',
+        placeholder: 'assets/images/icono.gif',
         image: foto,
         width: 100,
         height: 110,
@@ -605,10 +649,7 @@ class _EventosState extends State<Eventos> {
     );
   }
 
-  Widget _buildBody(
-    Future<ApiResponse<List<Evento>>> listadoEventos,
-    String tipo,
-  ) {
+  Widget _buildBody(Future<ApiResponse<List<Evento>>> listadoEventos, String tipo) {
     return Center(
       child: FutureBuilder<ApiResponse<List<Evento>>>(
         future: listadoEventos,
@@ -654,7 +695,7 @@ class _EventosState extends State<Eventos> {
           }
 
           if (tipo == 'busqueda') {
-            const double itemHeight = 140;
+            const double itemHeight = 110;
             final int visibleCount = eventos.length < 3 ? eventos.length : 3;
             final double maxHeight = itemHeight * visibleCount;
 
@@ -745,6 +786,7 @@ class _EventosState extends State<Eventos> {
                   icon: Icons.filter_alt_rounded,
                   tooltip: 'Filtrar',
                   onPressed: _abrirModalFiltros,
+                  badgeCount: _categoriasSeleccionadas.length,
                 ),
               ],
             ),

@@ -78,6 +78,26 @@ window.addEventListener("DOMContentLoaded", async () => {
     false,
   );
 
+
+  const formEditarContrasenia = document.getElementById("formEditarOrganizador");
+
+  formEditarContrasenia.addEventListener(
+    "submit",
+    function (event) {
+      if (!formEditarContrasenia.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+        formEditarContrasenia.classList.add("was-validated");
+      } else {
+        event.preventDefault();
+        const contrasenia = {
+          password: document.getElementById("contrasenia").value,
+        };
+      }
+      formEditarContrasenia.classList.add("was-validated");
+    },
+    false,
+  );
   // Limpia validaciones y campos al cerrar el modal de usuario
   const modalOrganizador = document.getElementById("modalAgregarOrganizador");
   if (modalOrganizador) {
@@ -105,10 +125,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 async function cargarOrganizadores(URL_BASE) {
   const tabla = document.getElementById("listadoOrganizadores");
   const loader = document.getElementById("loader");
+  const body = document.querySelector("body");
 
   try {
     if (loader) {
       loader.style.display = "flex";
+      body.classList.add("loading");
     }
 
     const resp = await fetch(URL_BASE + "usuarios/organizers", {
@@ -221,6 +243,7 @@ async function cargarOrganizadores(URL_BASE) {
   } finally {
     if (loader) {
       loader.style.display = "none";
+      body.classList.remove("loading");
     }
   }
 }

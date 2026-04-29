@@ -15,7 +15,6 @@ import '../services/api_service.dart';
 // 1. BARRA SUPERIOR (CustomAppBar)
 // ===========================================================================
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  // Parámetro opcional por si en alguna pantalla quieres poner botones (como la lupa de buscar)
   final List<Widget>? actions;
 
   const CustomAppBar({super.key, this.actions});
@@ -368,13 +367,21 @@ class _ModalEventoState extends State<ModalEvento> {
                     maxHeight: 320,
                     maxWidth: constraints.maxWidth,
                   ),
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    alignment: Alignment.topCenter,
-                    child: FadeInImage.assetNetwork(
-                      placeholder: 'assets/images/loader-eventvs.gif',
-                      image: evento.foto,
-                      placeholderFit: BoxFit.contain,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 340, // Puedes aumentar este valor para que sea aún más grande
+                        child: FadeInImage.assetNetwork(
+                          placeholder: 'assets/images/icono.gif',
+                          image: evento.foto,
+                          fit: BoxFit.contain,
+                          placeholderFit: BoxFit.contain,
+                          alignment: Alignment.center,
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -445,12 +452,12 @@ class _ModalEventoState extends State<ModalEvento> {
                   child: FilledButton.icon(
                     onPressed: _gestionarGuardado,
                     icon: Icon(
-                      estaGuardado
-                          ? Icons.bookmark
-                          : Icons.bookmark_border_outlined,
+                      estaGuardado ? Icons.bookmark : Icons.bookmark_border_outlined,
+                      color: _cs.surface,
                     ),
                     label: Text(
                       estaGuardado ? 'Evento guardado' : 'Guardar evento',
+                      style: _tt.bodyMedium?.copyWith(color: _cs.surface),
                     ),
                   ),
                 ),

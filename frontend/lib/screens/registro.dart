@@ -418,7 +418,7 @@ class _RegistroState extends State<Registro> {
         const SizedBox(width: 10),
         Expanded(
           child: _buildCampoTexto(
-            'Ano',
+            'Año',
             controller: _anioController,
             keyboardType: TextInputType.number,
           ),
@@ -434,7 +434,7 @@ class _RegistroState extends State<Registro> {
           value: _aceptaTerminos,
           onChanged: _actualizarTerminos,
           activeColor: _cs.primary,
-          checkColor: _cs.brightness == Brightness.dark ? Colors.black : Colors.white,
+          checkColor: _cs.surface,
           side: BorderSide(color: _cs.onSurface.withValues(alpha: 0.5)),
         ),
         Expanded(

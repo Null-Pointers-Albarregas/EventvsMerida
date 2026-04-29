@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/router/app_routes.dart';
+import '../services/shared_preferences_service.dart';
+import '../models/usuario.dart';
 
 class Menu extends StatefulWidget {
   final Widget child;
@@ -18,6 +20,7 @@ class _MenuState extends State<Menu> {
   // ===========================================================================
 
   int _indiceActual = 0;
+  Usuario? _usuario;
 
   ColorScheme get _cs => Theme.of(context).colorScheme;
 
@@ -37,6 +40,40 @@ class _MenuState extends State<Menu> {
     AppRoutes.terminos,
     AppRoutes.privacidad,
   ];
+
+  // ===========================================================================
+  // CICLO DE VIDA
+  // ===========================================================================
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarUsuario();
+    SharedPreferencesService.usuarioNotifier.addListener(_onUsuarioCambio);
+  }
+
+  void _onUsuarioCambio() {
+    if (!mounted) return;
+    setState(() {
+      _usuario = SharedPreferencesService.usuarioNotifier.value;
+    });
+  }
+
+  @override
+  void dispose() {
+    SharedPreferencesService.usuarioNotifier.removeListener(_onUsuarioCambio);
+    super.dispose();
+  }
+
+  // ===========================================================================
+  // CARGA DE DATOS
+  // ===========================================================================
+
+  Future<void> _cargarUsuario() async {
+    final usuario = await SharedPreferencesService.cargarUsuario();
+    if (!mounted) return;
+    setState(() => _usuario = usuario);
+  }
 
   // ===========================================================================
   // FUNCIONES AUXILIARES
@@ -77,11 +114,11 @@ class _MenuState extends State<Menu> {
         currentIndex: _indiceActual,
         iconSize: 30,
         onTap: _cambiarRuta,
-        items: const [
+        items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Mapa'),
           BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: 'Calendario',),
-          BottomNavigationBarItem(icon: Icon(Icons.person_2_rounded), label: 'Perfil',),
+          BottomNavigationBarItem(icon: Icon(Icons.person_2_rounded), label: _usuario?.nombre ?? 'Perfil')
         ],
         type: BottomNavigationBarType.fixed,
       ),

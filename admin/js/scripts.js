@@ -15,6 +15,8 @@ window.addEventListener("DOMContentLoaded", async (event) => {
       );
     });
   }
+
+  document.getElementById("nombreUsuario").innerText = obtenerNombreUsuario();
 });
 
 function mostrarAlerta(tipo, mensaje) {
@@ -55,10 +57,6 @@ function mostrarAlerta(tipo, mensaje) {
   });
 })();
 
-function obtenerNombreUsuario() {
-  return localStorage.getItem("nombreUsuario");
-}
-
 async function cerrarSesion() {
   const URL = "https://eventvsmerida.onrender.com/api/auth/logout";
 
@@ -81,6 +79,10 @@ async function cerrarSesion() {
   } catch (error) {
     console.error("Error en scripts.js", error);
   }
+}
+
+function obtenerNombreUsuario() {
+  return localStorage.getItem("nombreUsuario");
 }
 
 async function logeado() {

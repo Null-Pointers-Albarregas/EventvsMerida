@@ -11743,7 +11743,7 @@ body {
 }
 
 .bg-naranja {
-  background-color: #EE8D24;
+  background-color: #ee8d24;
 }
 
 .card {
@@ -11774,7 +11774,7 @@ body {
 }
 
 .colored-toast.swal2-icon-info {
-  background-color: #EE8D24 !important;
+  background-color: #ee8d24 !important;
 }
 
 .colored-toast.swal2-icon-question {
@@ -11830,19 +11830,38 @@ body {
   height: auto;
 }
 
+main {
+  position: relative;
+  min-height: 100vh;
+}
+
+body.loading,
+body.loading * {
+  overflow: hidden !important;
+}
+
 #loader {
-    display:none; 
-    position:fixed; 
-    top: 2; 
-    left: 100;
-    width: 82em; 
-    height: 40em; 
-    background:rgba(0,0,0,0.6); 
-    z-index:9999;
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+  display: none;
+  display: flex;
+
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 20%;
+}
+
+#loader img {
+  width: 300px;
+  max-width: 80%;
+  height: auto;
 }
 
 @keyframes pulso {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -11858,4 +11877,32 @@ body {
   display: none;
 }
 
-body.auth-pending { visibility: hidden; }
+body.auth-pending {
+  visibility: hidden;
+}
+
+#paginacion {
+  padding: 10px;
+  border-radius: 8px;
+}
+
+#paginacion .page-link {
+  background-color: #000;
+  color: #fff;
+  border-color: #333;
+  border: 1px solid #fff;
+}
+
+#paginacion .page-link:hover {
+  background-color: #222;
+}
+
+#paginacion .page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+#paginacion .page-item.disabled .page-link {
+  background-color: #111;
+  color: #666;
+}

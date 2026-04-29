@@ -221,6 +221,7 @@ class _LoginState extends State<Login> {
         Checkbox(
           value: _autoLogin,
           activeColor: _cs.primary,
+          checkColor: _cs.surface,
           onChanged: (value) {
             setState(() {
               _autoLogin = value ?? false;
