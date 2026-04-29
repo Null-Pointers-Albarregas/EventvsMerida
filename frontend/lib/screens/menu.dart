@@ -49,6 +49,20 @@ class _MenuState extends State<Menu> {
   void initState() {
     super.initState();
     _cargarUsuario();
+    SharedPreferencesService.usuarioNotifier.addListener(_onUsuarioCambio);
+  }
+
+  void _onUsuarioCambio() {
+    if (!mounted) return;
+    setState(() {
+      _usuario = SharedPreferencesService.usuarioNotifier.value;
+    });
+  }
+
+  @override
+  void dispose() {
+    SharedPreferencesService.usuarioNotifier.removeListener(_onUsuarioCambio);
+    super.dispose();
   }
 
   // ===========================================================================

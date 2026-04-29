@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,6 +13,7 @@ class SharedPreferencesService {
 
   // Sesion en memoria para la ejecucion actual de la app.
   static Usuario? usuarioSesionActual;
+  static final ValueNotifier<Usuario?> usuarioNotifier = ValueNotifier<Usuario?>(null);
 
   static Future<SharedPreferences> get _prefs async {
     return SharedPreferences.getInstance();
@@ -23,6 +25,7 @@ class SharedPreferencesService {
 
   static Future<void> iniciarSesion({required Usuario usuario, required bool autoLogin}) async {
     usuarioSesionActual = usuario;
+    usuarioNotifier.value = usuario;
 
     final prefs = await _prefs;
     await prefs.setBool(_autoLoginKey, autoLogin);
@@ -36,6 +39,7 @@ class SharedPreferencesService {
 
   static Future<void> cerrarSesion() async {
     usuarioSesionActual = null;
+    usuarioNotifier.value = null;
 
     final prefs = await _prefs;
     await prefs.remove(_usuarioKey);
@@ -70,6 +74,7 @@ class SharedPreferencesService {
       final data = jsonDecode(json) as Map<String, dynamic>;
       final usuario = Usuario.fromJson(data);
       usuarioSesionActual = usuario;
+      usuarioNotifier.value = usuario;
       return usuario;
     } catch (_) {
       await prefs.remove(_usuarioKey);
