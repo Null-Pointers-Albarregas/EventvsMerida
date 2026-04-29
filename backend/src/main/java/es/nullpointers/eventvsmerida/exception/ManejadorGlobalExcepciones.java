@@ -88,7 +88,7 @@ public class ManejadorGlobalExcepciones {
 
         return mensaje;
     }
-    
+
     /**
      * Maneja la excepción MethodArgumentNotValidException.
      * Se lanza cuando la validación de los argumentos de un método falla,
