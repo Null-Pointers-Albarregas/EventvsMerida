@@ -28,6 +28,8 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
 
     List<Evento> findByCategoria_IdIn(List<Long> categoriaIds);
 
+    Page<Evento> findByFechaFinAfter(LocalDateTime fechaFin, Pageable pageable);
+
     @Query(value = "SELECT e.* FROM \"Evento\" e JOIN \"Categoria\" c ON e.id_categoria = c.id " +
             "WHERE unaccent(lower(e.titulo)) LIKE concat('%', unaccent(lower(:q)), '%') " +
             //"OR unaccent(lower(e.descripcion)) LIKE concat('%', unaccent(lower(:q)), '%') " +

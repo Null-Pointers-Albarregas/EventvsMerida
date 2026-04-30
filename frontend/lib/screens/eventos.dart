@@ -5,6 +5,7 @@ import 'package:eventvsmerida/models/evento.dart';
 import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
 
 import '../models/api_response.dart';
 import '../models/usuario.dart';
@@ -23,10 +24,11 @@ class _EventosState extends State<Eventos> {
   // ===========================================================================
   // VARIABLES
   // ===========================================================================
-
+  final _log = Logger();
   String _textoBusqueda = '';
-  late Future<ApiResponse<List<Evento>>> _eventos;
+  //late Future<ApiResponse<List<Evento>>> _eventos;
   late Future<ApiResponse<List<Evento>>> _eventosEncontrados;
+  Future<ApiResponse<List<Evento>>>? _eventosFuture;
   Usuario? _usuario;
   List<Evento> _eventosGuardados = [];
   Timer? _debounce;
@@ -34,6 +36,13 @@ class _EventosState extends State<Eventos> {
   bool _modalBusquedaAbierto = false;
   late Future<ApiResponse<List<Categoria>>> _categorias;
   final Set<int> _categoriasSeleccionadas = {};
+  final List<Evento> _eventosList = [];
+  int _page = 0;
+  final int _pageSize = 15;
+  bool _isLoadingEventos = false;
+  bool _hasMoreEventos = true;
+  bool _usandoFiltros = false;
+  final ScrollController _scrollController = ScrollController();
 
   ColorScheme get _cs => Theme.of(context).colorScheme;
 
@@ -44,16 +53,19 @@ class _EventosState extends State<Eventos> {
   @override
   void initState() {
     super.initState();
-    _eventos = ApiService.obtenerEventos();
     _eventosEncontrados = ApiService.buscarEventos(_textoBusqueda);
     _categorias = ApiService.obtenerCategorias();
     _cargarDatosUsuarioYGuardados();
+    _scrollController.addListener(_onScroll);
+    _resetAndFetchEventos();
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _inputBusquedaController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -63,7 +75,7 @@ class _EventosState extends State<Eventos> {
 
   Future<void> _cargarDatosUsuarioYGuardados() async {
     final (usuario, guardados) =
-        await EventosGuardadosService.cargarUsuarioYEventosGuardados();
+    await EventosGuardadosService.cargarUsuarioYEventosGuardados();
 
     if (!mounted) return;
 
@@ -77,10 +89,7 @@ class _EventosState extends State<Eventos> {
   // FUNCIONES AUXILIARES
   // ===========================================================================
 
-  void _buscarEventos(
-    String text,
-    void Function(void Function()) setStateModal,
-  ) {
+  void _buscarEventos(String text, void Function(void Function()) setStateModal) {
     if (_debounce?.isActive ?? false) {
       _debounce?.cancel();
     }
@@ -133,6 +142,56 @@ class _EventosState extends State<Eventos> {
       return 'Fecha: $inicioFecha - $finFecha · $inicioHora';
     }
     return 'Fecha: $inicioFecha - $finFecha · $inicioHora - $finHora';
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients || _isLoadingEventos || !_hasMoreEventos || _usandoFiltros) return;
+    if (_scrollController.position.extentAfter < 200) {
+      _fetchEventosPage();
+    }
+  }
+
+  void _resetAndFetchEventos() {
+    _eventosList.clear();
+    _page = 0;
+    _hasMoreEventos = true;
+    _isLoadingEventos = false;
+    _fetchEventosPage();
+  }
+
+  Future<void> _fetchEventosPage() async {
+    if (_isLoadingEventos || !_hasMoreEventos) return;
+    setState(() => _isLoadingEventos = true);
+
+    _log.i('Antes de cargar página $_page de eventos...');
+
+    try {
+      final mapaResp = await ApiService.obtenerEventosPaginados(
+        page: _page,
+        size: _pageSize,
+        fechaFinDesde: DateTime.now(),
+      );
+
+      if (mapaResp == null) {
+        setState(() => _hasMoreEventos = false);
+        return;
+      }
+
+      final items = (mapaResp['items'] as List<Evento>?) ?? [];
+      final bool last = mapaResp['last'] as bool? ?? (items.length < _pageSize);
+
+      setState(() {
+        _eventosList.addAll(items);
+        _page++;
+        _hasMoreEventos = !last;
+      });
+    } catch (e) {
+      setState(() => _hasMoreEventos = false);
+    } finally {
+      setState(() => _isLoadingEventos = false);
+    }
+
+    _log.i('Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos');
   }
 
   // ===========================================================================
@@ -207,7 +266,7 @@ class _EventosState extends State<Eventos> {
               onChanged: (text) => _buscarEventos(text, setStateModal),
             ),
             const SizedBox(height: 12),
-            _buildBody(_eventosEncontrados, 'busqueda'),
+            _buildEventosFiltradosBusquedaBody(_eventosEncontrados, 'busqueda'),
           ],
         ),
       ),
@@ -373,9 +432,12 @@ class _EventosState extends State<Eventos> {
                               Navigator.of(context, rootNavigator: true).maybePop();
                               setState(() {
                                 if (_categoriasSeleccionadas.isEmpty) {
-                                  _eventos = ApiService.obtenerEventos();
+                                  _usandoFiltros = false;
+                                  _eventosFuture = null;
+                                  _resetAndFetchEventos();
                                 } else {
-                                  _eventos = ApiService.obtenerEventosFiltradosPorCategorias(_categoriasSeleccionadas.toList());
+                                  _usandoFiltros = true;
+                                  _eventosFuture = ApiService.obtenerEventosFiltradosPorCategorias(_categoriasSeleccionadas.toList());
                                 }
                               });
                             },
@@ -649,7 +711,36 @@ class _EventosState extends State<Eventos> {
     );
   }
 
-  Widget _buildBody(Future<ApiResponse<List<Evento>>> listadoEventos, String tipo) {
+  Widget _buildEventosPaginatedBody() {
+    if (_eventosList.isEmpty && _isLoadingEventos) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_eventosList.isEmpty) {
+      return _buildEstadoCentro(
+        icono: Icons.event_busy,
+        mensaje: 'No hay eventos disponibles',
+      );
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      itemCount: _eventosList.length + (_hasMoreEventos ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index < _eventosList.length) {
+          final evento = _eventosList[index];
+          return _buildEventoCard(evento);
+        } else {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildEventosFiltradosBusquedaBody(Future<ApiResponse<List<Evento>>> listadoEventos, String tipo) {
     return Center(
       child: FutureBuilder<ApiResponse<List<Evento>>>(
         future: listadoEventos,
@@ -669,7 +760,7 @@ class _EventosState extends State<Eventos> {
             return _buildEstadoCentro(
               icono: Icons.error_outline,
               mensaje:
-                  respuesta?.mensaje ?? 'No se han podido cargar los eventos',
+              respuesta?.mensaje ?? 'No se han podido cargar los eventos',
             );
           }
 
@@ -793,7 +884,11 @@ class _EventosState extends State<Eventos> {
           ),
         ],
       ),
-      body: _buildBody(_eventos, ''),
+      body: _usandoFiltros
+          ? (_eventosFuture == null
+          ? const Center(child: CircularProgressIndicator())
+          : _buildEventosFiltradosBusquedaBody(_eventosFuture!, ''))
+          : _buildEventosPaginatedBody(),
     );
   }
 }
