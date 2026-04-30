@@ -29,6 +29,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       foregroundColor: _cs.onSurface,
       elevation: 0,
       shadowColor: Colors.transparent,
+      scrolledUnderElevation: 0,
       title: SizedBox(
         height: 40,
         child: Image.asset(
