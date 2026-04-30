@@ -5,6 +5,7 @@ import 'package:eventvsmerida/models/evento.dart';
 import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../models/api_response.dart';
 import '../models/usuario.dart';
@@ -23,6 +24,12 @@ class _EventosState extends State<Eventos> {
   // ===========================================================================
   // VARIABLES
   // ===========================================================================
+
+  late TutorialCoachMark tutorialCoachMark;
+
+  GlobalKey keyTarjetaEvento = GlobalKey();
+  GlobalKey keyBtnBuscar = GlobalKey();
+  GlobalKey keyBtnFiltro = GlobalKey();
 
   String _textoBusqueda = '';
   //late Future<ApiResponse<List<Evento>>> _eventos;
@@ -57,6 +64,7 @@ class _EventosState extends State<Eventos> {
     _cargarDatosUsuarioYGuardados();
     _scrollController.addListener(_onScroll);
     _resetAndFetchEventos();
+    createTutorial();
   }
 
   @override
@@ -190,8 +198,28 @@ class _EventosState extends State<Eventos> {
       setState(() => _isLoadingEventos = false);
     }
 
+    if (_page == 1) {
+      _mostrarTutorialCuandoExista();
+    }
+
     print('Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos');
   }
+  void _mostrarTutorialCuandoExista() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final contextTarget = keyTarjetaEvento.currentContext;
+
+      if (contextTarget != null) {
+        tutorialCoachMark.show(context: context);
+      } else {
+        // Reintenta una vez más (la lista puede tardar un frame extra)
+        Future.delayed(const Duration(milliseconds: 100), _mostrarTutorialCuandoExista);
+      }
+    });
+  }
+
+
 
   // ===========================================================================
   // MODALES
@@ -537,8 +565,9 @@ class _EventosState extends State<Eventos> {
     );
   }
 
-  Widget _buildEventoCard(Evento evento) {
+  Widget _buildEventoCard(Evento evento, {Key? key}) {
     return Card(
+      key: key,
       elevation: 6,
       shadowColor: _cs.onSurface,
       margin: const EdgeInsets.all(16),
@@ -728,13 +757,16 @@ class _EventosState extends State<Eventos> {
       itemBuilder: (context, index) {
         if (index < _eventosList.length) {
           final evento = _eventosList[index];
-          return _buildEventoCard(evento);
-        } else {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator()),
+          return _buildEventoCard(
+            evento,
+            key: index == 0 ? keyTarjetaEvento : null,
           );
         }
+
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Center(child: CircularProgressIndicator()),
+        );
       },
     );
   }
@@ -889,5 +921,137 @@ class _EventosState extends State<Eventos> {
           : _buildEventosFiltradosBusquedaBody(_eventosFuture!, ''))
           : _buildEventosPaginatedBody(),
     );
+  }
+
+  void showTutorial() {
+    tutorialCoachMark.show(context: context);
+  }
+
+  void createTutorial() {
+    tutorialCoachMark = TutorialCoachMark(
+      targets: _createTargets(),
+      colorShadow: Colors.red,
+      textSkip: "SALTAR TUTORIAL",
+      paddingFocus: 10,
+      opacityShadow: 0.5,
+      imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+      onFinish: () {
+        print("finish");
+      },
+      onClickTarget: (target) {
+        print('onClickTarget: $target');
+      },
+      onClickTargetWithTapPosition: (target, tapDetails) {
+        print("target: $target");
+        print(
+            "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+      },
+      onClickOverlay: (target) {
+        print('onClickOverlay: $target');
+      },
+      onSkip: () {
+        print("skip");
+        return true;
+      },
+    );
+  }
+
+  List<TargetFocus> _createTargets() {
+    List<TargetFocus> targets = [];
+    targets.add(
+      TargetFocus(
+          identify: "keyTarjetaEvento",
+          keyTarget: keyTarjetaEvento,
+          alignSkip: Alignment.topRight,
+          enableOverlayTab: true,
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "Estos son los eventos disponibles. Puedes hacer click en cada uno para ver más detalles.",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 25,
+                        fontWeight: .bold
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+          shape: ShapeLightFocus.RRect,
+          color: Color(0xFFEE8D24)
+      ),
+    );
+
+    // targets.add(
+    //   TargetFocus(
+    //     identify: "keyBottomNavigation2",
+    //     keyTarget: keyBottomNavigation2,
+    //     alignSkip: Alignment.topRight,
+    //     contents: [
+    //       TargetContent(
+    //         align: ContentAlign.top,
+    //         builder: (context, controller) {
+    //           return const Column(
+    //             mainAxisSize: MainAxisSize.min,
+    //             crossAxisAlignment: CrossAxisAlignment.start,
+    //             children: <Widget>[
+    //               Text(
+    //                 "Titulo lorem ipsum",
+    //                 style: TextStyle(
+    //                   color: Colors.white,
+    //                 ),
+    //               ),
+    //             ],
+    //           );
+    //         },
+    //       ),
+    //     ],
+    //   ),
+    // );
+    //
+    // targets.add(
+    //   TargetFocus(
+    //     identify: "keyBottomNavigation3",
+    //     keyTarget: keyBottomNavigation3,
+    //     alignSkip: Alignment.topRight,
+    //     contents: [
+    //       TargetContent(
+    //         align: ContentAlign.top,
+    //         builder: (context, controller) {
+    //           return Column(
+    //             mainAxisSize: MainAxisSize.min,
+    //             crossAxisAlignment: CrossAxisAlignment.start,
+    //             children: <Widget>[
+    //               const Text(
+    //                 "Titulo lorem ipsum",
+    //                 style: TextStyle(
+    //                   color: Colors.white,
+    //                 ),
+    //               ),
+    //               const SizedBox(
+    //                 height: 10,
+    //               ),
+    //               ElevatedButton(
+    //                 onPressed: () {
+    //                   tutorialCoachMark.goTo(0);
+    //                 },
+    //                 child: const Text('Go to index 0'),
+    //               ),
+    //             ],
+    //           );
+    //         },
+    //       ),
+    //     ],
+    //   ),
+    // );
+    return targets;
   }
 }
