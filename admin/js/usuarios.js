@@ -20,9 +20,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         event.preventDefault();
 
         const contrasenia = document.getElementById("contrasena").value;
-        const confirmarContrasenia = document.getElementById(
-          "confirmarContrasena",
-        ).value;
+        const confirmarContrasenia = document.getElementById("confirmarContrasena").value;
 
         if (!form.checkValidity()) {
           event.stopPropagation();
@@ -41,7 +39,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             password: contrasenia,
             idRol: 1,
           };
-          subirUsuario(URL_BASE, usuario);
+          crearUsuario(URL_BASE, usuario);
         }
 
         form.classList.add("was-validated");
@@ -51,6 +49,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   const formEditar = document.getElementById("formEditarUsuario");
+  let contrasenia = "";
+  let nombreUsuario = "";
 
   formEditar.addEventListener(
     "submit",
@@ -62,19 +62,68 @@ window.addEventListener("DOMContentLoaded", async () => {
       } else {
         event.preventDefault();
         const usuario = {
-          nombre: document.getElementById("nombre").value,
-          apellidos: document.getElementById("apellidos").value,
+          nombre: document.getElementById("nombreEditar").value,
+          apellidos: document.getElementById("apellidosEditar").value,
           fechaNacimiento: formatearFecha(
-            document.getElementById("fechaNacimiento").value,
+            document.getElementById("fechaNacimientoEditar").value,
           ),
-          email: document.getElementById("correo").value,
-          telefono: document.getElementById("telefono").value,
-          password: contrasenia,
+          email: document.getElementById("correoEditar").value,
+          telefono: document.getElementById("telefonoEditar").value,
+          password: contraseniaModificada ? contrasenia : null,
           idRol: 1,
         };
-        editarRol(URL_BASE, formEditar.dataset.id, rol);
+        editarUsuario(URL_BASE, formEditar.dataset.id, usuario);
       }
       formEditar.classList.add("was-validated");
+    },
+    false,
+  );
+
+  let contraseniaModificada = false;
+
+  const formEditarContrasenia = document.getElementById(
+    "formEditarContrasenia",
+  );
+
+  formEditarContrasenia.addEventListener(
+    "submit",
+    function (event) {
+      const contraseniaEditar =
+        document.getElementById("contraseniaEditar").value;
+      const confirmarContraseniaEditar = document.getElementById(
+        "confirmarContraseniaEditar",
+      ).value;
+
+      if (!formEditarContrasenia.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+        formEditarContrasenia.classList.add("was-validated");
+      } else if (contraseniaEditar !== confirmarContraseniaEditar) {
+        event.stopPropagation();
+        event.preventDefault();
+        mostrarAlerta("error", "Las contraseñas tienen que ser iguales");
+      } else {
+        event.preventDefault();
+        contrasenia = document.getElementById("contraseniaEditar").value;
+
+        bootstrap.Modal.getInstance(
+          document.getElementById("modalEditarContrasenia"),
+        ).hide();
+
+        mostrarAlerta("info", "Contraseña actualizada pendiente de guardar");
+
+        const modalEditarContrasenia = document.getElementById(
+          "modalEditarContrasenia",
+        );
+
+        modalEditarContrasenia.addEventListener("hidden.bs.modal", function () {
+          const modalEditarUsuario = new bootstrap.Modal(
+            document.getElementById("modalEditarUsuario"),
+          );
+          modalEditarUsuario.show();
+        });
+      }
+      formEditarContrasenia.classList.add("was-validated");
     },
     false,
   );
@@ -97,7 +146,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       const form = document.getElementById("formEditarUsuario");
       if (form) {
         form.classList.remove("was-validated");
-        form.reset();
       }
     });
   }
@@ -192,6 +240,7 @@ async function cargarUsuarios(URL_BASE) {
       btnEditar.className = "btn btn-sm btn-warning";
       btnEditar.innerHTML = '<i class="fa-solid fa-pen"></i>';
       btnEditar.setAttribute("data-id", usuario.id);
+      btnEditar.setAttribute("data-nombre", usuario.nombre);
       btnEditar.setAttribute("data-bs-toggle", "modal");
       btnEditar.setAttribute("data-bs-target", "#modalEditarUsuario");
       btnEditar.addEventListener("click", function () {
@@ -202,6 +251,7 @@ async function cargarUsuarios(URL_BASE) {
           usuario.fechaNacimiento;
         document.getElementById("correoEditar").value = usuario.email;
         document.getElementById("telefonoEditar").value = usuario.telefono;
+        document.getElementById("nombreUsuario").innerText = usuario.nombre;
       });
 
       // Botón eliminar
@@ -232,7 +282,7 @@ async function cargarUsuarios(URL_BASE) {
   }
 }
 
-async function subirUsuario(URL_BASE, datosFormulario) {
+async function crearUsuario(URL_BASE, datosFormulario) {
   try {
     const options = {
       method: "POST",
@@ -246,11 +296,45 @@ async function subirUsuario(URL_BASE, datosFormulario) {
     const respuesta = await resp.json();
     if (resp.status === 201) {
       mostrarAlerta("success", "Usuario creado correctamente");
+
+      const modal = bootstrap.Modal.getInstance(
+        document.getElementById("modalCrearUsuario"),
+      );
+      modal.hide();
     } else {
       mostrarAlerta("error", "Error al crear el usuario: " + respuesta.error);
     }
   } catch (error) {
     console.error("Error al subir el evento:", error);
+  } finally {
+    cargarUsuarios(URL_BASE);
+  }
+}
+
+async function editarUsuario(URL_BASE, id, datosFormulario) {
+  try {
+    const options = {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(datosFormulario),
+    };
+    const resp = await fetch(URL_BASE + "usuarios/update/" + id, options);
+    const respuesta = await resp.json();
+    if (resp.status === 200) {
+      mostrarAlerta("success", "Usuario editado correctamente");
+
+      const modal = bootstrap.Modal.getInstance(
+        document.getElementById("modalEditarUsuario"),
+      );
+      modal.hide();
+    } else {
+      mostrarAlerta("error", "Error al editar el usuario: " + respuesta.error);
+    }
+  } catch (error) {
+    console.error("Error al editar el evento:", error);
   } finally {
     cargarUsuarios(URL_BASE);
   }

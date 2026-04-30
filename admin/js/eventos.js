@@ -13,10 +13,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   paginaActual = 0;
   cantidadPaginacion = 1;
   cargarEventos();
-  //buscarEvento("mit");
+  obtenerOrganizadores();
   obtenerCategorias();
 
-  // Buscador de eventos provisional
+  // Buscador de eventos
   document.addEventListener("input", (e) => {
     if (e.target.matches("#buscador")) {
       if (e.target.value.trim() === "") {
@@ -53,15 +53,13 @@ window.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("horaFin").value +
             ":00.000",
           localizacion: document.getElementById("localizacion").value,
-          idUsuario: 3,
-          idCategoria: asociarIdCategoria(
-            document.getElementById("categorias").value,
-          ),
+          idUsuario: document.getElementById("organizadores").value,
+          idCategoria: document.getElementById("categorias").value,
         };
         const formData = new FormData();
         formData.append("evento", JSON.stringify(evento));
         formData.append("foto", document.getElementById("fotoEvento").files[0]);
-        subirEvento(formData, true);
+        crearEvento(formData, true);
       }
       form.classList.add("was-validated");
     },
@@ -92,10 +90,8 @@ window.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("horaFin").value +
             ":00.000",
           localizacion: document.getElementById("localizacion").value,
-          idUsuario: 3,
-          idCategoria: asociarIdCategoria(
-            document.getElementById("categorias").value,
-          ),
+          idUsuario: document.getElementById("organizadoresEditar").value,
+          idCategoria: document.getElementById("categorias").value,
         };
         const formData = new FormData();
         formData.append("evento", JSON.stringify(evento));
@@ -107,6 +103,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     false,
   );
 });
+
+function limpiarBuscador() {
+  document.getElementById("buscador").value = "";
+}
 
 async function cargarEventos() {
   const loader = document.getElementById("loader");
@@ -171,6 +171,7 @@ async function buscarEvento(textoBusqueda) {
 
 function mostrarEventos(data, numeroPaginas = 0) {
   const tabla = document.getElementById("listadoEventos");
+  cantidadPaginacion = numeroPaginas
 
   // Mostrar mensaje si no hay eventos y limpiar tabla
   const eventosVacio = document.getElementById("eventos-vacio");
@@ -410,6 +411,22 @@ function actualizarBotones() {
   );
 }
 
+document.getElementById("btnAnterior").addEventListener("click", (e) => {
+  e.preventDefault();
+  if (paginaActual > 0) {
+    paginaActual--;
+    cargarEventos();
+  }
+});
+
+document.getElementById("btnSiguiente").addEventListener("click", (e) => {
+  e.preventDefault();
+  if (paginaActual < cantidadPaginacion - 1) {
+    paginaActual++;
+    cargarEventos();
+  }
+});
+
 function avanzarPagina(indice) {
   paginaActual = indice;
   cargarEventos();
@@ -444,8 +461,8 @@ async function obtenerCategorias() {
       }
       data.forEach((categoria) => {
         const opt = document.createElement("option");
-        opt.value = categoria["nombre"];
-        opt.textContent = categoria["nombre"];
+        opt.value = categoria.id;
+        opt.textContent = categoria.nombre;
         select.appendChild(opt);
       });
     });
@@ -454,21 +471,68 @@ async function obtenerCategorias() {
   }
 }
 
-async function subirEvento(datosFormulario) {
+async function obtenerOrganizadores() {
+  const selectCrear = document.getElementById("organizadores");
+  const selectEditar = document.getElementById("organizadoresEditar");
+
+  try {
+    const resp = await fetch(URL_BASE + "usuarios/organizers", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!resp.ok) {
+      throw new Error("Error al obtener los categorías");
+    }
+
+    const data = await resp.json();
+    const selects = [selectCrear, selectEditar].filter(Boolean);
+
+    selects.forEach((select) => {
+      const placeholder = select.querySelector("option[value='']");
+      select.innerHTML = "";
+      if (placeholder) {
+        select.appendChild(placeholder);
+      }
+      data.forEach((organizador) => {
+        const opt = document.createElement("option");
+        opt.value = organizador.id;
+        opt.textContent = organizador.nombre + " " + organizador.apellidos;
+        select.appendChild(opt);
+      });
+    });
+  } catch (error) {
+    console.error("Error al cargar las categorías:", error);
+  }
+}
+
+async function crearEvento(datosFormulario) {
   try {
     const options = {
       method: "POST",
+      credentials: "include",
       body: datosFormulario,
     };
     const resp = await fetch(URL_BASE + "eventos/addWithImage", options);
     const respuesta = await resp.json();
     if (resp.status === 201) {
       mostrarAlerta("success", "Evento creado correctamente");
+
+      const modal = bootstrap.Modal.getInstance(
+        document.getElementById("modalCrearEvento"),
+      );
+      modal.hide();
     } else {
       mostrarAlerta("error", "Error al crear el evento: " + respuesta.error);
     }
   } catch (error) {
     console.error("Error al subir el evento:", error);
+  } finally {
+    limpiarBuscador();
+    cargarEventos();
   }
 }
 
@@ -476,17 +540,26 @@ async function editarEvento(id, datosFormulario) {
   try {
     const options = {
       method: "PUT",
+      credentials: "include",
       body: datosFormulario,
     };
     const resp = await fetch(URL_BASE + "eventos/update/" + id, options);
     const respuesta = await resp.json();
     if (resp.status === 200) {
       mostrarAlerta("success", "Evento editado correctamente");
+
+      const modal = bootstrap.Modal.getInstance(
+        document.getElementById("modalEditarEvento"),
+      );
+      modal.hide();
     } else {
       mostrarAlerta("error", "Error al editar el evento: " + respuesta.error);
     }
   } catch (error) {
     console.error("Error al editar el evento:", error);
+  } finally {
+    limpiarBuscador();
+    cargarEventos();
   }
 }
 
@@ -505,50 +578,23 @@ async function eliminarEvento(id, nombre) {
       try {
         const options = {
           method: "DELETE",
+          credentials: "include",
         };
         const resp = await fetch(URL_BASE + "eventos/delete/" + id, options);
         if (resp.status === 204) {
           mostrarAlerta("success", "Evento eliminado correctamente");
         } else {
-          mostrarAlerta(
-            "error",
-            "Error al eliminar el evento: " + respuesta.error,
-          );
+          const respuesta = await resp.text();
+          mostrarAlerta("error", "Error al eliminar el evento: " + respuesta);
         }
       } catch (error) {
         console.error("Error al eliminar el evento:", error);
+      } finally {
+        limpiarBuscador();
+        cargarEventos();
       }
     }
   });
-}
-
-function asociarIdCategoria(nombreCategoria) {
-  switch (nombreCategoria) {
-    case "Conciertos y Música":
-      return 1;
-    case "Festivales y Ferias":
-      return 2;
-    case "Cine y Teatro":
-      return 3;
-    case "Exposiciones y Arte":
-      return 4;
-    case "Gastronomía":
-      return 5;
-    case "Conferencias, Talleres y Cursos":
-      return 6;
-    case "Deportes y Actividad Física":
-      return 7;
-    case "Fiestas y Vida Nocturna":
-      return 8;
-    case "Familia e Infantil":
-      return 9;
-    case "Tecnología y Ciencia":
-      return 10;
-    case "Solidaridad y Causas Sociales":
-      return 11;
-    default:
-      return 12;
-  }
 }
 
 function formatearFecha(fechaISO) {

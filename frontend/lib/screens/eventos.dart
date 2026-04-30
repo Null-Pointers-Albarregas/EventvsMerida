@@ -5,7 +5,6 @@ import 'package:eventvsmerida/models/evento.dart';
 import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:logger/logger.dart';
 
 import '../models/api_response.dart';
 import '../models/usuario.dart';
@@ -24,7 +23,7 @@ class _EventosState extends State<Eventos> {
   // ===========================================================================
   // VARIABLES
   // ===========================================================================
-  final _log = Logger();
+
   String _textoBusqueda = '';
   //late Future<ApiResponse<List<Evento>>> _eventos;
   late Future<ApiResponse<List<Evento>>> _eventosEncontrados;
@@ -163,7 +162,7 @@ class _EventosState extends State<Eventos> {
     if (_isLoadingEventos || !_hasMoreEventos) return;
     setState(() => _isLoadingEventos = true);
 
-    _log.i('Antes de cargar página $_page de eventos...');
+    print('Antes de cargar página $_page de eventos...');
 
     try {
       final mapaResp = await ApiService.obtenerEventosPaginados(
@@ -191,7 +190,7 @@ class _EventosState extends State<Eventos> {
       setState(() => _isLoadingEventos = false);
     }
 
-    _log.i('Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos');
+    print('Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos');
   }
 
   // ===========================================================================
