@@ -5,6 +5,7 @@ import 'package:eventvsmerida/models/evento.dart';
 import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
 
 import '../models/api_response.dart';
 import '../models/usuario.dart';
@@ -23,7 +24,7 @@ class _EventosState extends State<Eventos> {
   // ===========================================================================
   // VARIABLES
   // ===========================================================================
-
+  final _log = Logger();
   String _textoBusqueda = '';
   //late Future<ApiResponse<List<Evento>>> _eventos;
   late Future<ApiResponse<List<Evento>>> _eventosEncontrados;
@@ -52,7 +53,6 @@ class _EventosState extends State<Eventos> {
   @override
   void initState() {
     super.initState();
-    //_eventos = ApiService.obtenerEventos();
     _eventosEncontrados = ApiService.buscarEventos(_textoBusqueda);
     _categorias = ApiService.obtenerCategorias();
     _cargarDatosUsuarioYGuardados();
@@ -163,6 +163,8 @@ class _EventosState extends State<Eventos> {
     if (_isLoadingEventos || !_hasMoreEventos) return;
     setState(() => _isLoadingEventos = true);
 
+    _log.i('Antes de cargar página $_page de eventos...');
+
     try {
       final mapaResp = await ApiService.obtenerEventosPaginados(
         page: _page,
@@ -188,6 +190,8 @@ class _EventosState extends State<Eventos> {
     } finally {
       setState(() => _isLoadingEventos = false);
     }
+
+    _log.i('Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos');
   }
 
   // ===========================================================================
@@ -262,7 +266,7 @@ class _EventosState extends State<Eventos> {
               onChanged: (text) => _buscarEventos(text, setStateModal),
             ),
             const SizedBox(height: 12),
-            _buildBody(_eventosEncontrados, 'busqueda'),
+            _buildEventosFiltradosBusquedaBody(_eventosEncontrados, 'busqueda'),
           ],
         ),
       ),
@@ -736,7 +740,7 @@ class _EventosState extends State<Eventos> {
     );
   }
 
-  Widget _buildBody(Future<ApiResponse<List<Evento>>> listadoEventos, String tipo) {
+  Widget _buildEventosFiltradosBusquedaBody(Future<ApiResponse<List<Evento>>> listadoEventos, String tipo) {
     return Center(
       child: FutureBuilder<ApiResponse<List<Evento>>>(
         future: listadoEventos,
@@ -883,7 +887,7 @@ class _EventosState extends State<Eventos> {
       body: _usandoFiltros
           ? (_eventosFuture == null
           ? const Center(child: CircularProgressIndicator())
-          : _buildBody(_eventosFuture!, ''))
+          : _buildEventosFiltradosBusquedaBody(_eventosFuture!, ''))
           : _buildEventosPaginatedBody(),
     );
   }

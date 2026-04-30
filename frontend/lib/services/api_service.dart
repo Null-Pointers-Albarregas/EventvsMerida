@@ -212,7 +212,7 @@ class ApiService {
   /// GET /api/eventos/paginated?page=0&size=20&sort=fechaInicio,asc&fechaFinDesde=2024-01-01T00:00:00Z
   static Future<Map<String, dynamic>?> obtenerEventosPaginados({
     int page = 0,
-    int size = 20,
+    int size = 15,
     String sort = 'fechaInicio,asc',
     DateTime? fechaFinDesde,
   }) async {
@@ -223,7 +223,7 @@ class ApiService {
     };
 
     if (fechaFinDesde != null) {
-      queryParameters['fechaFinDesde'] = fechaFinDesde.toIso8601String(); // ISO 8601
+      queryParameters['fechaFinDesde'] = fechaFinDesde.toIso8601String();
     }
 
     final uri = Uri.parse('$baseUrl/eventos/paginated').replace(queryParameters: queryParameters);
