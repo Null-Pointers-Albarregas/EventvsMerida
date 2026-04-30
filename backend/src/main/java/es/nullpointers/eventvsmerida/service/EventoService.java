@@ -223,8 +223,17 @@ public class EventoService {
      * @param pageable Objeto Pageable que contiene la información de paginación y ordenación de los eventos a obtener. Se puede configurar con parámetros como page, size, sort, etc.
      * @return Page<EventoResponse> con la página de eventos y el estado HTTP 200 (OK).
      */
-    public Page<EventoResponse> obtenerEventosPaginados(Pageable pageable) {
-        return eventoRepository.findAll(pageable).map(EventoMapper::convertirAResponse);
+    public Page<EventoResponse> obtenerEventosPaginados(Pageable pageable, OffsetDateTime fechaFinDesde) {
+        Page<Evento> page;
+        
+        if (fechaFinDesde != null) {
+            LocalDateTime filtro = fechaFinDesde.toLocalDateTime();
+            page = eventoRepository.findByFechaFinAfter(filtro, pageable);
+        } else {
+            page = eventoRepository.findAll(pageable);
+        }
+        
+        return page.map(EventoMapper::convertirAResponse);
     }
 
     /**
