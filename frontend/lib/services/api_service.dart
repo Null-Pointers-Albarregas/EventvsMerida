@@ -210,23 +210,25 @@ class ApiService {
   }
 
   /// GET /api/eventos/paginated?page=0&size=20&sort=fechaInicio,asc&fechaFinDesde=2024-01-01T00:00:00Z
-  static Future<Map<String, dynamic>?> obtenerEventosPaginados({
-    int page = 0,
-    int size = 15,
-    String sort = 'fechaInicio,asc',
-    DateTime? fechaFinDesde,
-  }) async {
+  static Future<Map<String, dynamic>?> obtenerEventosPaginados({int page = 0, int size = 15, DateTime? fechaFinDesde,}) async {
     final queryParameters = <String, String>{
       'page': page.toString(),
       'size': size.toString(),
-      'sort': sort,
     };
 
     if (fechaFinDesde != null) {
-      queryParameters['fechaFinDesde'] = fechaFinDesde.toIso8601String();
+      final fechaLocal = fechaFinDesde.toLocal();
+      final offset = fechaLocal.timeZoneOffset;
+      final sign = offset.isNegative ? '-' : '+';
+      final offsetAbs = offset.abs();
+      final offHours = offsetAbs.inHours.toString().padLeft(2, '0');
+      final offMinutes = (offsetAbs.inMinutes % 60).toString().padLeft(2, '0');
+      final fechaFormateada = '${fechaLocal.year.toString().padLeft(4, '0')}-${fechaLocal.month.toString().padLeft(2, '0')}-${fechaLocal.day.toString().padLeft(2, '0')}T${fechaLocal.hour.toString().padLeft(2, '0')}:${fechaLocal.minute.toString().padLeft(2, '0')}:${fechaLocal.second.toString().padLeft(2, '0')}$sign$offHours:$offMinutes';
+      queryParameters['fechaFinDesde'] = fechaFormateada;
     }
 
     final uri = Uri.parse('$baseUrl/eventos/paginated').replace(queryParameters: queryParameters);
+
     final respuesta = await _getUri(uri);
     if (respuesta == null) return null;
     if (respuesta.statusCode != 200) {
