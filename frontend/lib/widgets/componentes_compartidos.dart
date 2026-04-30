@@ -12,7 +12,7 @@ import '../models/usuario.dart';
 import '../services/api_service.dart';
 
 // ===========================================================================
-// 1. BARRA SUPERIOR (CustomAppBar)
+// 1. BARRA SUPERIOR
 // ===========================================================================
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
@@ -34,12 +34,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           fit: BoxFit.contain,
         ),
       ),
-      // Si la pantalla que llama a este AppBar le pasa botones, los dibuja. Si no, no pone nada.
       actions: actions,
     );
   }
 
-  // Flutter necesita saber la altura estándar de un AppBar (que es 56.0)
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
@@ -70,13 +68,20 @@ class ModalEvento extends StatefulWidget {
 }
 
 class _ModalEventoState extends State<ModalEvento> {
+  // ===========================================================================
+  // VARIABLES
+  // ===========================================================================
+
   late final PageController _pageController;
   int _indiceActual = 0;
   late List<Evento> _eventosGuardados;
-  //late bool _estaGuardado;
 
   ColorScheme get _cs => Theme.of(context).colorScheme;
   TextTheme get _tt => Theme.of(context).textTheme;
+
+  // ===========================================================================
+  // CICLO DE VIDA
+  // ===========================================================================
 
   @override
   void initState() {
@@ -85,7 +90,15 @@ class _ModalEventoState extends State<ModalEvento> {
     _eventosGuardados = List.from(widget.eventosGuardados);
   }
 
+  // ===========================================================================
+  // CARGA DE DATOS
+  // ===========================================================================
+
   Evento get _eventoActual => widget.eventos[_indiceActual];
+
+  // ===========================================================================
+  // FUNCIONES AUXILIARES
+  // ===========================================================================
 
   bool _esMismoEvento(Evento a, Evento b) {
     return a.titulo == b.titulo &&
@@ -97,7 +110,6 @@ class _ModalEventoState extends State<ModalEvento> {
     return _eventosGuardados.any((e) => _esMismoEvento(e, evento));
   }
 
-  // --- Funciones auxiliares de formato de fecha ---
   bool _esMismoDia(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
   bool _esHoraCero(DateTime fecha) => fecha.hour == 0 && fecha.minute == 0;
   String _formatearFecha(DateTime fecha) => DateFormat('dd/MM/yyyy').format(fecha);
@@ -139,7 +151,6 @@ class _ModalEventoState extends State<ModalEvento> {
     );
   }
 
-  // --- Acciones ---
   Future<void> _abrirEnGoogleMaps(String direccion) async {
     final limpia = direccion.trim();
     final query = Uri.encodeComponent(limpia);
@@ -161,25 +172,6 @@ class _ModalEventoState extends State<ModalEvento> {
         const SnackBar(content: Text('No se pudo abrir Google Maps')),
       );
     }
-  }
-
-  void _mostrarSnackBarResultado({required String mensaje, required bool guardado}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(guardado ? Icons.check : Icons.delete, size: 20, color: Colors.white),
-            const SizedBox(width: 8),
-            Flexible(child: Text(mensaje, style: const TextStyle(color: Colors.white))),
-          ],
-        ),
-        backgroundColor: guardado ? Colors.green : Colors.red,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
   }
 
   Future<void> _compartirEvento(Evento evento) async {
@@ -244,7 +236,33 @@ class _ModalEventoState extends State<ModalEvento> {
     );
   }
 
-  // --- Modal para usuarios no registrados ---
+  // ===========================================================================
+  // MENSAJES
+  // ===========================================================================
+
+  void _mostrarSnackBarResultado({required String mensaje, required bool guardado}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(guardado ? Icons.check : Icons.delete, size: 20, color: Colors.white),
+            const SizedBox(width: 8),
+            Flexible(child: Text(mensaje, style: const TextStyle(color: Colors.white))),
+          ],
+        ),
+        backgroundColor: guardado ? Colors.green : Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // MODALES
+  // ===========================================================================
+
   void _mostrarModalNoLogeado() {
     showDialog<void>(
       context: context,
@@ -333,6 +351,10 @@ class _ModalEventoState extends State<ModalEvento> {
     );
   }
 
+  // ===========================================================================
+  // INTERFAZ
+  // ===========================================================================
+
   Widget _buildContenidoEvento(Evento evento) {
     final estaGuardado = _estaGuardado(evento);
 
@@ -395,7 +417,7 @@ class _ModalEventoState extends State<ModalEvento> {
                       borderRadius: BorderRadius.circular(12),
                       child: SizedBox(
                         width: double.infinity,
-                        height: 340, // Puedes aumentar este valor para que sea aún más grande
+                        height: 340,
                         child: FadeInImage.assetNetwork(
                           placeholder: 'assets/images/icono.gif',
                           image: evento.foto,
@@ -490,7 +512,10 @@ class _ModalEventoState extends State<ModalEvento> {
     );
   }
 
-  // --- Diseño del Modal Principal ---
+  // ===========================================================================
+  // BUILD
+  // ===========================================================================
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -530,9 +555,7 @@ class _ModalEventoState extends State<ModalEvento> {
                           return _buildContenidoEvento(widget.eventos[index]);
                         },
                       ),
-                      if (widget.mostrarFlechasDeslizamiento &&
-                          widget.eventos.length > 1 &&
-                          _indiceActual < widget.eventos.length - 1)
+                      if (widget.mostrarFlechasDeslizamiento && widget.eventos.length > 1 && _indiceActual < widget.eventos.length - 1)
                         Positioned(
                           right: 8,
                           top: 0,
@@ -552,9 +575,7 @@ class _ModalEventoState extends State<ModalEvento> {
                           ),
                         ),
 
-                      if (widget.mostrarFlechasDeslizamiento &&
-                          widget.eventos.length > 1 &&
-                          _indiceActual > 0)
+                      if (widget.mostrarFlechasDeslizamiento && widget.eventos.length > 1 && _indiceActual > 0)
                         Positioned(
                           left: 8,
                           top: 0,

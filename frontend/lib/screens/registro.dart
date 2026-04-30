@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/router/app_routes.dart';
 import '../services/api_service.dart';
 import '../services/shared_preferences_service.dart';
+import '../utils/utils.dart';
 
 class Registro extends StatefulWidget {
   const Registro({super.key});
@@ -106,7 +108,7 @@ class _RegistroState extends State<Registro> {
       }
     }
 
-    if (label == 'Numero de telefono') {
+    if (label == 'Número de teléfono') {
       final phoneRegex = RegExp(r'^[679]\d{8}$');
       if (!phoneRegex.hasMatch(texto)) {
         return 'Debe tener 9 dígitos y empezar por 6, 7 o 9';
@@ -120,8 +122,8 @@ class _RegistroState extends State<Registro> {
       }
     }
 
-    if (label == 'Repetir contrasena' && texto != _passwordController.text) {
-      return 'Las contrasenas no coinciden';
+    if (label == 'Repetir contraseña' && texto != _passwordController.text) {
+      return 'Las contraseñas deben coincidir';
     }
 
     return null;
@@ -174,7 +176,7 @@ class _RegistroState extends State<Registro> {
     }
 
     if (!_aceptaTerminos) {
-      _mostrarSnackBar('Debes aceptar los terminos', exito: false);
+      _mostrarSnackBar('Debes aceptar los términos y condiciones', exito: false);
       return;
     }
 
@@ -185,7 +187,7 @@ class _RegistroState extends State<Registro> {
 
     final fechaNacimiento = _obtenerFechaFormateada();
     if (fechaNacimiento == null) {
-      _mostrarSnackBar('Fecha invalida o futura', exito: false);
+      _mostrarSnackBar('Fecha inválida o futura', exito: false);
       return;
     }
 
@@ -280,10 +282,7 @@ class _RegistroState extends State<Registro> {
   // INTERFAZ
   // ===========================================================================
 
-  InputDecoration _buildDecoration({
-    required String label,
-    Widget? suffixIcon,
-  }) {
+  InputDecoration _buildDecoration({required String label, Widget? suffixIcon}) {
     return InputDecoration(
       labelText: label,
       labelStyle: TextStyle(color: _cs.onSurface.withValues(alpha: 0.7)),
@@ -323,15 +322,17 @@ class _RegistroState extends State<Registro> {
   }
 
   Widget _buildCampoTexto(
-    String label, {
-    required TextEditingController controller,
-    TextInputType? keyboardType,
-    bool isPassword = false,
-    bool obscureText = false,
-    VoidCallback? onToggle,
-    bool readOnly = false,
-    bool isDropdown = false,
-  }) {
+      String label, {
+        required TextEditingController controller,
+        TextInputType? keyboardType,
+        bool isPassword = false,
+        bool obscureText = false,
+        VoidCallback? onToggle,
+        bool readOnly = false,
+        bool isDropdown = false,
+        int? maxLength,
+        List<TextInputFormatter>? inputFormatters,
+      }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: TextFormField(
@@ -344,15 +345,17 @@ class _RegistroState extends State<Registro> {
           label: label,
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(
-                    obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: _cs.primary.withValues(alpha: 0.6),
-                  ),
-                  onPressed: onToggle,
-                )
+            icon: Icon(
+              obscureText ? Icons.visibility_off : Icons.visibility,
+              color: _cs.primary.withValues(alpha: 0.6),
+            ),
+            onPressed: onToggle,
+          )
               : (isDropdown ? const Icon(Icons.arrow_drop_down) : null),
-        ),
+        ).copyWith(counterText: maxLength != null ? '' : null),
         obscureText: isPassword ? obscureText : false,
+        maxLength: maxLength,
+        inputFormatters: inputFormatters,
       ),
     );
   }
@@ -382,9 +385,11 @@ class _RegistroState extends State<Registro> {
       children: [
         Expanded(
           child: _buildCampoTexto(
-            'Dia',
+            'Día',
             controller: _diaController,
             keyboardType: TextInputType.number,
+            maxLength: 2,
+            inputFormatters: [DayRangeTextInputFormatter()],
           ),
         ),
         const SizedBox(width: 10),
@@ -421,6 +426,8 @@ class _RegistroState extends State<Registro> {
             'Año',
             controller: _anioController,
             keyboardType: TextInputType.number,
+            maxLength: 4,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
         ),
       ],
@@ -439,7 +446,7 @@ class _RegistroState extends State<Registro> {
         ),
         Expanded(
           child: Text(
-            'He leido y acepto los Terminos y condiciones y la Politica de Privacidad',
+            'He leído y acepto los Terminos y condiciones y la Política de Privacidad',
             style: TextStyle(color: _cs.onSurface, fontSize: 12),
           ),
         ),
@@ -507,21 +514,21 @@ class _RegistroState extends State<Registro> {
             keyboardType: TextInputType.emailAddress,
           ),
           _buildCampoTexto(
-            'Contrasena',
+            'Contraseña',
             controller: _passwordController,
             isPassword: true,
             obscureText: _ocultarPassword,
             onToggle: _alternarPassword,
           ),
           _buildCampoTexto(
-            'Repetir contrasena',
+            'Repetir contraseña',
             controller: _repetirPasswordController,
             isPassword: true,
             obscureText: _ocultarRepetirPassword,
             onToggle: _alternarRepetirPassword,
           ),
           _buildCampoTexto(
-            'Numero de telefono',
+            'Número de teléfono',
             controller: _telefonoController,
             keyboardType: TextInputType.number,
           ),

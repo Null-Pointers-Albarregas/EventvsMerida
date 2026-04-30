@@ -209,6 +209,47 @@ class ApiService {
     return _manejarError<List<Evento>>(respuesta);
   }
 
+  /// GET /api/eventos/paginated?page=0&size=20&sort=fechaInicio,asc&fechaFinDesde=2024-01-01T00:00:00Z
+  static Future<Map<String, dynamic>?> obtenerEventosPaginados({
+    int page = 0,
+    int size = 15,
+    String sort = 'fechaInicio,asc',
+    DateTime? fechaFinDesde,
+  }) async {
+    final queryParameters = <String, String>{
+      'page': page.toString(),
+      'size': size.toString(),
+      'sort': sort,
+    };
+
+    if (fechaFinDesde != null) {
+      queryParameters['fechaFinDesde'] = fechaFinDesde.toIso8601String();
+    }
+
+    final uri = Uri.parse('$baseUrl/eventos/paginated').replace(queryParameters: queryParameters);
+    final respuesta = await _getUri(uri);
+    if (respuesta == null) return null;
+    if (respuesta.statusCode != 200) {
+      return {
+        'items': <Evento>[],
+        'last': true,
+        'error': _leerMensajeError(respuesta.body),
+      };
+    }
+
+    final mapa = jsonDecode(respuesta.body) as Map<String, dynamic>;
+    final listaRaw = (mapa['content'] as List<dynamic>?) ?? [];
+    final eventos = listaRaw.map((e) => Evento.fromJson(e as Map<String, dynamic>)).toList();
+
+    return {
+      'items': eventos,
+      'last': mapa['last'] as bool? ?? (eventos.length < size),
+      'totalPages': mapa['totalPages'],
+      'number': mapa['number'],
+      'size': mapa['size'],
+    };
+  }
+
   // ============================================================================
   // USUARIO-EVENTOS
   // ============================================================================

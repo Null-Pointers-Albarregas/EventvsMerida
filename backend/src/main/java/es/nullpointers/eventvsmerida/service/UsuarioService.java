@@ -76,14 +76,14 @@ public class UsuarioService {
         if (usuarioRepository.existsByEmail(usuarioRequest.email())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Ya existe un usuario registrado con ese correo"
+                    "Este correo ya está en uso"
             );
         }
 
         if (usuarioRepository.existsByTelefono(usuarioRequest.telefono())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Ya existe un usuario registrado con ese teléfono"
+                    "Este teléfono ya está en uso"
             );
         }
 
@@ -139,7 +139,7 @@ public class UsuarioService {
             if (usuarioConEmail != null && !usuarioConEmail.getId().equals(usuarioExistente.getId())) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
-                        "Ya existe otro usuario registrado con ese correo"
+                        "Este correo ya está en uso"
                 );
             }
 
@@ -152,7 +152,7 @@ public class UsuarioService {
             if (usuarioConTelefono != null && !usuarioConTelefono.getId().equals(usuarioExistente.getId())) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
-                        "Ya existe otro usuario registrado con ese teléfono"
+                        "Este teléfono ya está en uso"
                 );
             }
 
