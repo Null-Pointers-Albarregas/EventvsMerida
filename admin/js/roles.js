@@ -25,7 +25,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         const rol = {
           nombre: document.getElementById("nombreRol").value,
         };
-        subirRol(URL_BASE, rol);
+        crearRol(URL_BASE, rol);
       }
       form.classList.add("was-validated");
     },
@@ -85,6 +85,7 @@ async function cargarRoles(URL_BASE) {
       rolesVacio.classList.add("d-none");
     }
 
+    tabla.innerHTML = "";
     data.forEach((rol) => {
       const tr = document.createElement("tr");
       const tdId = document.createElement("td");
@@ -144,14 +145,15 @@ async function cargarRoles(URL_BASE) {
   }
 }
 
-async function subirRol(URL_BASE, datosCategoria) {
+async function crearRol(URL_BASE, datosRol) {
   try {
     const options = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(datosCategoria),
+      credentials: "include",
+      body: JSON.stringify(datosRol),
     };
     const resp = await fetch(URL_BASE + "roles/add", options);
     const respuesta = await resp.json();
@@ -167,5 +169,75 @@ async function subirRol(URL_BASE, datosCategoria) {
     }
   } catch (error) {
     console.error("Error al subir el rol:", error);
+  } finally {
+    cargarRoles(URL_BASE);
   }
+}
+
+async function editarRol(URL_BASE, id, datosRol) {
+  try {
+    const options = {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(datosRol),
+    };
+    const resp = await fetch(URL_BASE + "roles/update/" + id, options);
+    const respuesta = await resp.json();
+    if (resp.status === 200) {
+      mostrarAlerta("success", "Rol actualizado correctamente");
+
+      const modal = bootstrap.Modal.getInstance(
+        document.getElementById("modalEditarRol"),
+      );
+      modal.hide();
+    } else {
+      mostrarAlerta(
+        "error",
+        "Error al editar el rol: " + respuesta.error,
+      );
+    }
+  } catch (error) {
+    console.error("Error al editar el rol:", error);
+  } finally {
+    cargarRoles(URL_BASE);
+  }
+}
+
+async function eliminarRol(URL_BASE, id, rol) {
+  Swal.fire({
+    title: "¿Estás seguro que deseas eliminar el rol \"" + rol +"\"?",
+    text: "Esta acción no puede revertirse",
+    icon: "warning",
+    showCancelButton: true,
+    cancelButtonColor: "#3085d6",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#d33",
+    confirmButtonText: "Eliminar rol",
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const options = {
+          method: "DELETE",
+          credentials: "include"
+        };
+        const resp = await fetch(URL_BASE + "roles/delete/" + id, options);
+        const respuesta = await resp.text();
+        if (resp.status === 204) {
+          mostrarAlerta("success", "Rol eliminado correctamente");
+        } else {
+          mostrarAlerta(
+            "error",
+            "Error al eliminar el rol: " + respuesta,
+          );
+        }
+      } catch (error) {
+        console.error("Error al eliminar el rol:", error);
+      } finally {
+        cargarRoles(URL_BASE);
+      }
+    }
+  });
 }
