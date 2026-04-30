@@ -19,6 +19,7 @@ class _CalendarioState extends State<Calendario> {
   // ===========================================================================
   // VARIABLES
   // ===========================================================================
+
   late final DateTime _primerMesPermitido;
   late final DateTime _ultimoMesPermitido;
   late final List<int> _years;
@@ -53,6 +54,7 @@ class _CalendarioState extends State<Calendario> {
   // ===========================================================================
   // CICLO DE VIDA
   // ===========================================================================
+
   @override
   void initState() {
     super.initState();
@@ -76,6 +78,7 @@ class _CalendarioState extends State<Calendario> {
   // ===========================================================================
   // CARGA DE DATOS
   // ===========================================================================
+
   Future<void> _cargarUsuarioYGuardados() async {
     final (usuario, guardados) =
     await EventosGuardadosService.cargarUsuarioYEventosGuardados();
@@ -121,13 +124,14 @@ class _CalendarioState extends State<Calendario> {
     final mapa = <DateTime, List<Evento>>{};
 
     for (final evento in eventos) {
-      var dia = _normalizarFecha(evento.fechaInicio);
+      final inicio = _normalizarFecha(evento.fechaInicio);
       final fin = _normalizarFecha(evento.fechaFin);
+      final totalDias = fin.difference(inicio).inDays;
 
-      while (!dia.isAfter(fin)) {
+      for (var i = 0; i <= totalDias; i++) {
+        final dia = _normalizarFecha(inicio.add(Duration(days: i)));
         mapa.putIfAbsent(dia, () => []);
         mapa[dia]!.add(evento);
-        dia = dia.add(const Duration(days: 1));
       }
     }
 
@@ -137,8 +141,10 @@ class _CalendarioState extends State<Calendario> {
   // ===========================================================================
   // FUNCIONES AUXILIARES
   // ===========================================================================
+
   DateTime _normalizarFecha(DateTime fecha) {
-    return DateTime(fecha.year, fecha.month, fecha.day);
+    final f = fecha.toLocal();
+    return DateTime(f.year, f.month, f.day);
   }
 
   bool _esMismoDia(DateTime a, DateTime b) {
@@ -316,6 +322,10 @@ class _CalendarioState extends State<Calendario> {
     });
   }
 
+  // ===========================================================================
+  // MODALES
+  // ===========================================================================
+
   void _abrirModalEvento(Evento evento) {
     showDialog(
       context: context,
@@ -337,6 +347,7 @@ class _CalendarioState extends State<Calendario> {
   // ===========================================================================
   // MENSAJES
   // ===========================================================================
+
   void _mostrarMensaje(String mensaje) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
