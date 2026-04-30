@@ -48,5 +48,4 @@ final List<GoRoute> _shellRoutes = [
   GoRoute(path: AppRoutes.privacidad, builder: (context, state) => const Privacidad()),
   GoRoute(path: AppRoutes.cuenta, builder: (context, state) => const Cuenta()),
   GoRoute(path: AppRoutes.eventosGuardados, builder: (context, state) => const EventosGuardados()),
-  GoRoute(path: AppRoutes.tutorial, builder: (context, state) => const MyHomePage()),
 ];

@@ -29,7 +29,6 @@ class _MenuState extends State<Menu> {
     AppRoutes.mapa,
     AppRoutes.calendario,
     AppRoutes.perfil,
-    AppRoutes.tutorial,
   ];
 
   static const List<String> _rutasPerfil = [
@@ -120,7 +119,6 @@ class _MenuState extends State<Menu> {
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Mapa'),
           BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: 'Calendario',),
           BottomNavigationBarItem(icon: Icon(Icons.person_2_rounded), label: _usuario?.nombre ?? 'Perfil'),
-          BottomNavigationBarItem(icon: Icon(Icons.question_mark), label: 'Tutorial')
         ],
         type: BottomNavigationBarType.fixed,
       ),

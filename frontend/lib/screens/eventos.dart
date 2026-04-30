@@ -64,8 +64,16 @@ class _EventosState extends State<Eventos> {
     _cargarDatosUsuarioYGuardados();
     _scrollController.addListener(_onScroll);
     _resetAndFetchEventos();
+    //createTutorial();
+  }
+
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     createTutorial();
   }
+
 
   @override
   void dispose() {
@@ -199,7 +207,7 @@ class _EventosState extends State<Eventos> {
     }
 
     if (_page == 1) {
-      _mostrarTutorialCuandoExista();
+      showTutorial();
     }
 
     print('Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos');
@@ -493,9 +501,10 @@ class _EventosState extends State<Eventos> {
   // INTERFAZ
   // ===========================================================================
 
-  Widget _buildAppBarAction({required IconData icon, required String tooltip, VoidCallback? onPressed, int badgeCount = 0,}) {
+  Widget _buildAppBarAction({required IconData icon, required String tooltip, VoidCallback? onPressed, int badgeCount = 0, key}) {
     if (badgeCount <= 0) {
       return IconButton(
+        key: key,
         onPressed: onPressed,
         icon: Icon(icon, color: _cs.primary),
         tooltip: tooltip,
@@ -903,12 +912,14 @@ class _EventosState extends State<Eventos> {
                       setState(() {});
                     });
                   },
+                  key: keyBtnBuscar
                 ),
                 _buildAppBarAction(
                   icon: Icons.filter_alt_rounded,
                   tooltip: 'Filtrar',
                   onPressed: _abrirModalFiltros,
                   badgeCount: _categoriasSeleccionadas.length,
+                  key: keyBtnFiltro
                 ),
               ],
             ),
@@ -930,7 +941,7 @@ class _EventosState extends State<Eventos> {
   void createTutorial() {
     tutorialCoachMark = TutorialCoachMark(
       targets: _createTargets(),
-      colorShadow: Colors.red,
+      colorShadow: _cs.primary,
       textSkip: "SALTAR TUTORIAL",
       paddingFocus: 10,
       opacityShadow: 0.5,
@@ -960,98 +971,146 @@ class _EventosState extends State<Eventos> {
     List<TargetFocus> targets = [];
     targets.add(
       TargetFocus(
-          identify: "keyTarjetaEvento",
-          keyTarget: keyTarjetaEvento,
-          alignSkip: Alignment.topRight,
-          enableOverlayTab: true,
-          contents: [
-            TargetContent(
-              align: ContentAlign.bottom,
-              builder: (context, controller) {
-                return const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      "Estos son los eventos disponibles. Puedes hacer click en cada uno para ver más detalles.",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 25,
-                        fontWeight: .bold
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-          shape: ShapeLightFocus.RRect,
-          color: Color(0xFFEE8D24)
+        identify: "keyTarjetaEvento",
+        keyTarget: keyTarjetaEvento,
+        alignSkip: Alignment.topRight,
+        shape: ShapeLightFocus.RRect,
+        color: _cs.primary,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return _tutorialCard(
+                context: context,
+                icon: Icons.event,
+                title: 'Eventos disponibles',
+                message:
+                'Aquí puedes ver todos los eventos disponibles. Toca cualquiera para acceder a la información completa.',
+                showNext: true,
+                onNext: controller.next,
+              );
+            },
+          ),
+        ],
       ),
     );
 
-    // targets.add(
-    //   TargetFocus(
-    //     identify: "keyBottomNavigation2",
-    //     keyTarget: keyBottomNavigation2,
-    //     alignSkip: Alignment.topRight,
-    //     contents: [
-    //       TargetContent(
-    //         align: ContentAlign.top,
-    //         builder: (context, controller) {
-    //           return const Column(
-    //             mainAxisSize: MainAxisSize.min,
-    //             crossAxisAlignment: CrossAxisAlignment.start,
-    //             children: <Widget>[
-    //               Text(
-    //                 "Titulo lorem ipsum",
-    //                 style: TextStyle(
-    //                   color: Colors.white,
-    //                 ),
-    //               ),
-    //             ],
-    //           );
-    //         },
-    //       ),
-    //     ],
-    //   ),
-    // );
-    //
-    // targets.add(
-    //   TargetFocus(
-    //     identify: "keyBottomNavigation3",
-    //     keyTarget: keyBottomNavigation3,
-    //     alignSkip: Alignment.topRight,
-    //     contents: [
-    //       TargetContent(
-    //         align: ContentAlign.top,
-    //         builder: (context, controller) {
-    //           return Column(
-    //             mainAxisSize: MainAxisSize.min,
-    //             crossAxisAlignment: CrossAxisAlignment.start,
-    //             children: <Widget>[
-    //               const Text(
-    //                 "Titulo lorem ipsum",
-    //                 style: TextStyle(
-    //                   color: Colors.white,
-    //                 ),
-    //               ),
-    //               const SizedBox(
-    //                 height: 10,
-    //               ),
-    //               ElevatedButton(
-    //                 onPressed: () {
-    //                   tutorialCoachMark.goTo(0);
-    //                 },
-    //                 child: const Text('Go to index 0'),
-    //               ),
-    //             ],
-    //           );
-    //         },
-    //       ),
-    //     ],
-    //   ),
-    // );
+    targets.add(
+      TargetFocus(
+        identify: "keyBtnBuscar",
+        keyTarget: keyBtnBuscar,
+        alignSkip: Alignment.topLeft,
+        shape: ShapeLightFocus.Circle,
+        color: _cs.primary,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return _tutorialCard(
+                context: context,
+                icon: Icons.search,
+                title: 'Buscar eventos',
+                message:
+                'Usa este botón para buscar eventos por nombre, ubicación o categoría.',
+                showNext: true,
+                onNext: controller.next,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "keyBtnFiltro",
+        keyTarget: keyBtnFiltro,
+        alignSkip: Alignment.topLeft,
+        shape: ShapeLightFocus.Circle,
+        color: const Color(0xFFEE8D24),
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return _tutorialCard(
+                context: context,
+                icon: Icons.filter_alt,
+                title: 'Filtrar eventos',
+                message:
+                'Filtra los eventos por categoría para encontrar más rápido lo que te interesa.',
+              );
+            },
+          ),
+        ],
+      ),
+    );
     return targets;
   }
+}
+
+Widget _tutorialCard({
+  required BuildContext context,
+  required IconData icon,
+  required String title,
+  required String message,
+  bool showNext = false,
+  VoidCallback? onNext,
+}) {
+  final _cs = Theme.of(context).colorScheme;
+  return Container(
+    constraints: const BoxConstraints(maxWidth: 300),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: const [
+        BoxShadow(
+          color: Colors.black26,
+          blurRadius: 8,
+          offset: Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: _cs.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          message,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black54,
+            height: 1.4,
+          ),
+        ),
+        if (showNext) ...[
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: onNext,
+              child: const Text('Siguiente'),
+            ),
+          )
+        ],
+      ],
+    ),
+  );
 }

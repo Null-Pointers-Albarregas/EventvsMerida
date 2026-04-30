@@ -12,5 +12,4 @@ class AppRoutes {
   static const privacidad = '/privacidad';
   static const cuenta = '/cuenta';
   static const eventosGuardados = '/eventos_guardados';
-  static const tutorial = '/tutorial';
 }
