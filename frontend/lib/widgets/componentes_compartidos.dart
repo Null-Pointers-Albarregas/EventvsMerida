@@ -26,7 +26,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       centerTitle: true,
       backgroundColor: _cs.surface,
-      foregroundColor: _cs.onPrimary,
+      foregroundColor: _cs.onSurface,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      scrolledUnderElevation: 0,
       title: SizedBox(
         height: 40,
         child: Image.asset(
