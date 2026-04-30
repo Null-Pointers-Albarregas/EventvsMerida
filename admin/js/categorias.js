@@ -25,7 +25,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         const categoria = {
           nombre: document.getElementById("nombreCategoria").value,
         };
-        subirCategoria(URL_BASE, categoria);
+        crearCategoria(URL_BASE, categoria);
       }
       form.classList.add("was-validated");
     },
@@ -126,7 +126,7 @@ async function cargarCategorias(URL_BASE) {
       btnEliminar.setAttribute("data-id", categoria.id);
       btnEliminar.setAttribute("data-nombre", categoria.nombre);
       btnEliminar.addEventListener("click", function () {
-        eliminarCategoria(URL_BASE, this.dataset.id, this.dataset.nombre);
+        eliminarRol(URL_BASE, this.dataset.id, this.dataset.nombre);
       });
 
       divGrupo.appendChild(btnEditar);
@@ -145,13 +145,14 @@ async function cargarCategorias(URL_BASE) {
   }
 }
 
-async function subirCategoria(URL_BASE, datosCategoria) {
+async function crearCategoria(URL_BASE, datosCategoria) {
   try {
     const options = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify(datosCategoria),
     };
     const resp = await fetch(URL_BASE + "categorias/add", options);
@@ -180,6 +181,7 @@ async function editarCategoria(URL_BASE, id, datosCategoria) {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify(datosCategoria),
     };
     const resp = await fetch(URL_BASE + "categorias/update/" + id, options);
@@ -204,7 +206,7 @@ async function editarCategoria(URL_BASE, id, datosCategoria) {
   }
 }
 
-async function eliminarCategoria(URL_BASE, id, categoria) {
+async function eliminarRol(URL_BASE, id, categoria) {
   Swal.fire({
     title: "¿Estás seguro que deseas eliminar la categoría \"" + categoria +"\"?",
     text: "Esta acción no puede revertirse",
@@ -219,14 +221,16 @@ async function eliminarCategoria(URL_BASE, id, categoria) {
       try {
         const options = {
           method: "DELETE",
+          credentials: "include"
         };
         const resp = await fetch(URL_BASE + "categorias/delete/" + id, options);
+        const respuesta = await resp.text();
         if (resp.status === 204) {
-          mostrarAlerta("success", "Evento eliminado correctamente");
+          mostrarAlerta("success", "Categoría eliminada correctamente");
         } else {
           mostrarAlerta(
             "error",
-            "Error al eliminar la categoria: " + resp.error,
+            "Error al eliminar la categoria: " + respuesta,
           );
         }
       } catch (error) {

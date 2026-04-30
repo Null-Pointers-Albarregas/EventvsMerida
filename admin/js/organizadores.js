@@ -38,9 +38,9 @@ window.addEventListener("DOMContentLoaded", async () => {
             email: document.getElementById("correo").value,
             telefono: document.getElementById("telefono").value,
             password: contrasenia,
-            idRol: 1,
+            idRol: 2,
           };
-          subirUsuario(URL_BASE, usuario);
+          crearOrganizador(URL_BASE, usuario);
         }
 
         form.classList.add("was-validated");
@@ -50,10 +50,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   const formEditar = document.getElementById("formEditarOrganizador");
+  let contrasenia = "";
 
   formEditar.addEventListener(
     "submit",
     function (event) {
+      event.preventDefault();
       if (!formEditar.checkValidity()) {
         event.preventDefault();
         event.stopPropagation();
@@ -61,43 +63,73 @@ window.addEventListener("DOMContentLoaded", async () => {
       } else {
         event.preventDefault();
         const organizador = {
-          nombre: document.getElementById("nombre").value,
-          apellidos: document.getElementById("apellidos").value,
+          nombre: document.getElementById("nombreEditar").value,
+          apellidos: document.getElementById("apellidosEditar").value,
           fechaNacimiento: formatearFecha(
-            document.getElementById("fechaNacimiento").value,
+            document.getElementById("fechaNacimientoEditar").value,
           ),
-          email: document.getElementById("correo").value,
-          telefono: document.getElementById("telefono").value,
-          password: contrasenia,
-          idRol: 1,
+          email: document.getElementById("correoEditar").value,
+          telefono: document.getElementById("telefonoEditar").value,
+          password: contraseniaModificada ? contrasenia : null,
+          idRol: 2,
         };
-        editarRol(URL_BASE, formEditar.dataset.id, rol);
+        editarOrganizador(URL_BASE, formEditar.dataset.id, organizador);
       }
       formEditar.classList.add("was-validated");
     },
     false,
   );
 
+  let contraseniaModificada = false;
 
-  const formEditarContrasenia = document.getElementById("formEditarOrganizador");
+  const formEditarContrasenia = document.getElementById(
+    "formEditarContrasenia",
+  );
 
   formEditarContrasenia.addEventListener(
     "submit",
     function (event) {
+      const contraseniaEditar =
+        document.getElementById("contraseniaEditar").value;
+      const confirmarContraseniaEditar = document.getElementById(
+        "confirmarContraseniaEditar",
+      ).value;
+
       if (!formEditarContrasenia.checkValidity()) {
         event.preventDefault();
         event.stopPropagation();
         formEditarContrasenia.classList.add("was-validated");
+      } else if (contraseniaEditar !== confirmarContraseniaEditar) {
+        event.stopPropagation();
+        event.preventDefault();
+        mostrarAlerta("error", "Las contraseñas tienen que ser iguales");
       } else {
         event.preventDefault();
-        const contrasenia = {
-          password: document.getElementById("contrasenia").value,
-        };
+        contrasenia = document.getElementById("contraseniaEditar").value;
+        contraseniaModificada = true;
+
+        bootstrap.Modal.getInstance(
+          document.getElementById("modalEditarContrasenia"),
+        ).hide();
+
+        mostrarAlerta("info", "Contraseña actualizada pendiente de guardar");
+
+        const modalEditarContrasenia = document.getElementById(
+          "modalEditarContrasenia",
+        );
+
+        modalEditarContrasenia.addEventListener("hidden.bs.modal", function () {
+          const modalEditarOrganizador = new bootstrap.Modal(
+            document.getElementById("modalEditarOrganizador"),
+          );
+          modalEditarOrganizador.show();
+        });
       }
       formEditarContrasenia.classList.add("was-validated");
     },
     false,
   );
+  
   // Limpia validaciones y campos al cerrar el modal de usuario
   const modalOrganizador = document.getElementById("modalAgregarOrganizador");
   if (modalOrganizador) {
@@ -110,13 +142,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  const modalEditarOrganizador = document.getElementById("modalEditarOrganizador");
+  const modalEditarOrganizador = document.getElementById(
+    "modalEditarOrganizador",
+  );
   if (modalEditarOrganizador) {
-    modalEditarUsuario.addEventListener("hidden.bs.modal", function () {
+    modalEditarOrganizador.addEventListener("hidden.bs.modal", function () {
       const form = document.getElementById("formEditarOrganizador");
       if (form) {
         form.classList.remove("was-validated");
-        form.reset();
       }
     });
   }
@@ -248,7 +281,7 @@ async function cargarOrganizadores(URL_BASE) {
   }
 }
 
-async function subirOrganizador(URL_BASE, datosFormulario) {
+async function crearOrganizador(URL_BASE, datosFormulario) {
   try {
     const options = {
       method: "POST",
@@ -261,12 +294,49 @@ async function subirOrganizador(URL_BASE, datosFormulario) {
     const resp = await fetch(URL_BASE + "usuarios/add", options);
     const respuesta = await resp.json();
     if (resp.status === 201) {
-      mostrarAlerta("success", "Usuario creado correctamente");
+      mostrarAlerta("success", "Organizador creado correctamente");
+
+      const modal = bootstrap.Modal.getInstance(
+        document.getElementById("modalCrearOrganizador"),
+      );
+      modal.hide();
     } else {
-      mostrarAlerta("error", "Error al crear el usuario: " + respuesta.error);
+      mostrarAlerta(
+        "error",
+        "Error al crear el organizador: " + respuesta.error,
+      );
     }
   } catch (error) {
-    console.error("Error al subir el evento:", error);
+    console.error("Error al crear el organizador:", error);
+  } finally {
+    cargarOrganizadores(URL_BASE);
+  }
+}
+
+async function editarOrganizador(URL_BASE, id, datosFormulario) {
+  try {
+    const options = {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(datosFormulario),
+    };
+    const resp = await fetch(URL_BASE + "usuarios/update/" + id, options);
+    const respuesta = await resp.json();
+    if (resp.status === 200) {
+      mostrarAlerta("success", "Usuario editado correctamente");
+
+      const modal = bootstrap.Modal.getInstance(
+        document.getElementById("modalEditarOrganizador"),
+      );
+      modal.hide();
+    } else {
+      mostrarAlerta("error", "Error al editar el usuario: " + respuesta.error);
+    }
+  } catch (error) {
+    console.error("Error al editar el evento:", error);
   } finally {
     cargarOrganizadores(URL_BASE);
   }
@@ -274,7 +344,8 @@ async function subirOrganizador(URL_BASE, datosFormulario) {
 
 async function eliminarOrganizador(URL_BASE, id, nombre) {
   Swal.fire({
-    title: `¿Estás seguro que deseas eliminar el organizador \"` + nombre + `\"?`,
+    title:
+      `¿Estás seguro que deseas eliminar el organizador \"` + nombre + `\"?`,
     text: "Esta acción no puede revertirse",
     icon: "warning",
     showCancelButton: true,

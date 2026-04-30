@@ -168,7 +168,7 @@
                     <div class="col-md-6">
                       <label for="contrasena" class="form-label">Contraseña</label>
                       <input type="password" class="form-control" id="contrasena" name="contrasena"
-                        pattern="La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número"
+                        pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
                         required />
                       <div class="invalid-feedback">
                         La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un
@@ -262,7 +262,7 @@
                   <button type="button" class="btn btn-secondary bg-danger" data-bs-dismiss="modal">
                     Cancelar
                   </button>
-                  <button type="submit" form="formAgregarUsuario" class="btn btn-primary">
+                  <button type="submit" form="formEditarUsuario" class="btn btn-primary">
                     Editar usuario
                   </button>
                 </div>
@@ -283,19 +283,19 @@
                     aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                  <form class="row g-3 needs-validation" id="formEditarUsuario" novalidate>
+                  <form class="row g-3 needs-validation" id="formEditarContrasenia" novalidate>
                     <div class="col-md-6">
-                      <label for="nombreEditar" class="form-label">Contraseña</label>
-                      <input type="password" class="form-control" id="nombreEditar" name="nombreEditar"
-                        pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" required />
+                      <label for="contraseniaEditar" class="form-label">Contraseña</label>
+                      <input type="password" class="form-control" id="contraseniaEditar" name="contraseniaEditar"
+                        pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$" required />
                       <div class="invalid-feedback">
                         La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un
                         símbolo. </div>
                     </div>
                     <div class="col-md-6">
-                      <label for="apellidosEditar" class="form-label">Confirmar contraseña</label>
-                      <input type="password" class="form-control" id="apellidosEditar" name="apellidosEditar"
-                        pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" required />
+                      <label for="confirmarContraseniaEditar" class="form-label">Confirmar contraseña</label>
+                      <input type="password" class="form-control" id="confirmarContraseniaEditar" name="confirmarContaseniaEditar"
+                        pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$" required />
                       <div class="invalid-feedback">
                         La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un
                         símbolo. </div>
@@ -313,8 +313,6 @@
               </div>
             </div>
           </div>
-
-
 
           <table class="table text-light table-custom mt-4">
             <thead>

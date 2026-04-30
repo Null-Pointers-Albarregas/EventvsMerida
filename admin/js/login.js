@@ -37,13 +37,11 @@ async function login(datos) {
             window.location.href = "../index.html"
         } else if (respuesta.status === 400 ) {
             mostrarAlerta("error", "El correo y/o la contraseña no pueden estar vacíos")
-        }
-         else if (respuesta.status === 401 || respuesta.status === 404 || respuesta.status === 500){
+        } else if (respuesta.status === 401 || respuesta.status === 404 || respuesta.status === 500){
             mostrarAlerta("error", "Usuario o contraseña incorrectos")
         } else if (respuesta.status === 403) {
             mostrarAlerta("error", "No estás autorizado para acceder")
-        }
-        else {
+        } else {
             mostrarAlerta("error", "Ha ocurrido un problema inesperado")
             const errorTexto = await respuesta.text();
             console.error(`Error ${respuesta.status}: ${errorTexto}`);
@@ -54,4 +52,23 @@ async function login(datos) {
         }
         return { éxito: false, mensaje: error.message };
     }
+}
+
+function mostrarAlerta(tipo, mensaje) {
+  const Toast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    iconColor: "white",
+    customClass: {
+      popup: "colored-toast",
+    },
+    showConfirmButton: false,
+    timer: 2000,
+    timerProgressBar: true,
+  });
+
+  Toast.fire({
+    icon: tipo,
+    title: mensaje,
+  });
 }
