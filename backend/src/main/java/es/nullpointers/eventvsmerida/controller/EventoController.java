@@ -137,8 +137,11 @@ public class EventoController {
      */
     @GetMapping("/paginated")
     public ResponseEntity<Page<EventoResponse>> obtenerEventosPaginados(
-        @PageableDefault(page = 0, size = 20, sort = "fechaInicio", direction = Sort.Direction.ASC) Pageable pageable) {
-        Page<EventoResponse> pagina = eventoService.obtenerEventosPaginados(pageable);
+        @PageableDefault(page = 0, size = 20, sort = "fechaInicio", direction = Sort.Direction.ASC) Pageable pageable,
+        @RequestParam(name = "fechaFinDesde", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime fechaFinDesde) {
+    
+        Page<EventoResponse> pagina = eventoService.obtenerEventosPaginados(pageable, fechaFinDesde);
         return ResponseEntity.ok(pagina);
     }
 
