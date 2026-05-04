@@ -7,11 +7,13 @@ import es.nullpointers.eventvsmerida.entity.Rol;
 import es.nullpointers.eventvsmerida.entity.Usuario;
 import es.nullpointers.eventvsmerida.mapper.UsuarioMapper;
 import es.nullpointers.eventvsmerida.repository.UsuarioRepository;
+import es.nullpointers.eventvsmerida.supabase.SupabaseStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RolService rolService;
     private final PasswordEncoder passwordEncoder;
+    private final SupabaseStorage storageUploader;
 
     // ============
     // Metodos CRUD
@@ -48,7 +51,7 @@ public class UsuarioService {
         List<UsuarioResponse> usuariosResponse = new ArrayList<>();
 
         for (Usuario usuario : usuarios) {
-            usuariosResponse.add(UsuarioMapper.convertirAResponse(usuario));
+            usuariosResponse.add(UsuarioMapper.convertirAResponse(usuario, storageUploader));
         }
 
         return usuariosResponse;
@@ -62,16 +65,17 @@ public class UsuarioService {
      */
     public UsuarioResponse obtenerUsuarioPorId(Long id) {
         Usuario usuarioObtenido = obtenerUsuarioPorIdOExcepcion(id, "Error en UsuarioService.obtenerUsuarioPorId: No se encontró el usuario con id " + id);
-        return UsuarioMapper.convertirAResponse(usuarioObtenido);
+        return UsuarioMapper.convertirAResponse(usuarioObtenido, storageUploader);
     }
 
     /**
      * Metodo para crear un nuevo usuario.
      *
      * @param usuarioRequest Datos del usuario a crear.
+     * @param imagen Imagen de perfil (opcional).
      * @return Usuario creado.
      */
-    public UsuarioResponse crearUsuario(UsuarioCrearRequest usuarioRequest) {
+    public UsuarioResponse crearUsuario(UsuarioCrearRequest usuarioRequest, MultipartFile imagen) {
         // Se hacen las comprobaciones necesarias para evitar errores de integridad de datos
         if (usuarioRepository.existsByEmail(usuarioRequest.email())) {
             throw new ResponseStatusException(
@@ -90,14 +94,14 @@ public class UsuarioService {
         Rol rol = rolService.obtenerRolPorIdOExcepcion(usuarioRequest.idRol(), "Error en UsuarioService.crearUsuario: No se encontró el rol con id " + usuarioRequest.idRol());
 
         // Se convierte el DTO a entidad y se codifica la contraseña
-        Usuario usuarioNuevo = UsuarioMapper.convertirAEntidad(usuarioRequest, rol);
+        Usuario usuarioNuevo = UsuarioMapper.convertirAEntidad(usuarioRequest, rol, imagen, storageUploader);
         usuarioNuevo.setPassword(passwordEncoder.encode(usuarioNuevo.getPassword()));
 
         // Se guarda el nuevo usuario en la base de datos
         Usuario usuarioCreado = usuarioRepository.save(usuarioNuevo);
 
         // Se devuelve el usuario creado convertido a response
-        return UsuarioMapper.convertirAResponse(usuarioCreado);
+        return UsuarioMapper.convertirAResponse(usuarioCreado, storageUploader);
     }
 
     /**
@@ -107,6 +111,15 @@ public class UsuarioService {
      */
     public void eliminarUsuario(Long id) {
         Usuario usuario = obtenerUsuarioPorIdOExcepcion(id, "Error en UsuarioService.eliminarUsuario: No se encontró el usuario con id " + id);
+
+        if (usuario.getFotoPath() != null && !usuario.getFotoPath().isBlank()) {
+            try {
+                storageUploader.borrarImagenPrivada(usuario.getFotoPath());
+            } catch (Exception ex) {
+                log.warn("No se pudo borrar la imagen del usuario: {}", ex.getMessage());
+            }
+        }
+
         usuarioRepository.delete(usuario);
     }
 
@@ -115,9 +128,10 @@ public class UsuarioService {
      *
      * @param id ID del usuario a actualizar.
      * @param usuarioRequest Datos actualizados del usuario.
+     * @param imagen Imagen de perfil (opcional).
      * @return Usuario actualizado.
      */
-    public UsuarioResponse actualizarUsuario(Long id, UsuarioActualizarRequest usuarioRequest) {
+    public UsuarioResponse actualizarUsuario(Long id, UsuarioActualizarRequest usuarioRequest, MultipartFile imagen) {
         Usuario usuarioExistente = obtenerUsuarioPorIdOExcepcion(id, "Error en UsuarioService.actualizarUsuario: No se encontró el usuario con id " + id);
 
         // Se actualizan solo los campos que no sean nulos en el request, permitiendo actualizaciones parciales
@@ -168,11 +182,27 @@ public class UsuarioService {
             usuarioExistente.setRol(rol);
         }
 
+        String oldPath = usuarioExistente.getFotoPath();
+        if (imagen != null && !imagen.isEmpty()) {
+            String newPath = storageUploader.subirImagenPrivada(imagen, "usuarios", usuarioExistente.getNombre());
+            usuarioExistente.setFotoPath(newPath);
+
+            if (oldPath != null && !oldPath.isBlank() && !oldPath.equals(newPath)) {
+                try {
+                    storageUploader.borrarImagenPrivada(oldPath);
+                } catch (Exception ex) {
+                    log.warn("No se pudo borrar la imagen anterior: {}", ex.getMessage());
+                }
+            }
+        } else if (usuarioRequest.fotoPath() != null && !usuarioRequest.fotoPath().isBlank()) {
+            usuarioExistente.setFotoPath(usuarioRequest.fotoPath());
+        }
+
         // Se guarda el usuario actualizado en la base de datos
         Usuario usuarioActualizado = usuarioRepository.save(usuarioExistente);
 
         // Se devuelve el usuario actualizado convertido a response
-        return UsuarioMapper.convertirAResponse(usuarioActualizado);
+        return UsuarioMapper.convertirAResponse(usuarioActualizado, storageUploader);
     }
 
     // ============================
@@ -200,7 +230,7 @@ public class UsuarioService {
         List<UsuarioResponse> usuariosResponse = new ArrayList<>();
 
         for (Usuario usuario : usuarios) {
-            usuariosResponse.add(UsuarioMapper.convertirAResponse(usuario));
+            usuariosResponse.add(UsuarioMapper.convertirAResponse(usuario, storageUploader));
         }
 
         return usuariosResponse;
@@ -224,6 +254,6 @@ public class UsuarioService {
 
     public UsuarioResponse obtenerUsuarioPorEmail(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow(() -> new NoSuchElementException("Error en UsuarioService.obtenerUsuarioPorEmail: No se encontró el usuario con email " + email));
-        return UsuarioMapper.convertirAResponse(usuario);
+        return UsuarioMapper.convertirAResponse(usuario, storageUploader);
     }
 }

@@ -27,6 +27,7 @@ public class SupabaseStorage {
 
     private final String supabaseUrl;
     private final String bucket = "imagenesEvento";
+    private final String bucketUsuarios = "imagenesPerfil";
     private final RestClient supabaseClient;
 
     // Constructor que con @Value obtiene las propiedades del application.properties
@@ -136,6 +137,109 @@ public class SupabaseStorage {
         } catch (Exception e) {
             log.warn("Error borrando imagen en Supabase Storage: {}", e.getMessage());
             throw new IllegalStateException("No se pudo borrar la imagen en el storage", e);
+        }
+    }
+
+    /**
+     * Método que se encarga de subir una imagen de perfil a un bucket privado.
+     *
+     * @param imagen Archivo de imagen.
+     * @param carpeta Carpeta destino dentro del bucket.
+     * @param nombreBase Nombre base para generar el nombre del fichero.
+     * @return Object path privado almacenado en la BD.
+     */
+    public String subirImagenPrivada(MultipartFile imagen, String carpeta, String nombreBase) {
+        if (imagen == null || imagen.isEmpty()) {
+            throw new IllegalArgumentException("Imagen vacía o nula");
+        }
+
+        byte[] bytes;
+        String filename;
+        String contentType;
+
+        try {
+            bytes = imagen.getBytes();
+            filename = sanitizarNombre(nombreBase, imagen.getOriginalFilename());
+            contentType = imagen.getContentType();
+            if (contentType == null || contentType.equals("application/octet-stream")) {
+                contentType = contentTypeFromFilename(filename);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Error al leer el contenido de la imagen: " + imagen.getOriginalFilename(), e);
+        }
+
+        String objectPath = (carpeta != null && !carpeta.isBlank())
+                ? carpeta + "/" + filename
+                : filename;
+
+        String encodedPath = UriUtils.encodePath(objectPath, StandardCharsets.UTF_8);
+
+        supabaseClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/storage/v1/object/{bucket}/{path}")
+                        .queryParam("upsert", true)
+                        .build(Map.of("bucket", bucketUsuarios, "path", encodedPath)))
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(bytes)
+                .retrieve()
+                .toBodilessEntity();
+
+        return objectPath;
+    }
+
+    /**
+     * Método para generar una URL firmada de un objeto privado.
+     *
+     * @param objectPath Path interno del objeto.
+     * @param expiresSeconds Segundos de validez de la URL.
+     * @return URL firmada completa.
+     */
+    public String generarUrlFirmada(String objectPath, int expiresSeconds) {
+        if (objectPath == null || objectPath.isBlank()) {
+            return null;
+        }
+
+        String encodedPath = UriUtils.encodePath(objectPath, StandardCharsets.UTF_8);
+
+        Map<?, ?> response = supabaseClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/storage/v1/object/sign/{bucket}/{path}")
+                        .build(Map.of("bucket", bucketUsuarios, "path", encodedPath)))
+                .body(Map.of("expiresIn", expiresSeconds))
+                .retrieve()
+                .body(Map.class);
+
+        if (response == null || !response.containsKey("signedURL")) {
+            throw new IllegalStateException("No se pudo generar URL firmada");
+        }
+
+        String signed = String.valueOf(response.get("signedURL"));
+        if (signed.startsWith("http")) {
+            return signed;
+        }
+        return supabaseUrl + signed;
+    }
+
+    /**
+     * Método para borrar una imagen privada a partir del object path.
+     *
+     * @param objectPath Path interno del objeto.
+     */
+    public void borrarImagenPrivada(String objectPath) {
+        if (objectPath == null || objectPath.isBlank()) return;
+
+        String encodedPath = UriUtils.encodePath(objectPath, StandardCharsets.UTF_8);
+
+        try {
+            supabaseClient.delete()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/storage/v1/object/{bucket}/{path}")
+                            .build(Map.of("bucket", bucketUsuarios, "path", encodedPath)))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (Exception e) {
+            log.warn("Error borrando imagen privada: {}", e.getMessage());
+            throw new IllegalStateException("No se pudo borrar la imagen privada", e);
         }
     }
 
