@@ -1,12 +1,12 @@
 package es.nullpointers.eventvsmerida.service;
 
 import es.nullpointers.eventvsmerida.dto.request.EventoCrearRequest;
-import es.nullpointers.eventvsmerida.dto.request.EventoImagenCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.EventoResponse;
 import es.nullpointers.eventvsmerida.dto.request.EventoActualizarRequest;
 import es.nullpointers.eventvsmerida.entity.Categoria;
 import es.nullpointers.eventvsmerida.entity.Evento;
 import es.nullpointers.eventvsmerida.entity.Usuario;
+import es.nullpointers.eventvsmerida.exception.EventoFotoImagenException;
 import es.nullpointers.eventvsmerida.mapper.EventoMapper;
 import es.nullpointers.eventvsmerida.repository.EventoRepository;
 import es.nullpointers.eventvsmerida.supabase.SupabaseStorage;
@@ -81,13 +81,28 @@ public class EventoService {
     }
 
     /**
-     * Métooo para crear un nuevo evento.
+     * Método para crear un nuevo evento.
+     * Soporta tanto URL de imagen como archivo subido por el usuario.
      *
      * @param eventoRequest Datos del evento a crear.
+     * @param imagen MultipartFile opcional de la imagen (si es null, usa la URL del request).
      * @return Evento creado.
      */
-    public EventoResponse crearEvento(EventoCrearRequest eventoRequest) {
-        // Se hacen las comprobaciones necesarias para evitar errores de integridad de datos
+    public EventoResponse crearEvento(EventoCrearRequest eventoRequest, MultipartFile imagen) {
+        // Validar que se proporcione foto o imagen, pero no ambas
+        boolean tieneUrl = eventoRequest.foto() != null && !eventoRequest.foto().isBlank();
+        boolean tieneArchivo = imagen != null && !imagen.isEmpty();
+        
+        if (!tieneUrl && !tieneArchivo) {
+            throw new EventoFotoImagenException(
+                "Debes proporcionar una imagen: 'foto' (URL) o 'imagen' (archivo)");
+        }
+        
+        if (tieneUrl && tieneArchivo) {
+            throw new EventoFotoImagenException(
+                "No puedes enviar tanto 'foto' como 'imagen' al mismo tiempo");
+        }
+        
         if (eventoRepository.existsByTituloAndFechaInicioAndFechaFin(eventoRequest.titulo(), eventoRequest.fechaInicio(), eventoRequest.fechaFin())) {
             throw new DataIntegrityViolationException("Ya existe un evento con el título y fecha indicados");
         }
@@ -95,39 +110,9 @@ public class EventoService {
         Usuario usuario = usuarioService.obtenerUsuarioPorIdOExcepcion(eventoRequest.idUsuario(), "Error en EventoService.crearEvento: No se encontró el usuario con id " + eventoRequest.idUsuario());
         Categoria categoria = categoriaService.obtenerCategoriaPorIdOExcepcion(eventoRequest.idCategoria(), "Error en EventoService.crearEvento: No se encontró la categoría con id " + eventoRequest.idCategoria());
 
-        // Se convierte el DTO a entidad
-        Evento eventoNuevo = EventoMapper.convertirAEntidad(eventoRequest, usuario, categoria, storageUploader);
-
-        // Se guarda el nuevo evento en la base de datos
+        Evento eventoNuevo = EventoMapper.convertirAEntidad(eventoRequest, imagen, usuario, categoria, storageUploader);
         Evento eventoCreado = eventoRepository.save(eventoNuevo);
 
-        // Se devuelve el evento creado convertido a response
-        return EventoMapper.convertirAResponse(eventoCreado);
-    }
-
-    /**
-     * Método para crear un nuevo evento con archivo de imagen.
-     * 
-     * @param eventoRequest Datos del evento a crear, incluyendo el nombre del archivo de imagen.
-     * @param imagen Archivo de imagen del evento a crear.
-     * @return EventoResponse con el evento creado.
-     */
-    public EventoResponse crearEventoConImagen(EventoImagenCrearRequest eventoRequest, MultipartFile imagen) {
-        // Se hacen las comprobaciones necesarias para evitar errores de integridad de datos
-        if (eventoRepository.existsByTituloAndFechaInicioAndFechaFin(eventoRequest.titulo(), eventoRequest.fechaInicio(), eventoRequest.fechaFin())) {
-            throw new DataIntegrityViolationException("Ya existe un evento con el título y fecha indicados");
-        }
-
-        Usuario usuario = usuarioService.obtenerUsuarioPorIdOExcepcion(eventoRequest.idUsuario(), "Error en EventoService.crearEvento: No se encontró el usuario con id " + eventoRequest.idUsuario());
-        Categoria categoria = categoriaService.obtenerCategoriaPorIdOExcepcion(eventoRequest.idCategoria(), "Error en EventoService.crearEvento: No se encontró la categoría con id " + eventoRequest.idCategoria());
-
-        // Se convierte el DTO a entidad
-        Evento eventoNuevo = EventoMapper.convertirAEntidadEventoImagen(eventoRequest, imagen, usuario, categoria, storageUploader);
-
-        // Se guarda el nuevo evento en la base de datos
-        Evento eventoCreado = eventoRepository.save(eventoNuevo);
-
-        // Se devuelve el evento creado convertido a response
         return EventoMapper.convertirAResponse(eventoCreado);
     }
 
@@ -138,7 +123,7 @@ public class EventoService {
      */
     @Transactional
     public void eliminarEvento(Long id) {
-        Evento evento = obtenerEventoPorIdOExcepcion(id, "...");
+        Evento evento = obtenerEventoPorIdOExcepcion(id, "Error en EventoService.eliminarEvento: No se encontró el evento con id " + id);
         String foto = evento.getFoto();
 
         eventoRepository.delete(evento);
@@ -147,7 +132,7 @@ public class EventoService {
             @Override
             public void afterCommit() {
                 try {
-                    storageUploader.borrarImagenPorUrl(foto);
+                    storageUploader.borrarImagenEvento(foto);
                 } catch (Exception ex) {
                     log.warn("No se pudo borrar la imagen tras commit: {}", ex.getMessage());
                 }
@@ -156,47 +141,35 @@ public class EventoService {
     }
 
     /**
-     * Método para actualizar un evento existente.
-     *
+     * Método para actualizar un evento existente por su ID, con la posibilidad de actualizar la imagen asociada.
+     * 
      * @param id ID del evento a actualizar.
-     * @param eventoRequest Datos actualizados del evento.
-     * @return Evento actualizado.
+     * @param eventoRequest DTO con los datos del evento a actualizar, incluyendo la URL de la foto (si se quiere actualizar).
+     * @param imagen Archivo de imagen opcional para actualizar la imagen del evento.
+     * @return ResponseEntity con el evento actualizado y el estado HTTP 200 (OK).
      */
-    public EventoResponse actualizarEvento(Long id, EventoActualizarRequest eventoRequest) {
+    @Transactional
+    public EventoResponse actualizarEvento(Long id, EventoActualizarRequest eventoRequest, MultipartFile imagen) {
         Evento eventoExistente = obtenerEventoPorIdOExcepcion(id, "Error en EventoService.actualizarEvento: No se encontró el evento con id " + id);
 
-        // Se actualizan solo los campos que no sean nulos en el request, permitiendo actualizaciones parciales
-        if (eventoRequest.titulo() != null) {
-            eventoExistente.setTitulo(eventoRequest.titulo());
+        boolean tieneUrl = eventoRequest.foto() != null && !eventoRequest.foto().isBlank();
+        boolean tieneArchivo = imagen != null && !imagen.isEmpty();
+
+        if (tieneUrl && tieneArchivo) {
+            throw new EventoFotoImagenException("No puedes enviar tanto 'foto' (URL) como 'imagen' (archivo) al mismo tiempo");
         }
 
-        if (eventoRequest.descripcion() != null) {
-            eventoExistente.setDescripcion(eventoRequest.descripcion());
-        }
+        // Guardar foto anterior por si hay que borrarla tras commit
+        String fotoAnterior = eventoExistente.getFoto();
 
-        if (eventoRequest.fechaInicio() != null) {
-            eventoExistente.setFechaInicio(eventoRequest.fechaInicio());
-        }
-
-        if  (eventoRequest.fechaFin() != null) {
-            eventoExistente.setFechaFin(eventoRequest.fechaFin());
-        }
-
-        if (eventoRequest.localizacion() != null) {
-            eventoExistente.setLocalizacion(eventoRequest.localizacion());
-        }
-
-        if (eventoRequest.latitud() != null) {
-            eventoExistente.setLatitud(eventoRequest.latitud());
-        }
-
-        if (eventoRequest.longitud() != null) {
-            eventoExistente.setLongitud(eventoRequest.longitud());
-        }
-
-        if (eventoRequest.foto() != null) {
-            eventoExistente.setFoto(eventoRequest.foto());
-        }
+        // Campos habituales
+        if (eventoRequest.titulo() != null) eventoExistente.setTitulo(eventoRequest.titulo());
+        if (eventoRequest.descripcion() != null) eventoExistente.setDescripcion(eventoRequest.descripcion());
+        if (eventoRequest.fechaInicio() != null) eventoExistente.setFechaInicio(eventoRequest.fechaInicio());
+        if (eventoRequest.fechaFin() != null) eventoExistente.setFechaFin(eventoRequest.fechaFin());
+        if (eventoRequest.localizacion() != null) eventoExistente.setLocalizacion(eventoRequest.localizacion());
+        if (eventoRequest.latitud() != null) eventoExistente.setLatitud(eventoRequest.latitud());
+        if (eventoRequest.longitud() != null) eventoExistente.setLongitud(eventoRequest.longitud());
 
         if (eventoRequest.idUsuario() != null) {
             Usuario usuario = usuarioService.obtenerUsuarioPorIdOExcepcion(eventoRequest.idUsuario(), "Error en EventoService.actualizarEvento: No se encontró el usuario con id " + eventoRequest.idUsuario());
@@ -208,10 +181,24 @@ public class EventoService {
             eventoExistente.setCategoria(categoria);
         }
 
-        // Se guarda el evento actualizado en la base de datos
-        Evento eventoActualizado = eventoRepository.save(eventoExistente);
+        // Manejo de imagen
+        if (tieneArchivo) {
+            if (fotoAnterior != null && !fotoAnterior.isBlank()) {
+                try {
+                    storageUploader.borrarImagenEvento(fotoAnterior);
+                } catch (Exception ex) {
+                    log.warn("No se pudo borrar la imagen anterior: {}", ex.getMessage());
+                }
+            }
 
-        // Se devuelve el evento actualizado convertido a response
+            String nombreParaSubir = eventoRequest.titulo() != null ? eventoRequest.titulo() : eventoExistente.getTitulo();
+            String nuevaUrl = storageUploader.subirImagenEvento(null, imagen, nombreParaSubir);
+            eventoExistente.setFoto(nuevaUrl);
+        } else if (tieneUrl) {
+            eventoExistente.setFoto(eventoRequest.foto());
+        }
+
+        Evento eventoActualizado = eventoRepository.save(eventoExistente);
         return EventoMapper.convertirAResponse(eventoActualizado);
     }
 

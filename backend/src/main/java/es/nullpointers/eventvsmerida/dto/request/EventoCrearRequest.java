@@ -6,7 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
- * DTO para la creación o actualización de un evento.
+ * DTO para la creación de un evento.
+ * La imagen puede ser proporcionada como URL (foto) o como archivo (en multipart).
  *
  * @author Eva Retamar
  * @author David Muñoz
@@ -31,7 +32,6 @@ public record EventoCrearRequest(
         Double latitud,
         Double longitud,
 
-        @NotBlank
         String foto,
 
         @NotNull

@@ -57,36 +57,10 @@ public class ManejadorGlobalExcepciones {
      * @param e La excepción capturada.
      * @return Una respuesta HTTP 404 Not Found.
      */
-    /*@ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<ErrorResponse> manejadorNoSuchElementException(NoSuchElementException e) {
-        String mensajeError = e.getMessage();
-        log.error(mensajeError);
-        return ResponseEntity
-                .status(404)
-                .body(new ErrorResponse(mensajeError));
-    }*/
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ErrorResponse> manejadorNoSuchElementException(NoSuchElementException e) {
-        String mensajeTecnico = e.getMessage();
-        log.error(mensajeTecnico);
-
-        String mensajeUsuario = limpiarMensajeTecnico(mensajeTecnico);
-
-        return ResponseEntity
-                .status(404)
-                .body(new ErrorResponse(mensajeUsuario));
-    }
-
-    private String limpiarMensajeTecnico(String mensaje) {
-        if (mensaje == null || mensaje.isBlank()) {
-            return "No se encontró el recurso solicitado";
-        }
-
-        if (mensaje.contains(":")) {
-            return mensaje.substring(mensaje.indexOf(":") + 1).trim();
-        }
-
-        return mensaje;
+        String mensajeUsuario = limpiarMensajeTecnico(e.getMessage());
+        return construirRespuesta(e.getStackTrace(), HttpStatus.NOT_FOUND, e.getMessage(), mensajeUsuario);
     }
 
     /**
@@ -97,31 +71,16 @@ public class ManejadorGlobalExcepciones {
      * @param e La excepción capturada.
      * @return Una respuesta HTTP 400 Bad Request.
      */
-    /*@ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> manejadorMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        String mensaje = e.getMessage();
-        String errores = construirErroresValidacion(e);
-        String mensajeError = obtenerMensajePersonalizado(mensaje, errores);
-        log.error(mensajeError);
-        return ResponseEntity
-                .badRequest()
-                .body(new ErrorResponse(mensajeError));
-    }*/
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> manejadorMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        String mensajeError = e.getBindingResult()
+        String mensajeUsuario = e.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(FieldError::getDefaultMessage)
                 .findFirst()
                 .orElse("Datos inválidos");
 
-        log.error(mensajeError);
-
-        return ResponseEntity
-                .badRequest()
-                .body(new ErrorResponse(mensajeError));
+        return construirRespuesta(e.getStackTrace(), HttpStatus.BAD_REQUEST, mensajeUsuario, mensajeUsuario);
     }
 
     /**
@@ -134,14 +93,8 @@ public class ManejadorGlobalExcepciones {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> manejadorDataIntegrityViolationException(DataIntegrityViolationException e) {
-        String mensaje = e.getMessage();
-        String claseMetodo = obtenerClaseMetodoDesdeStackTrace(e.getStackTrace());
-        String logMsg = obtenerMensajePersonalizado(mensaje, null);
-        String mensajeError = "Error en " + claseMetodo + ": " + logMsg;
-        log.error(mensajeError);
-        return ResponseEntity
-                .status(409)
-                .body(new ErrorResponse(mensajeError));
+        String mensajeUsuario = obtenerMensajePersonalizado(e.getMessage(), null);
+        return construirRespuesta(e.getStackTrace(), HttpStatus.CONFLICT, mensajeUsuario, mensajeUsuario);
     }
 
     /**
@@ -153,11 +106,8 @@ public class ManejadorGlobalExcepciones {
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> manejadorMissingServletRequestParameterException(MissingServletRequestParameterException e) {
-        String mensajeError = "Falta el parámetro obligatorio '" + e.getParameterName() + "'";
-        log.error(mensajeError);
-        return ResponseEntity
-                .badRequest()
-                .body(new ErrorResponse(mensajeError));
+        String mensajeUsuario = "Falta el parámetro obligatorio '" + e.getParameterName() + "'";
+        return construirRespuesta(e.getStackTrace(), HttpStatus.BAD_REQUEST, mensajeUsuario, mensajeUsuario);
     }
 
     /**
@@ -169,11 +119,8 @@ public class ManejadorGlobalExcepciones {
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> manejadorConstraintViolationException(ConstraintViolationException e) {
-        String mensajeError = e.getMessage();
-        log.error(mensajeError);
-        return ResponseEntity
-                .badRequest()
-                .body(new ErrorResponse(mensajeError));
+        String mensajeUsuario = e.getMessage();
+        return construirRespuesta(e.getStackTrace(), HttpStatus.BAD_REQUEST, mensajeUsuario, mensajeUsuario);
     }
 
     /**
@@ -187,38 +134,42 @@ public class ManejadorGlobalExcepciones {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> manejadorHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         Throwable causa = e.getMostSpecificCause();
-        String metodo = e.getStackTrace().length > 0 ? e.getStackTrace()[0].getMethodName() : "desconocido";
-        String mensajeError;
+        String mensajeUsuario;
 
         if (causa instanceof DateTimeParseException) {
             String formatoEsperado = "dd/MM/yyyy";
-            mensajeError = "Error de formato en la fecha. Formato esperado: '" + formatoEsperado + "'. Detalle: " + causa.getMessage();
+            mensajeUsuario = "Error de formato en la fecha. Formato esperado: '" + formatoEsperado + "'. Detalle: " + causa.getMessage();
         } else {
-            mensajeError = "Excepción en método '" + metodo + "': Error de formato en los datos recibidos. Detalle: " + causa.getMessage();
+            mensajeUsuario = "Error de formato en los datos recibidos. Detalle: " + causa.getMessage();
         }
 
-        log.error(mensajeError);
-        return ResponseEntity
-                .badRequest()
-                .body(new ErrorResponse(mensajeError));
+        return construirRespuesta(e.getStackTrace(), HttpStatus.BAD_REQUEST, mensajeUsuario, mensajeUsuario);
     }
 
+    /**
+     * Maneja la excepción AuthenticationException.
+     * Se lanza cuando ocurre un error de autenticación, como credenciales inválidas.
+     * 
+     * @param e La excepción capturada.
+     * @return Una respuesta HTTP 401 Unauthorized.
+     */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> manejadorAuthenticationException(AuthenticationException e) {
-        String origen = obtenerClaseMetodoDesdeStackTrace(e.getStackTrace());
-        String detalle = e.getMessage() != null ? e.getMessage() : "Credenciales inválidas";
-        String mensajeError = "Error de autenticación en " + origen + ": " + detalle;
-        log.info(mensajeError);
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(mensajeError));
+        String mensajeUsuario = e.getMessage() != null ? e.getMessage() : "Credenciales inválidas";
+        return construirRespuesta(e.getStackTrace(), HttpStatus.UNAUTHORIZED, mensajeUsuario, mensajeUsuario);
     }
 
+    /**
+     * Maneja la excepción AccessDeniedException.
+     * Se lanza cuando un usuario autenticado intenta acceder a un recurso para el cual no tiene permisos.
+     * 
+     * @param e La excepción capturada.
+     * @return Una respuesta HTTP 403 Forbidden.
+     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> manejadorAccessDeniedException(AccessDeniedException e) {
-        String origen = obtenerClaseMetodoDesdeStackTrace(e.getStackTrace());
-        String detalle = e.getMessage() != null ? e.getMessage() : "Acceso denegado";
-        String mensajeError = "Acceso denegado en " + origen + ": " + detalle;
-        log.warn(mensajeError);
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(mensajeError));
+        String mensajeUsuario = e.getMessage() != null ? e.getMessage() : "Acceso denegado";
+        return construirRespuesta(e.getStackTrace(), HttpStatus.FORBIDDEN, mensajeUsuario, mensajeUsuario);
     }
 
     /**
@@ -229,9 +180,20 @@ public class ManejadorGlobalExcepciones {
      */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> manejadorResponseStatus(ResponseStatusException e) {
-        String mensaje = e.getReason() != null ? e.getReason() : e.getMessage();
-        log.error("Error en " + obtenerClaseMetodoDesdeStackTrace(e.getStackTrace()) + ": " + mensaje);
-        return ResponseEntity.status(e.getStatusCode()).body(new ErrorResponse(mensaje));
+        String mensajeUsuario = e.getReason() != null ? e.getReason() : e.getMessage();
+        return construirRespuesta(e.getStackTrace(), HttpStatus.valueOf(e.getStatusCode().value()), mensajeUsuario, mensajeUsuario);
+    }
+
+    /**
+     * Maneja la excepción EventoFotoImagenException.
+     * Se lanza cuando hay un error de validación con la foto e imagen del evento.
+     *
+     * @param e La excepción capturada.
+     * @return Una respuesta HTTP 400 Bad Request.
+     */
+    @ExceptionHandler(EventoFotoImagenException.class)
+    public ResponseEntity<ErrorResponse> manejadorEventoFotoImagenException(EventoFotoImagenException e) {
+        return construirRespuesta(e.getStackTrace(), HttpStatus.BAD_REQUEST, e.getMessage(), e.getMessage());
     }
 
     /**
@@ -242,33 +204,13 @@ public class ManejadorGlobalExcepciones {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> manejadoreGeneralException(Exception e) {
-        String mensajeError = e.getMessage();
-        log.error(mensajeError);
-        return ResponseEntity
-                .internalServerError()
-                .body(new ErrorResponse(mensajeError));
+        String mensajeUsuario = e.getMessage() != null ? e.getMessage() : "Error interno del servidor";
+        return construirRespuesta(e.getStackTrace(), HttpStatus.INTERNAL_SERVER_ERROR, mensajeUsuario, mensajeUsuario);
     }
 
     // ================
     // Métodos Privados
     // ================
-
-    /**
-     * Método auxiliar para construir un mensaje de error detallado
-     * a partir de una excepción MethodArgumentNotValidException.
-     *
-     * @param e La excepción capturada.
-     * @return Una cadena con los detalles de los errores de validación.
-     */
-    private String construirErroresValidacion(MethodArgumentNotValidException e) {
-        StringBuilder errores = new StringBuilder();
-
-        for (FieldError error : e.getBindingResult().getFieldErrors()) {
-            errores.append("[").append(error.getField()).append(": ").append(error.getDefaultMessage()).append("] ");
-        }
-
-        return errores.toString().trim();
-    }
 
     /**
      * Método auxiliar para obtener la clase y el método
@@ -306,5 +248,31 @@ public class ManejadorGlobalExcepciones {
         }
 
         return mensaje;
+    }
+
+    /**
+     * Método auxiliar para limpiar el mensaje técnico de una excepción,
+     * extrayendo solo la parte relevante para el usuario.
+     * 
+     * @param mensaje El mensaje técnico original de la excepción.
+     * @return Un mensaje más limpio y amigable para el usuario.
+     */
+    private String limpiarMensajeTecnico(String mensaje) {
+        if (mensaje == null || mensaje.isBlank()) {
+            return "No se encontró el recurso solicitado";
+        }
+
+        if (mensaje.contains(":")) {
+            return mensaje.substring(mensaje.indexOf(":") + 1).trim();
+        }
+
+        return mensaje;
+    }
+
+
+    private ResponseEntity<ErrorResponse> construirRespuesta(StackTraceElement[] stackTrace, HttpStatus status, String mensajeLog, String mensajeRespuesta) {
+        String claseMetodo = obtenerClaseMetodoDesdeStackTrace(stackTrace);
+        log.error("Error en " + claseMetodo + ": " + mensajeLog);
+        return ResponseEntity.status(status).body(new ErrorResponse(mensajeRespuesta));
     }
 }
