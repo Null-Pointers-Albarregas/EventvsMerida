@@ -123,7 +123,7 @@ public class EventoController {
      * @throws JsonProcessingException
      */
     @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<EventoResponse> actualizarEventoConImagen(@PathVariable Long id, @RequestPart("evento") String jsonEvento, @RequestPart(value = "imagen", required = false) MultipartFile imagen) throws JsonProcessingException {
+    public ResponseEntity<EventoResponse> actualizarEvento(@PathVariable Long id, @RequestPart("evento") String jsonEvento, @RequestPart(value = "imagen", required = false) MultipartFile imagen) throws JsonProcessingException {
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
