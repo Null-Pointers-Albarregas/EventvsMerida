@@ -65,17 +65,17 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
 
-                // Eventos: mutaciones (POST/PUT/DELETE) -> Administrador u Organizador
+                // Eventos: (POST/PUT/DELETE) -> Administrador u Organizador
                 .requestMatchers(HttpMethod.POST, "/api/eventos/**").hasAnyAuthority("Administrador", "Organizador")
                 .requestMatchers(HttpMethod.PUT,  "/api/eventos/**").hasAnyAuthority("Administrador", "Organizador")
                 .requestMatchers(HttpMethod.DELETE, "/api/eventos/**").hasAnyAuthority("Administrador", "Organizador")
 
-                // Categorías: (add, update, delete) -> solo Administrador
+                // Categorías: (POST/PUT/DELETE) -> solo Administrador
                 .requestMatchers(HttpMethod.POST,   "/api/categorias/add").hasAuthority("Administrador")
                 .requestMatchers(HttpMethod.PUT,    "/api/categorias/update/*").hasAuthority("Administrador")
                 .requestMatchers(HttpMethod.DELETE, "/api/categorias/delete/*").hasAuthority("Administrador")
 
-                // Usuarios: proteger solo los GETs específicos -> solo Administrador
+                // Usuarios: solo los GETs -> solo Administrador
                 .requestMatchers(HttpMethod.GET,
                     "/api/usuarios/*",
                     "/api/usuarios/registered",
