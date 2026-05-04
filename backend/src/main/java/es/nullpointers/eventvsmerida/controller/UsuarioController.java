@@ -8,7 +8,10 @@ import es.nullpointers.eventvsmerida.dto.request.UsuarioCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.UsuarioResponse;
 import es.nullpointers.eventvsmerida.service.UsuarioService;
 
-import jakarta.validation.Valid;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +37,7 @@ import java.util.List;
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
     private final UsuarioService usuarioService;
+    private final Validator validator;
 
     // ============
     // Metodos CRUD
@@ -70,14 +74,17 @@ public class UsuarioController {
      * @return ResponseEntity con el usuario creado y el estado HTTP 201 (CREATED).
      */
     @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UsuarioResponse> crearUsuario(
-            @Valid @RequestPart("usuario") String jsonUsuario,
-            @RequestPart(value = "foto", required = false) MultipartFile foto
-    ) throws JsonProcessingException {
+    public ResponseEntity<UsuarioResponse> crearUsuario(@RequestPart("usuario") String jsonUsuario, @RequestPart(value = "foto", required = false) MultipartFile foto) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
 
         UsuarioCrearRequest request = mapper.readValue(jsonUsuario, UsuarioCrearRequest.class);
+
+        Set<ConstraintViolation<UsuarioCrearRequest>> violaciones = validator.validate(request);
+        if (!violaciones.isEmpty()) {
+            throw new ConstraintViolationException(violaciones);
+        }
+
         UsuarioResponse usuarioNuevo = usuarioService.crearUsuario(request, foto);
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioNuevo);
     }
@@ -103,15 +110,17 @@ public class UsuarioController {
      * @return ResponseEntity con el usuario actualizado y el estado HTTP 200 (OK).
      */
     @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UsuarioResponse> actualizarUsuario(
-            @PathVariable Long id,
-            @Valid @RequestPart("usuario") String jsonUsuario,
-            @RequestPart(value = "foto", required = false) MultipartFile foto
-    ) throws JsonProcessingException {
+    public ResponseEntity<UsuarioResponse> actualizarUsuario(@PathVariable Long id, @RequestPart("usuario") String jsonUsuario, @RequestPart(value = "foto", required = false) MultipartFile foto) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
 
         UsuarioActualizarRequest request = mapper.readValue(jsonUsuario, UsuarioActualizarRequest.class);
+
+        Set<ConstraintViolation<UsuarioActualizarRequest>> violaciones = validator.validate(request);
+        if (!violaciones.isEmpty()) {
+            throw new ConstraintViolationException(violaciones);
+        }
+
         UsuarioResponse usuarioActualizado = usuarioService.actualizarUsuario(id, request, foto);
         return ResponseEntity.ok(usuarioActualizado);
     }

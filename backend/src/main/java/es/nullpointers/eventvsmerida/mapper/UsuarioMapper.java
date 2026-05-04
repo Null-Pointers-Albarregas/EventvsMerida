@@ -43,7 +43,7 @@ public class UsuarioMapper {
 
         String objectPath = null;
         if (imagen != null && !imagen.isEmpty()) {
-            objectPath = storage.subirImagenPrivada(imagen, "usuarios", request.nombre());
+            objectPath = storage.subirImagenUsuario(imagen, request.email());
         } else if (request.fotoPath() != null && !request.fotoPath().isBlank()) {
             objectPath = request.fotoPath();
         }
