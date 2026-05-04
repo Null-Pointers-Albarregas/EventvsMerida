@@ -4,7 +4,9 @@ import es.nullpointers.eventvsmerida.dto.request.UsuarioCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.UsuarioResponse;
 import es.nullpointers.eventvsmerida.entity.Rol;
 import es.nullpointers.eventvsmerida.entity.Usuario;
+import es.nullpointers.eventvsmerida.supabase.SupabaseStorage;
 import es.nullpointers.eventvsmerida.utils.TextoUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -24,9 +26,11 @@ public class UsuarioMapper {
      *
      * @param request Objeto DTO con los datos del usuario.
      * @param rol Rol asignado al usuario.
+     * @param imagen Imagen de perfil (opcional).
+     * @param storage Servicio para subir imagen privada.
      * @return Entidad Usuario creada a partir del DTO.
      */
-    public static Usuario convertirAEntidad(UsuarioCrearRequest request, Rol rol) {
+    public static Usuario convertirAEntidad(UsuarioCrearRequest request, Rol rol, MultipartFile imagen, SupabaseStorage storage) {
         Usuario usuario = new Usuario();
 
         usuario.setNombre(TextoUtils.capitalizarTexto(request.nombre()));
@@ -37,6 +41,14 @@ public class UsuarioMapper {
         usuario.setPassword(request.password());
         usuario.setRol(rol);
 
+        String objectPath = null;
+        if (imagen != null && !imagen.isEmpty()) {
+            objectPath = storage.subirImagenUsuario(imagen, request.email());
+        } else if (request.fotoPath() != null && !request.fotoPath().isBlank()) {
+            objectPath = request.fotoPath();
+        }
+
+        usuario.setFotoPath(objectPath);
         return usuario;
     }
 
@@ -44,9 +56,10 @@ public class UsuarioMapper {
      * Metodo que convierte una entidad Usuario a un objeto UsuarioResponse.
      *
      * @param usuario Entidad Usuario a convertir.
+     * @param storage Servicio para generar URL firmada.
      * @return Objeto DTO con los datos del usuario.
      */
-    public static UsuarioResponse convertirAResponse(Usuario usuario) {
+    public static UsuarioResponse convertirAResponse(Usuario usuario, SupabaseStorage storage) {
         Long id = usuario.getId();
         String nombre = usuario.getNombre();
         String apellidos = usuario.getApellidos();
@@ -55,6 +68,11 @@ public class UsuarioMapper {
         String telefono = usuario.getTelefono();
         String rol = usuario.getRol().getNombre();
 
-        return new UsuarioResponse(id, nombre, apellidos, fechaNacimiento, email, telefono, rol);
+        String fotoUrl = null;
+        if (usuario.getFotoPath() != null && !usuario.getFotoPath().isBlank()) {
+            fotoUrl = storage.generarUrlFirmada(usuario.getFotoPath(), 3600);
+        }
+
+        return new UsuarioResponse(id, nombre, apellidos, fechaNacimiento, email, telefono, rol, fotoUrl);
     }
 }

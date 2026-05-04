@@ -43,6 +43,9 @@ public class Usuario {
     @Column(name = "password", nullable = false, length = Integer.MAX_VALUE)
     private String password;
 
+    @Column(name = "foto_path", length = 1024)
+    private String fotoPath;
+
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.SET_DEFAULT)
