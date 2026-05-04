@@ -53,12 +53,13 @@ window.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("horaFin").value +
             ":00.000",
           localizacion: document.getElementById("localizacion").value,
+          foto: null,
           idUsuario: document.getElementById("organizadores").value,
           idCategoria: document.getElementById("categorias").value,
         };
         const formData = new FormData();
         formData.append("evento", JSON.stringify(evento));
-        formData.append("foto", document.getElementById("fotoEvento").files[0]);
+        formData.append("imagen", document.getElementById("fotoEvento").files[0]);
         crearEvento(formData, true);
       }
       form.classList.add("was-validated");
@@ -67,41 +68,43 @@ window.addEventListener("DOMContentLoaded", async () => {
   );
 
   const formEditar = document.getElementById("formEditarEvento");
-  formEditar.addEventListener(
-    "submit",
-    function (event) {
-      if (!formEditar.checkValidity()) {
-        event.preventDefault();
-        event.stopPropagation();
-        formEditar.classList.add("was-validated");
-      } else {
-        event.preventDefault();
-        const evento = {
-          titulo: document.getElementById("titulo").value,
-          descripcion: document.getElementById("descripcion").value,
-          fechaInicio:
-            document.getElementById("fechaInicio").value +
-            "T" +
-            document.getElementById("horaInicio").value +
-            ":00.000",
-          fechaFin:
-            document.getElementById("fechaFin").value +
-            "T" +
-            document.getElementById("horaFin").value +
-            ":00.000",
-          localizacion: document.getElementById("localizacion").value,
-          idUsuario: document.getElementById("organizadoresEditar").value,
-          idCategoria: document.getElementById("categorias").value,
-        };
-        const formData = new FormData();
-        formData.append("evento", JSON.stringify(evento));
-        formData.append("foto", document.getElementById("fotoEvento").files[0]);
-        editarEvento(formEditar.dataset.id, formData);
-      }
+  formEditar.addEventListener("submit", function (event) {
+    if (!formEditar.checkValidity()) {
+      event.preventDefault();
+      event.stopPropagation();
       formEditar.classList.add("was-validated");
-    },
-    false,
-  );
+      return;
+    }
+    event.preventDefault();
+
+    const titulo = document.getElementById("tituloEventoEditar").value.trim();
+    const descripcion = document.getElementById("descripcionEventoEditar").value.trim();
+    const fechaInicioVal = document.getElementById("fechaInicioEditar").value;
+    const horaInicioVal = document.getElementById("horaInicioEditar").value;
+    const fechaFinVal = document.getElementById("fechaFinEditar").value;
+    const horaFinVal = document.getElementById("horaFinEditar").value;
+    const fechaInicio = fechaInicioVal && horaInicioVal ? `${fechaInicioVal}T${horaInicioVal}:00.000` : null;
+    const fechaFin = fechaFinVal && horaFinVal ? `${fechaFinVal}T${horaFinVal}:00.000` : null;
+
+    const evento = {
+      titulo,
+      descripcion,
+      fechaInicio,
+      fechaFin,
+      localizacion: document.getElementById("localizacionEditar").value.trim(),
+      foto: null,
+      idUsuario: Number(document.getElementById("organizadoresEditar").value) || null,
+      idCategoria: Number(document.getElementById("categoriasEditar").value) || null
+    };
+
+    const formData = new FormData();
+    formData.append("evento", JSON.stringify(evento));
+    const file = document.getElementById("formFile")?.files?.[0];
+    if (file) formData.append("imagen", file);
+
+    editarEvento(formEditar.dataset.id, formData);
+    formEditar.classList.add("was-validated");
+  }, false);
 });
 
 function limpiarBuscador() {
@@ -485,7 +488,7 @@ async function obtenerOrganizadores() {
     });
 
     if (!resp.ok) {
-      throw new Error("Error al obtener los categorías");
+      throw new Error("Error al obtener los organizadores");
     }
 
     const data = await resp.json();
@@ -505,7 +508,7 @@ async function obtenerOrganizadores() {
       });
     });
   } catch (error) {
-    console.error("Error al cargar las categorías:", error);
+    console.error("Error al cargar los organizadores:", error);
   }
 }
 
@@ -516,7 +519,7 @@ async function crearEvento(datosFormulario) {
       credentials: "include",
       body: datosFormulario,
     };
-    const resp = await fetch(URL_BASE + "eventos/addWithImage", options);
+    const resp = await fetch(URL_BASE + "eventos/add", options);
     const respuesta = await resp.json();
     if (resp.status === 201) {
       mostrarAlerta("success", "Evento creado correctamente");

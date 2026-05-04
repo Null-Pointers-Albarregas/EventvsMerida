@@ -37,5 +37,7 @@ public record UsuarioActualizarRequest(
         )
         String password,
 
-        Long idRol
+        Long idRol,
+
+        String fotoPath
 ) {}

@@ -44,5 +44,7 @@ public record UsuarioCrearRequest(
         String password,
 
         @NotNull
-        Long idRol
+        Long idRol,
+
+        String fotoPath
 ) {}

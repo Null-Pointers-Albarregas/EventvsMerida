@@ -43,8 +43,8 @@ public class EventoMapper {
         evento.setLongitud(request.longitud());
         
         String fotoUrl = (imagen != null && !imagen.isEmpty()) 
-            ? storageUploader.subirImagen(null, imagen, request.titulo())
-            : storageUploader.subirImagen(request.foto(), null, request.titulo());
+            ? storageUploader.subirImagenEvento(null, imagen, request.titulo())
+            : storageUploader.subirImagenEvento(request.foto(), null, request.titulo());
         
         evento.setFoto(fotoUrl);
         evento.setUsuario(usuario);

@@ -1,17 +1,25 @@
 package es.nullpointers.eventvsmerida.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import es.nullpointers.eventvsmerida.dto.request.UsuarioActualizarRequest;
 import es.nullpointers.eventvsmerida.dto.request.UsuarioCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.UsuarioResponse;
 import es.nullpointers.eventvsmerida.service.UsuarioService;
 
-import jakarta.validation.Valid;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -29,6 +37,7 @@ import java.util.List;
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
     private final UsuarioService usuarioService;
+    private final Validator validator;
 
     // ============
     // Metodos CRUD
@@ -60,12 +69,23 @@ public class UsuarioController {
     /**
      * Metodo POST que llama al servicio para crear un nuevo usuario.
      *
-     * @param usuarioCrearRequest DTO con los datos del usuario a crear.
+     * @param jsonUsuario DTO con los datos del usuario a crear.
+     * @param foto Imagen de perfil opcional.
      * @return ResponseEntity con el usuario creado y el estado HTTP 201 (CREATED).
      */
-    @PostMapping("/add")
-    public ResponseEntity<UsuarioResponse> crearUsuario(@Valid @RequestBody UsuarioCrearRequest usuarioCrearRequest) {
-        UsuarioResponse usuarioNuevo = usuarioService.crearUsuario(usuarioCrearRequest);
+    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UsuarioResponse> crearUsuario(@RequestPart("usuario") String jsonUsuario, @RequestPart(value = "foto", required = false) MultipartFile foto) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+
+        UsuarioCrearRequest request = mapper.readValue(jsonUsuario, UsuarioCrearRequest.class);
+
+        Set<ConstraintViolation<UsuarioCrearRequest>> violaciones = validator.validate(request);
+        if (!violaciones.isEmpty()) {
+            throw new ConstraintViolationException(violaciones);
+        }
+
+        UsuarioResponse usuarioNuevo = usuarioService.crearUsuario(request, foto);
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioNuevo);
     }
 
@@ -85,12 +105,23 @@ public class UsuarioController {
      * Metodo PUT que llama al servicio para actualizar un usuario existente.
      *
      * @param id ID del usuario a actualizar.
-     * @param usuarioActualizarRequest DTO con los datos del usuario a actualizar.
+     * @param jsonUsuario DTO con los datos del usuario a actualizar.
+     * @param foto Imagen de perfil opcional.
      * @return ResponseEntity con el usuario actualizado y el estado HTTP 200 (OK).
      */
-    @PutMapping("/update/{id}")
-    public ResponseEntity<UsuarioResponse> actualizarUsuario(@PathVariable Long id, @Valid @RequestBody UsuarioActualizarRequest usuarioActualizarRequest) {
-        UsuarioResponse usuarioActualizado = usuarioService.actualizarUsuario(id, usuarioActualizarRequest);
+    @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UsuarioResponse> actualizarUsuario(@PathVariable Long id, @RequestPart("usuario") String jsonUsuario, @RequestPart(value = "foto", required = false) MultipartFile foto) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+
+        UsuarioActualizarRequest request = mapper.readValue(jsonUsuario, UsuarioActualizarRequest.class);
+
+        Set<ConstraintViolation<UsuarioActualizarRequest>> violaciones = validator.validate(request);
+        if (!violaciones.isEmpty()) {
+            throw new ConstraintViolationException(violaciones);
+        }
+
+        UsuarioResponse usuarioActualizado = usuarioService.actualizarUsuario(id, request, foto);
         return ResponseEntity.ok(usuarioActualizado);
     }
 

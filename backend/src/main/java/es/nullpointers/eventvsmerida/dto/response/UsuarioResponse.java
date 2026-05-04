@@ -16,5 +16,6 @@ public record UsuarioResponse (
         LocalDate fechaNacimiento,
         String email,
         String telefono,
-        String rol
+        String rol,
+        String fotoUrl
 ){}

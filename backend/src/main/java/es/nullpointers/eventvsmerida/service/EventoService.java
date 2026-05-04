@@ -132,7 +132,7 @@ public class EventoService {
             @Override
             public void afterCommit() {
                 try {
-                    storageUploader.borrarImagenPorUrl(foto);
+                    storageUploader.borrarImagenEvento(foto);
                 } catch (Exception ex) {
                     log.warn("No se pudo borrar la imagen tras commit: {}", ex.getMessage());
                 }
@@ -185,14 +185,14 @@ public class EventoService {
         if (tieneArchivo) {
             if (fotoAnterior != null && !fotoAnterior.isBlank()) {
                 try {
-                    storageUploader.borrarImagenPorUrl(fotoAnterior);
+                    storageUploader.borrarImagenEvento(fotoAnterior);
                 } catch (Exception ex) {
                     log.warn("No se pudo borrar la imagen anterior: {}", ex.getMessage());
                 }
             }
 
             String nombreParaSubir = eventoRequest.titulo() != null ? eventoRequest.titulo() : eventoExistente.getTitulo();
-            String nuevaUrl = storageUploader.subirImagen(null, imagen, nombreParaSubir);
+            String nuevaUrl = storageUploader.subirImagenEvento(null, imagen, nombreParaSubir);
             eventoExistente.setFoto(nuevaUrl);
         } else if (tieneUrl) {
             eventoExistente.setFoto(eventoRequest.foto());
