@@ -2,13 +2,12 @@ package es.nullpointers.eventvsmerida.controller;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import es.nullpointers.eventvsmerida.dto.request.EventoCrearRequest;
-import es.nullpointers.eventvsmerida.dto.request.EventoImagenCrearRequest;
 import es.nullpointers.eventvsmerida.dto.response.EventoResponse;
 import es.nullpointers.eventvsmerida.dto.request.EventoActualizarRequest;
 import es.nullpointers.eventvsmerida.service.EventoService;
-
-import jakarta.validation.Valid;
-
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,12 +21,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Controlador REST que recibe las peticiones HTTP relacionadas con la
@@ -43,6 +44,7 @@ import java.util.List;
 @RequestMapping("/api/eventos")
 public class EventoController {
     private final EventoService eventoService;
+    private final Validator validator;
 
     // ============
     // Metodos CRUD
@@ -73,33 +75,30 @@ public class EventoController {
 
     /**
      * Método POST que llama al servicio para crear un nuevo evento.
-     *
-     * @param eventoCrearRequest DTO con los datos del evento a crear.
-     * @return ResponseEntity con el evento creado y el estado HTTP 201 (Created).
-     */
-    @PostMapping("/add")
-    public ResponseEntity<EventoResponse> crearEvento(@Valid @RequestBody EventoCrearRequest eventoCrearRequest) {
-        EventoResponse eventoNuevo = eventoService.crearEvento(eventoCrearRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(eventoNuevo);
-    }
-
-    /**
-     * Método POST que llama al servicio para crear un nuevo evento con archivo de imagen.
      * 
-     * @param jsonEvento String con el JSON del evento a crear, que se convertirá a EventoImagenCrearRequest.
-     * @param foto MultipartFile con la imagen del evento a crear.
+     * @param jsonEvento JSON con los datos del evento a crear, enviado como parte de un multipart/form-data.
+     * @param imagen Archivo de imagen opcional para el evento, enviado como parte de un multipart/form-data.
      * @return ResponseEntity con el evento creado y el estado HTTP 201 (Created).
-     * @throws JsonProcessingException
      */
-    @PostMapping(value = "/addWithImage", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<EventoResponse> crearEventoConImagen(@Valid @RequestPart("evento")String jsonEvento, @RequestPart("foto") MultipartFile foto) throws JsonProcessingException {
+    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<EventoResponse> crearEvento(@RequestPart("evento") String jsonEvento, @RequestPart(value = "imagen", required = false) MultipartFile imagen) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
 
-        EventoImagenCrearRequest request = mapper.readValue(jsonEvento, EventoImagenCrearRequest.class);
-        EventoResponse eventoConImagenNuevo = eventoService.crearEventoConImagen(request, foto);
+        EventoCrearRequest eventoRequest;
+        try {
+            eventoRequest = mapper.readValue(jsonEvento, EventoCrearRequest.class);
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El campo 'evento' debe ser un JSON válido");
+        }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(eventoConImagenNuevo);
+        Set<ConstraintViolation<EventoCrearRequest>> violaciones = validator.validate(eventoRequest);
+        if (!violaciones.isEmpty()) {
+            throw new ConstraintViolationException(violaciones);
+        }
+
+        EventoResponse eventoNuevo = eventoService.crearEvento(eventoRequest, imagen);
+        return ResponseEntity.status(HttpStatus.CREATED).body(eventoNuevo);
     }
 
     /**
@@ -115,15 +114,33 @@ public class EventoController {
     }
 
     /**
-     * Método PUT que llama al servicio para actualizar un evento existente.
-     *
+     * Método PUT que llama al servicio para actualizar un evento existente por su ID, con la posibilidad de actualizar la imagen asociada.
+     * 
      * @param id ID del evento a actualizar.
-     * @param eventoActualizarRequest DTO con los datos del evento a actualizar.
+     * @param jsonEvento JSON con los datos del evento a actualizar, enviado como parte de un multipart/form-data.
+     * @param imagen Archivo de imagen opcional para actualizar la imagen del evento, enviado como parte de un multipart/form-data.
      * @return ResponseEntity con el evento actualizado y el estado HTTP 200 (OK).
+     * @throws JsonProcessingException
      */
-    @PutMapping("/update/{id}")
-    public ResponseEntity<EventoResponse> actualizarEvento (@PathVariable Long id, @Valid @RequestBody EventoActualizarRequest eventoActualizarRequest) {
-        EventoResponse eventoActualizado = eventoService.actualizarEvento(id, eventoActualizarRequest);
+    @PutMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<EventoResponse> actualizarEventoConImagen(@PathVariable Long id, @RequestPart("evento") String jsonEvento, @RequestPart(value = "imagen", required = false) MultipartFile imagen) throws JsonProcessingException {
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+
+        EventoActualizarRequest eventoRequest;
+        try {
+            eventoRequest = mapper.readValue(jsonEvento, EventoActualizarRequest.class);
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El campo 'evento' debe ser un JSON válido");
+        }
+
+        Set<ConstraintViolation<EventoActualizarRequest>> violaciones = validator.validate(eventoRequest);
+        if (!violaciones.isEmpty()) {
+            throw new ConstraintViolationException(violaciones);
+        }
+
+        EventoResponse eventoActualizado = eventoService.actualizarEvento(id, eventoRequest, imagen);
         return ResponseEntity.ok(eventoActualizado);
     }
 
