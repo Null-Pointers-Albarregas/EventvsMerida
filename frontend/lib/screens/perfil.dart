@@ -188,7 +188,7 @@ class _PerfilState extends State<Perfil> {
         if (isRegistrado) ...[
           _buildItem(Icons.account_circle, 'Cuenta', onTap: () => context.push(AppRoutes.cuenta)),
           _buildItem(Icons.bookmark_border, 'Eventos guardados', onTap: () => context.push(AppRoutes.eventosGuardados),),
-          _buildItem(Icons.notifications, 'Preferencias de notificaciones'),
+          //_buildItem(Icons.notifications, 'Preferencias de notificaciones'),
         ],
 
         _buildModoOscuro(),

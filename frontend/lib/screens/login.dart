@@ -156,16 +156,30 @@ class _LoginState extends State<Login> {
       bottom: false,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 35.0),
+        padding: const EdgeInsets.symmetric(vertical: 35.0, horizontal: 16.0),
         color: _cs.primary,
-        alignment: Alignment.center,
-        child: Text(
-          'Iniciar sesión',
-          style: TextStyle(
-            color: _cs.surface,
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-          ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Navigator.canPop(context) ? IconButton(
+                icon: Icon(Icons.arrow_back, color: _cs.surface),
+                onPressed: () {
+                  context.pop();
+                },
+              ) : const SizedBox.shrink(),
+            ),
+
+            Text(
+              'Iniciar sesión',
+              style: TextStyle(
+                color: _cs.surface,
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );
