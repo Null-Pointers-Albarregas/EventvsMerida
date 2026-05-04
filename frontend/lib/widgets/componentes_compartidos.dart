@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/router/app_routes.dart';
@@ -14,6 +15,7 @@ import '../services/api_service.dart';
 // ===========================================================================
 // 1. BARRA SUPERIOR
 // ===========================================================================
+
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
 
@@ -80,6 +82,7 @@ class _ModalEventoState extends State<ModalEvento> {
   late List<Evento> _eventosGuardados;
 
   ColorScheme get _cs => Theme.of(context).colorScheme;
+
   TextTheme get _tt => Theme.of(context).textTheme;
 
   // ===========================================================================
@@ -113,9 +116,14 @@ class _ModalEventoState extends State<ModalEvento> {
     return _eventosGuardados.any((e) => _esMismoEvento(e, evento));
   }
 
-  bool _esMismoDia(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
+  bool _esMismoDia(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
   bool _esHoraCero(DateTime fecha) => fecha.hour == 0 && fecha.minute == 0;
-  String _formatearFecha(DateTime fecha) => DateFormat('dd/MM/yyyy').format(fecha);
+
+  String _formatearFecha(DateTime fecha) =>
+      DateFormat('dd/MM/yyyy').format(fecha);
+
   String _formatearHora(DateTime fecha) => DateFormat('HH:mm').format(fecha);
 
   String _textoFechaHoraDetalle(Evento evento) {
@@ -125,14 +133,16 @@ class _ModalEventoState extends State<ModalEvento> {
     final inicioHora = _formatearHora(evento.fechaInicio);
     final finHora = _formatearHora(evento.fechaFin);
     final horasIguales = inicioHora == finHora;
-    final ambasHorasCero = _esHoraCero(evento.fechaInicio) && _esHoraCero(evento.fechaFin);
+    final ambasHorasCero =
+        _esHoraCero(evento.fechaInicio) && _esHoraCero(evento.fechaFin);
 
     if (esMismoDia) {
       if (horasIguales && ambasHorasCero) return 'Fecha: $inicioFecha';
       if (horasIguales) return 'Fecha: $inicioFecha\nHora: $inicioHora';
       return 'Fecha: $inicioFecha\nHora: $inicioHora - $finHora';
     }
-    if (horasIguales && ambasHorasCero) return 'Desde: $inicioFecha\nHasta: $finFecha';
+    if (horasIguales && ambasHorasCero)
+      return 'Desde: $inicioFecha\nHasta: $finFecha';
     return 'Desde: $inicioFecha $inicioHora\nHasta: $finFecha $finHora';
   }
 
@@ -157,7 +167,9 @@ class _ModalEventoState extends State<ModalEvento> {
   Future<void> _abrirEnGoogleMaps(String direccion) async {
     final limpia = direccion.trim();
     final query = Uri.encodeComponent(limpia);
-    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query',);
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$query',
+    );
 
     try {
       final ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
@@ -168,7 +180,6 @@ class _ModalEventoState extends State<ModalEvento> {
         );
       }
     } catch (_) {
-
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -178,7 +189,8 @@ class _ModalEventoState extends State<ModalEvento> {
   }
 
   Future<void> _compartirEvento(Evento evento) async {
-    final texto = '''
+    final texto =
+        '''
     ${evento.titulo}
     
     ${evento.localizacion}
@@ -188,10 +200,7 @@ class _ModalEventoState extends State<ModalEvento> {
     ${evento.descripcion}
     ''';
 
-    await Share.share(
-      texto,
-      subject: evento.titulo,
-    );
+    await Share.share(texto, subject: evento.titulo);
   }
 
   Future<void> _gestionarGuardado() async {
@@ -207,17 +216,17 @@ class _ModalEventoState extends State<ModalEvento> {
 
     final respuesta = yaGuardado
         ? await ApiService.eliminarEventoUsuario(
-      usuario.email,
-      evento.titulo,
-      evento.fechaInicio,
-      evento.fechaFin,
-    )
+            usuario.email,
+            evento.titulo,
+            evento.fechaInicio,
+            evento.fechaFin,
+          )
         : await ApiService.guardarEventoUsuario(
-      usuario.email,
-      evento.titulo,
-      evento.fechaInicio,
-      evento.fechaFin,
-    );
+            usuario.email,
+            evento.titulo,
+            evento.fechaInicio,
+            evento.fechaFin,
+          );
 
     if (!mounted) return;
 
@@ -243,15 +252,24 @@ class _ModalEventoState extends State<ModalEvento> {
   // MENSAJES
   // ===========================================================================
 
-  void _mostrarSnackBarResultado({required String mensaje, required bool guardado}) {
+  void _mostrarSnackBarResultado({
+    required String mensaje,
+    required bool guardado,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(guardado ? Icons.check : Icons.delete, size: 20, color: Colors.white),
+            Icon(
+              guardado ? Icons.check : Icons.delete,
+              size: 20,
+              color: Colors.white,
+            ),
             const SizedBox(width: 8),
-            Flexible(child: Text(mensaje, style: const TextStyle(color: Colors.white))),
+            Flexible(
+              child: Text(mensaje, style: const TextStyle(color: Colors.white)),
+            ),
           ],
         ),
         backgroundColor: guardado ? Colors.green : Colors.red,
@@ -281,7 +299,9 @@ class _ModalEventoState extends State<ModalEvento> {
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: AlertDialog(
                 backgroundColor: _cs.surface.withValues(alpha: 0.98),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
                 actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 content: Column(
@@ -297,7 +317,7 @@ class _ModalEventoState extends State<ModalEvento> {
                           child: Text(
                             'Inicia sesión o regístrate',
                             style: _tt.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -312,7 +332,7 @@ class _ModalEventoState extends State<ModalEvento> {
                     const SizedBox(height: 12),
                     Text(
                       'Para poder guardar un evento, tienes que iniciar sesión o registrarte.',
-                        style: _tt.bodyMedium
+                      style: _tt.bodyMedium,
                     ),
                   ],
                 ),
@@ -339,7 +359,7 @@ class _ModalEventoState extends State<ModalEvento> {
                           },
                           child: const Text(
                             'Iniciar sesión',
-                            overflow: TextOverflow.ellipsis
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
@@ -372,9 +392,7 @@ class _ModalEventoState extends State<ModalEvento> {
               Expanded(
                 child: Text(
                   evento.titulo,
-                  style: _tt.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: _tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -477,20 +495,15 @@ class _ModalEventoState extends State<ModalEvento> {
                 const SizedBox(height: 16),
                 Text(
                   'Descripción',
-                  style: _tt.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: _tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  evento.descripcion,
-                  style: _tt.bodyMedium,
-                ),
+                Text(evento.descripcion, style: _tt.bodyMedium),
               ],
             ),
           ),
         ),
-        if(widget.mostrarBotonGuardado)
+        if (widget.mostrarBotonGuardado)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: Row(
@@ -499,7 +512,9 @@ class _ModalEventoState extends State<ModalEvento> {
                   child: FilledButton.icon(
                     onPressed: _gestionarGuardado,
                     icon: Icon(
-                      estaGuardado ? Icons.bookmark : Icons.bookmark_border_outlined,
+                      estaGuardado
+                          ? Icons.bookmark
+                          : Icons.bookmark_border_outlined,
                       color: _cs.surface,
                     ),
                     label: Text(
@@ -558,7 +573,9 @@ class _ModalEventoState extends State<ModalEvento> {
                           return _buildContenidoEvento(widget.eventos[index]);
                         },
                       ),
-                      if (widget.mostrarFlechasDeslizamiento && widget.eventos.length > 1 && _indiceActual < widget.eventos.length - 1)
+                      if (widget.mostrarFlechasDeslizamiento &&
+                          widget.eventos.length > 1 &&
+                          _indiceActual < widget.eventos.length - 1)
                         Positioned(
                           right: 8,
                           top: 0,
@@ -577,8 +594,9 @@ class _ModalEventoState extends State<ModalEvento> {
                             ),
                           ),
                         ),
-
-                      if (widget.mostrarFlechasDeslizamiento && widget.eventos.length > 1 && _indiceActual > 0)
+                      if (widget.mostrarFlechasDeslizamiento &&
+                          widget.eventos.length > 1 &&
+                          _indiceActual > 0)
                         Positioned(
                           left: 8,
                           top: 0,
@@ -598,7 +616,7 @@ class _ModalEventoState extends State<ModalEvento> {
                           ),
                         ),
                     ],
-                  )
+                  ),
                 ),
               ),
             ),
@@ -608,3 +626,141 @@ class _ModalEventoState extends State<ModalEvento> {
     );
   }
 }
+
+class Tutorial {
+  static final pasosTutorial = <TargetFocus>[];
+  static late TutorialCoachMark _tutorial;
+  static bool tutorialInicializado = false;
+  static final GlobalKey keyNavMapa = GlobalKey();
+  static final ValueNotifier<bool> navPasoActivo = ValueNotifier(false);
+  static int numPantalla = 1;
+
+  static TutorialCoachMark get tutorial => _tutorial;
+
+  static void set tutorial(TutorialCoachMark value) {
+    _tutorial = value;
+    tutorialInicializado = true;
+  }
+
+  static void mostrarTutorial(BuildContext context) {
+    _tutorial.show(context: context, rootOverlay: true);
+  }
+
+  static TutorialCoachMark crearTutorial({
+    required BuildContext context,
+    required List<TargetFocus> pasosTutorial,
+    required Color color,
+  }) {
+    return TutorialCoachMark(
+      targets: pasosTutorial,
+      colorShadow: color,
+      textSkip: "SALTAR TUTORIAL",
+      paddingFocus: 10,
+      opacityShadow: 0.5,
+      imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+    );
+  }
+
+  static TargetFocus crearPaso({
+    required GlobalKey key,
+    required BuildContext context,
+    required String titulo,
+    required String descripcion,
+    required IconData icon,
+    required bool siguiente,
+    ShapeLightFocus? forma,
+    ContentAlign alineamientoTarjeta = ContentAlign.bottom,
+    required VoidCallback? onNext,
+  }) {
+    return TargetFocus(
+      identify: '${titulo}_${key.hashCode}',
+      keyTarget: key,
+      alignSkip: Alignment.topLeft,
+      shape: forma ?? ShapeLightFocus.Circle,
+      enableTargetTab: false,
+      contents: [
+        TargetContent(
+          align: alineamientoTarjeta,
+          child: _tutorialCard(
+            context: context,
+            icon: icon,
+            title: titulo,
+            message: descripcion,
+            showNext: true,
+            buttonText: siguiente && numPantalla != 5? 'Siguiente' : 'Terminar tutorial',
+            onNext: onNext,
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Widget _tutorialCard({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String message,
+    bool showNext = false,
+    String buttonText = 'Siguiente',
+    VoidCallback? onNext,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 300),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: cs.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            message,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+              height: 1.4,
+            ),
+          ),
+          if (showNext) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  print('BOTON DEL TUTORIAL PULSADO: $title');
+                  onNext?.call();
+                },
+                child: Text(buttonText),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+

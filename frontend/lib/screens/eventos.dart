@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:eventvsmerida/models/evento.dart';
 import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
@@ -25,13 +26,12 @@ class _EventosState extends State<Eventos> {
   // VARIABLES
   // ===========================================================================
 
-  late TutorialCoachMark tutorialCoachMark;
-
   GlobalKey keyTarjetaEvento = GlobalKey();
   GlobalKey keyBtnBuscar = GlobalKey();
   GlobalKey keyBtnFiltro = GlobalKey();
 
   String _textoBusqueda = '';
+
   //late Future<ApiResponse<List<Evento>>> _eventos;
   late Future<ApiResponse<List<Evento>>> _eventosEncontrados;
   Future<ApiResponse<List<Evento>>>? _eventosFuture;
@@ -67,13 +67,13 @@ class _EventosState extends State<Eventos> {
     //createTutorial();
   }
 
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    createTutorial();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _comprobarInicializacionTutorial();
+    });
   }
-
 
   @override
   void dispose() {
@@ -90,7 +90,7 @@ class _EventosState extends State<Eventos> {
 
   Future<void> _cargarDatosUsuarioYGuardados() async {
     final (usuario, guardados) =
-    await EventosGuardadosService.cargarUsuarioYEventosGuardados();
+        await EventosGuardadosService.cargarUsuarioYEventosGuardados();
 
     if (!mounted) return;
 
@@ -104,7 +104,10 @@ class _EventosState extends State<Eventos> {
   // FUNCIONES AUXILIARES
   // ===========================================================================
 
-  void _buscarEventos(String text, void Function(void Function()) setStateModal) {
+  void _buscarEventos(
+    String text,
+    void Function(void Function()) setStateModal,
+  ) {
     if (_debounce?.isActive ?? false) {
       _debounce?.cancel();
     }
@@ -160,7 +163,11 @@ class _EventosState extends State<Eventos> {
   }
 
   void _onScroll() {
-    if (!_scrollController.hasClients || _isLoadingEventos || !_hasMoreEventos || _usandoFiltros) return;
+    if (!_scrollController.hasClients ||
+        _isLoadingEventos ||
+        !_hasMoreEventos ||
+        _usandoFiltros)
+      return;
     if (_scrollController.position.extentAfter < 200) {
       _fetchEventosPage();
     }
@@ -200,34 +207,34 @@ class _EventosState extends State<Eventos> {
         _page++;
         _hasMoreEventos = !last;
       });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (!mounted) return;
+        _comprobarInicializacionTutorial();
+      });
     } catch (e) {
       setState(() => _hasMoreEventos = false);
     } finally {
       setState(() => _isLoadingEventos = false);
     }
 
-    if (_page == 1) {
-      showTutorial();
-    }
-
-    print('Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos');
-  }
-  void _mostrarTutorialCuandoExista() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      final contextTarget = keyTarjetaEvento.currentContext;
-
-      if (contextTarget != null) {
-        tutorialCoachMark.show(context: context);
-      } else {
-        // Reintenta una vez más (la lista puede tardar un frame extra)
-        Future.delayed(const Duration(milliseconds: 100), _mostrarTutorialCuandoExista);
-      }
-    });
+    print(
+      'Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos',
+    );
   }
 
+  void _comprobarInicializacionTutorial() {
+    if (!mounted || _eventosList.isEmpty) return;
 
+    // Solo empezar aquí si toca comenzar en Eventos
+    if (Tutorial.numPantalla != 1) return;
+
+    if (Tutorial.tutorialInicializado) return;
+
+    Tutorial.tutorialInicializado = true;
+    _configurarTutorial();
+  }
 
   // ===========================================================================
   // MODALES
@@ -328,7 +335,10 @@ class _EventosState extends State<Eventos> {
             ),
             Dialog(
               backgroundColor: Colors.transparent,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 48),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 48,
+              ),
               child: StatefulBuilder(
                 builder: (contextModal, setStateModal) {
                   return Container(
@@ -354,7 +364,10 @@ class _EventosState extends State<Eventos> {
                             ),
                             IconButton(
                               icon: Icon(Icons.close, color: _cs.primary),
-                              onPressed: () => Navigator.of(context, rootNavigator: true).maybePop(),
+                              onPressed: () => Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).maybePop(),
                             ),
                           ],
                         ),
@@ -362,36 +375,55 @@ class _EventosState extends State<Eventos> {
                         FutureBuilder<ApiResponse<List<Categoria>>>(
                           future: _categorias,
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
                               return const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 24),
-                                child: Center(child: CircularProgressIndicator()),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
                               );
                             }
                             if (snapshot.hasError) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 24),
-                                child: Text('Error: ${snapshot.error}', textAlign: TextAlign.center),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 24,
+                                ),
+                                child: Text(
+                                  'Error: ${snapshot.error}',
+                                  textAlign: TextAlign.center,
+                                ),
                               );
                             }
                             final resp = snapshot.data;
                             if (resp == null || !resp.exito) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 24),
-                                child: Text(resp?.mensaje ?? 'No se pudieron cargar las categorías', textAlign: TextAlign.center),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 24,
+                                ),
+                                child: Text(
+                                  resp?.mensaje ??
+                                      'No se pudieron cargar las categorías',
+                                  textAlign: TextAlign.center,
+                                ),
                               );
                             }
                             final lista = resp.datos ?? const [];
 
                             return ConstrainedBox(
-                              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+                              constraints: BoxConstraints(
+                                maxHeight:
+                                    MediaQuery.of(context).size.height * 0.5,
+                              ),
                               child: ListView.separated(
                                 shrinkWrap: true,
                                 itemCount: lista.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 6),
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 6),
                                 itemBuilder: (context, index) {
                                   final cat = lista[index];
-                                  final seleccionado = _categoriasSeleccionadas.contains(cat.id);
+                                  final seleccionado = _categoriasSeleccionadas
+                                      .contains(cat.id);
                                   return Material(
                                     color: Colors.transparent,
                                     child: InkWell(
@@ -399,18 +431,31 @@ class _EventosState extends State<Eventos> {
                                       onTap: () {
                                         setStateModal(() {
                                           if (seleccionado) {
-                                            _categoriasSeleccionadas.remove(cat.id);
+                                            _categoriasSeleccionadas.remove(
+                                              cat.id,
+                                            );
                                           } else {
-                                            _categoriasSeleccionadas.add(cat.id);
+                                            _categoriasSeleccionadas.add(
+                                              cat.id,
+                                            );
                                           }
                                         });
                                       },
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 6,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: _cs.surface,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: seleccionado ? _cs.primary : _cs.onSurface.withAlpha(24)),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          border: Border.all(
+                                            color: seleccionado
+                                                ? _cs.primary
+                                                : _cs.onSurface.withAlpha(24),
+                                          ),
                                         ),
                                         child: Row(
                                           children: [
@@ -418,11 +463,17 @@ class _EventosState extends State<Eventos> {
                                               width: 36,
                                               height: 36,
                                               decoration: BoxDecoration(
-                                                color: _cs.primary.withAlpha(40),
+                                                color: _cs.primary.withAlpha(
+                                                  40,
+                                                ),
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Center(
-                                                child: Icon(Icons.label, size: 18, color: _cs.primary),
+                                                child: Icon(
+                                                  Icons.label,
+                                                  size: 18,
+                                                  color: _cs.primary,
+                                                ),
                                               ),
                                             ),
                                             const SizedBox(width: 12),
@@ -440,9 +491,11 @@ class _EventosState extends State<Eventos> {
                                               onChanged: (v) {
                                                 setStateModal(() {
                                                   if (v == true) {
-                                                    _categoriasSeleccionadas.add(cat.id);
+                                                    _categoriasSeleccionadas
+                                                        .add(cat.id);
                                                   } else {
-                                                    _categoriasSeleccionadas.remove(cat.id);
+                                                    _categoriasSeleccionadas
+                                                        .remove(cat.id);
                                                   }
                                                 });
                                               },
@@ -464,7 +517,10 @@ class _EventosState extends State<Eventos> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.of(context, rootNavigator: true).maybePop();
+                              Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).maybePop();
                               setState(() {
                                 if (_categoriasSeleccionadas.isEmpty) {
                                   _usandoFiltros = false;
@@ -472,7 +528,10 @@ class _EventosState extends State<Eventos> {
                                   _resetAndFetchEventos();
                                 } else {
                                   _usandoFiltros = true;
-                                  _eventosFuture = ApiService.obtenerEventosFiltradosPorCategorias(_categoriasSeleccionadas.toList());
+                                  _eventosFuture =
+                                      ApiService.obtenerEventosFiltradosPorCategorias(
+                                        _categoriasSeleccionadas.toList(),
+                                      );
                                 }
                               });
                             },
@@ -480,7 +539,9 @@ class _EventosState extends State<Eventos> {
                               backgroundColor: _cs.primary,
                               foregroundColor: _cs.surface,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                             child: const Text('Aplicar filtros'),
                           ),
@@ -501,7 +562,13 @@ class _EventosState extends State<Eventos> {
   // INTERFAZ
   // ===========================================================================
 
-  Widget _buildAppBarAction({required IconData icon, required String tooltip, VoidCallback? onPressed, int badgeCount = 0, key}) {
+  Widget _buildAppBarAction({
+    required IconData icon,
+    required String tooltip,
+    VoidCallback? onPressed,
+    int badgeCount = 0,
+    key,
+  }) {
     if (badgeCount <= 0) {
       return IconButton(
         key: key,
@@ -558,7 +625,10 @@ class _EventosState extends State<Eventos> {
     );
   }
 
-  Widget _buildEstadoCentro({required IconData icono, required String mensaje,}) {
+  Widget _buildEstadoCentro({
+    required IconData icono,
+    required String mensaje,
+  }) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -780,7 +850,92 @@ class _EventosState extends State<Eventos> {
     );
   }
 
-  Widget _buildEventosFiltradosBusquedaBody(Future<ApiResponse<List<Evento>>> listadoEventos, String tipo) {
+  // ===========================================================================
+  // TUTORIAL
+  // ===========================================================================
+
+  void _configurarTutorial() {
+    Tutorial.pasosTutorial.clear();
+    cargarPasosTutorial();
+    Tutorial.tutorial = Tutorial.crearTutorial(
+      context: context,
+      pasosTutorial: Tutorial.pasosTutorial,
+      color: Theme.of(context).colorScheme.primary,
+    );
+    Tutorial.mostrarTutorial(context);
+  }
+
+  void cargarPasosTutorial() {
+    Tutorial.navPasoActivo.value = false;
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        context: context,
+        key: keyTarjetaEvento,
+        titulo: 'Eventos disponibles',
+        descripcion: 'Aquí puedes ver todos los eventos disponibles. Toca cualquiera para acceder a la información completa.',
+        icon: Icons.event,
+        siguiente: true,
+        onNext: () => Tutorial.tutorial.next(),
+        forma: ShapeLightFocus.RRect,
+      ),
+    );
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        context: context,
+        key: keyBtnBuscar,
+        titulo: 'Buscar eventos',
+        descripcion:
+            'Usa este botón para buscar eventos por nombre, ubicación o categoría.',
+        icon: Icons.search,
+        siguiente: true,
+        onNext: () => Tutorial.tutorial.next(),
+      ),
+    );
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        context: context,
+        key: keyBtnFiltro,
+        titulo: 'Filtrar eventos',
+        descripcion:
+            'Filtra los eventos por categoría para encontrar más rápido lo que te interesa.',
+        icon: Icons.filter_alt,
+        siguiente: true,
+        onNext: () {
+          Tutorial.navPasoActivo.value = true;
+          Tutorial.tutorial.next();
+        },
+      ),
+    );
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        alineamientoTarjeta: ContentAlign.top,
+        context: context,
+        key: Tutorial.keyNavMapa,
+        titulo: 'Mapa',
+        descripcion: 'Pasemos a la siguiente pantalla.',
+        icon: Icons.map,
+        siguiente: true,
+        onNext: () async {
+          print('ENTRA EN EL onNext DEL ULTIMO PASO');
+
+          Tutorial.navPasoActivo.value = false;
+          Tutorial.numPantalla = 2;
+          Tutorial.tutorialInicializado = false;
+
+          Tutorial.tutorial.finish();
+
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (!mounted) return;
+          context.go('/mapa');
+        },
+      ),
+    );
+  }
+
+  Widget _buildEventosFiltradosBusquedaBody(
+    Future<ApiResponse<List<Evento>>> listadoEventos,
+    String tipo,
+  ) {
     return Center(
       child: FutureBuilder<ApiResponse<List<Evento>>>(
         future: listadoEventos,
@@ -800,7 +955,7 @@ class _EventosState extends State<Eventos> {
             return _buildEstadoCentro(
               icono: Icons.error_outline,
               mensaje:
-              respuesta?.mensaje ?? 'No se han podido cargar los eventos',
+                  respuesta?.mensaje ?? 'No se han podido cargar los eventos',
             );
           }
 
@@ -885,7 +1040,10 @@ class _EventosState extends State<Eventos> {
                               child: IgnorePointer(
                                 ignoring: true,
                                 child: BackdropFilter(
-                                  filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 6,
+                                    sigmaY: 6,
+                                  ),
                                   child: Container(color: Colors.transparent),
                                 ),
                               ),
@@ -912,14 +1070,14 @@ class _EventosState extends State<Eventos> {
                       setState(() {});
                     });
                   },
-                  key: keyBtnBuscar
+                  key: keyBtnBuscar,
                 ),
                 _buildAppBarAction(
                   icon: Icons.filter_alt_rounded,
                   tooltip: 'Filtrar',
                   onPressed: _abrirModalFiltros,
                   badgeCount: _categoriasSeleccionadas.length,
-                  key: keyBtnFiltro
+                  key: keyBtnFiltro,
                 ),
               ],
             ),
@@ -928,189 +1086,9 @@ class _EventosState extends State<Eventos> {
       ),
       body: _usandoFiltros
           ? (_eventosFuture == null
-          ? const Center(child: CircularProgressIndicator())
-          : _buildEventosFiltradosBusquedaBody(_eventosFuture!, ''))
+                ? const Center(child: CircularProgressIndicator())
+                : _buildEventosFiltradosBusquedaBody(_eventosFuture!, ''))
           : _buildEventosPaginatedBody(),
     );
   }
-
-  void showTutorial() {
-    tutorialCoachMark.show(context: context);
-  }
-
-  void createTutorial() {
-    tutorialCoachMark = TutorialCoachMark(
-      targets: _createTargets(),
-      colorShadow: _cs.primary,
-      textSkip: "SALTAR TUTORIAL",
-      paddingFocus: 10,
-      opacityShadow: 0.5,
-      imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-      onFinish: () {
-        print("finish");
-      },
-      onClickTarget: (target) {
-        print('onClickTarget: $target');
-      },
-      onClickTargetWithTapPosition: (target, tapDetails) {
-        print("target: $target");
-        print(
-            "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
-      },
-      onClickOverlay: (target) {
-        print('onClickOverlay: $target');
-      },
-      onSkip: () {
-        print("skip");
-        return true;
-      },
-    );
-  }
-
-  List<TargetFocus> _createTargets() {
-    List<TargetFocus> targets = [];
-    targets.add(
-      TargetFocus(
-        identify: "keyTarjetaEvento",
-        keyTarget: keyTarjetaEvento,
-        alignSkip: Alignment.topRight,
-        shape: ShapeLightFocus.RRect,
-        color: _cs.primary,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return _tutorialCard(
-                context: context,
-                icon: Icons.event,
-                title: 'Eventos disponibles',
-                message:
-                'Aquí puedes ver todos los eventos disponibles. Toca cualquiera para acceder a la información completa.',
-                showNext: true,
-                onNext: controller.next,
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
-    targets.add(
-      TargetFocus(
-        identify: "keyBtnBuscar",
-        keyTarget: keyBtnBuscar,
-        alignSkip: Alignment.topLeft,
-        shape: ShapeLightFocus.Circle,
-        color: _cs.primary,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return _tutorialCard(
-                context: context,
-                icon: Icons.search,
-                title: 'Buscar eventos',
-                message:
-                'Usa este botón para buscar eventos por nombre, ubicación o categoría.',
-                showNext: true,
-                onNext: controller.next,
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
-    targets.add(
-      TargetFocus(
-        identify: "keyBtnFiltro",
-        keyTarget: keyBtnFiltro,
-        alignSkip: Alignment.topLeft,
-        shape: ShapeLightFocus.Circle,
-        color: const Color(0xFFEE8D24),
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return _tutorialCard(
-                context: context,
-                icon: Icons.filter_alt,
-                title: 'Filtrar eventos',
-                message:
-                'Filtra los eventos por categoría para encontrar más rápido lo que te interesa.',
-              );
-            },
-          ),
-        ],
-      ),
-    );
-    return targets;
-  }
-}
-
-Widget _tutorialCard({
-  required BuildContext context,
-  required IconData icon,
-  required String title,
-  required String message,
-  bool showNext = false,
-  VoidCallback? onNext,
-}) {
-  final _cs = Theme.of(context).colorScheme;
-  return Container(
-    constraints: const BoxConstraints(maxWidth: 300),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black26,
-          blurRadius: 8,
-          offset: Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: _cs.primary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Text(
-          message,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.black54,
-            height: 1.4,
-          ),
-        ),
-        if (showNext) ...[
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: onNext,
-              child: const Text('Siguiente'),
-            ),
-          )
-        ],
-      ],
-    ),
-  );
 }

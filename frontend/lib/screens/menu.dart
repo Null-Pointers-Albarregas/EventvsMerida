@@ -1,3 +1,4 @@
+import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -115,10 +116,35 @@ class _MenuState extends State<Menu> {
         iconSize: 30,
         onTap: _cambiarRuta,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Mapa'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: 'Calendario',),
-          BottomNavigationBarItem(icon: Icon(Icons.person_2_rounded), label: _usuario?.nombre ?? 'Perfil'),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Inicio',
+          ),
+          BottomNavigationBarItem(
+            icon: ValueListenableBuilder<bool>(
+              valueListenable: Tutorial.navPasoActivo,
+              child: const Icon(Icons.map),
+              builder: (context, activo, child) {
+                return SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: KeyedSubtree(
+                    key: activo ? Tutorial.keyNavMapa : null,
+                    child: Center(child: child),
+                  ),
+                );
+              },
+            ),
+            label: 'Mapa',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month),
+            label: 'Calendario',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_2_rounded),
+            label: _usuario?.nombre ?? 'Perfil',
+          ),
         ],
         type: BottomNavigationBarType.fixed,
       ),
