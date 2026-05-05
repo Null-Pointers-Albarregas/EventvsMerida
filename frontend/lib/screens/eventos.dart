@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:eventvsmerida/models/evento.dart';
+import 'package:eventvsmerida/services/shared_preferences_service.dart';
 import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -64,15 +65,6 @@ class _EventosState extends State<Eventos> {
     _cargarDatosUsuarioYGuardados();
     _scrollController.addListener(_onScroll);
     _resetAndFetchEventos();
-    //createTutorial();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _comprobarInicializacionTutorial();
-    });
   }
 
   @override
@@ -208,11 +200,13 @@ class _EventosState extends State<Eventos> {
         _hasMoreEventos = !last;
       });
 
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await Future.delayed(const Duration(milliseconds: 300));
-        if (!mounted) return;
-        _comprobarInicializacionTutorial();
-      });
+      if(await SharedPreferencesService.cargarTutorial()) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (!mounted) return;
+          _comprobarInicializacionTutorial();
+        });
+      }
     } catch (e) {
       setState(() => _hasMoreEventos = false);
     } finally {
@@ -872,7 +866,8 @@ class _EventosState extends State<Eventos> {
         context: context,
         key: keyTarjetaEvento,
         titulo: 'Eventos disponibles',
-        descripcion: 'Aquí puedes ver todos los eventos disponibles. Toca cualquiera para acceder a la información completa.',
+        descripcion:
+            'Aquí puedes ver todos los eventos disponibles. Toca en cualquiera para verlo en detalle.',
         icon: Icons.event,
         siguiente: true,
         onNext: () => Tutorial.tutorial.next(),
@@ -885,7 +880,7 @@ class _EventosState extends State<Eventos> {
         key: keyBtnBuscar,
         titulo: 'Buscar eventos',
         descripcion:
-            'Usa este botón para buscar eventos por nombre, ubicación o categoría.',
+            'Desde aquí puedes buscar eventos por nombre, ubicación o categoría.',
         icon: Icons.search,
         siguiente: true,
         onNext: () => Tutorial.tutorial.next(),
@@ -897,7 +892,7 @@ class _EventosState extends State<Eventos> {
         key: keyBtnFiltro,
         titulo: 'Filtrar eventos',
         descripcion:
-            'Filtra los eventos por categoría para encontrar más rápido lo que te interesa.',
+            'Desde aquí puedes filtrar los eventos por categoría para encontrar más rápido segun tus gustos.',
         icon: Icons.filter_alt,
         siguiente: true,
         onNext: () {
@@ -912,16 +907,14 @@ class _EventosState extends State<Eventos> {
         context: context,
         key: Tutorial.keyNavMapa,
         titulo: 'Mapa',
-        descripcion: 'Pasemos a la siguiente pantalla.',
+        descripcion:
+            'A continuación, pasemos al mapa. Pulsa el botón de continuar para ir al mapa.',
         icon: Icons.map,
         siguiente: true,
         onNext: () async {
-          print('ENTRA EN EL onNext DEL ULTIMO PASO');
-
           Tutorial.navPasoActivo.value = false;
           Tutorial.numPantalla = 2;
           Tutorial.tutorialInicializado = false;
-
           Tutorial.tutorial.finish();
 
           await Future.delayed(const Duration(milliseconds: 300));

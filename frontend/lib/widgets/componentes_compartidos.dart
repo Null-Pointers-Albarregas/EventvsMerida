@@ -1,3 +1,4 @@
+import 'package:eventvsmerida/services/shared_preferences_service.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:ui';
@@ -632,6 +633,8 @@ class Tutorial {
   static late TutorialCoachMark _tutorial;
   static bool tutorialInicializado = false;
   static final GlobalKey keyNavMapa = GlobalKey();
+  static final GlobalKey keyNavCalendario = GlobalKey();
+  static final GlobalKey keyNavPerfil = GlobalKey();
   static final ValueNotifier<bool> navPasoActivo = ValueNotifier(false);
   static int numPantalla = 1;
 
@@ -658,6 +661,10 @@ class Tutorial {
       paddingFocus: 10,
       opacityShadow: 0.5,
       imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+      onSkip: (){
+        SharedPreferencesService.finalizarTurorial();
+        return true;
+      }
     );
   }
 
@@ -686,8 +693,8 @@ class Tutorial {
             icon: icon,
             title: titulo,
             message: descripcion,
-            showNext: true,
-            buttonText: siguiente && numPantalla != 5? 'Siguiente' : 'Terminar tutorial',
+            showNext: siguiente,
+            buttonText: siguiente ? 'Siguiente' : 'Terminar tutorial',
             onNext: onNext,
           ),
         ),
@@ -751,7 +758,6 @@ class Tutorial {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () {
-                  print('BOTON DEL TUTORIAL PULSADO: $title');
                   onNext?.call();
                 },
                 child: Text(buttonText),

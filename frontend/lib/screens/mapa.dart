@@ -1,7 +1,9 @@
+import 'package:eventvsmerida/services/shared_preferences_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../models/evento.dart';
 import '../models/usuario.dart';
@@ -105,11 +107,13 @@ class _MapaState extends State<Mapa> {
         _cargando = false;
       });
 
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await Future.delayed(const Duration(milliseconds: 400));
-        if (!mounted) return;
-        _comprobarInicializacionTutorial();
-      });
+      if(await SharedPreferencesService.cargarTutorial()) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await Future.delayed(const Duration(milliseconds: 400));
+          if (!mounted) return;
+          _comprobarInicializacionTutorial();
+        });
+      }
     } else {
       setState(() => _cargando = false);
       _mostrarMensaje(respuesta.mensaje);
@@ -204,6 +208,7 @@ class _MapaState extends State<Mapa> {
   // ===========================================================================
 
   void _configurarTutorial() {
+    Tutorial.navPasoActivo.value = false;
     Tutorial.pasosTutorial.clear();
     cargarPasosTutorial();
     Tutorial.tutorial = Tutorial.crearTutorial(
@@ -211,7 +216,7 @@ class _MapaState extends State<Mapa> {
       pasosTutorial: Tutorial.pasosTutorial,
       color: Theme.of(context).colorScheme.primary,
     );
-    Tutorial.tutorial.show(context: context);
+    Tutorial.mostrarTutorial(context);
   }
 
   void cargarPasosTutorial() {
@@ -219,9 +224,8 @@ class _MapaState extends State<Mapa> {
       Tutorial.crearPaso(
           context: context,
           key: keyPinLocalizacion,
-          titulo: 'Localización de eventos',
-          descripcion:
-          'En estos pines puedes visualizar y ubicar los eventos en el mapa de Mérida.',
+          titulo: 'Localización ',
+          descripcion: 'En estos pines puedes visualizar y ubicar los eventos en el mapa de Mérida. Si pulsas en uno de ellos, podrás ver nuevamente en detalle este.',
           icon: Icons.event,
           siguiente: true,
           onNext: () => Tutorial.tutorial.next(),
@@ -230,24 +234,22 @@ class _MapaState extends State<Mapa> {
     Tutorial.pasosTutorial.add(
       Tutorial.crearPaso(
         context: context,
-        key: keyPinLocalizacion,
-        titulo: 'Calendario de eventos',
-        descripcion:
-        'Ahora pasemos al calendario para que puedas ver los eventos ordenados por fecha y guardarlos en tu perfil.',
+        key: Tutorial.keyNavCalendario,
+        titulo: 'Calendario',
+        descripcion: 'Ahora pasemos al calendario para ver sus funcionalidades.',
         icon: Icons.calendar_month,
         siguiente: true,
         onNext: () async {
-          print('ENTRA EN EL onNext DEL ULTIMO PASO');
-
+          Tutorial.navPasoActivo.value = false;
           Tutorial.numPantalla = 3;
           Tutorial.tutorialInicializado = false;
-
           Tutorial.tutorial.finish();
 
           await Future.delayed(const Duration(milliseconds: 300));
           if (!mounted) return;
           context.go('/calendario');
         },
+        alineamientoTarjeta: ContentAlign.top,
       ),
     );
   }

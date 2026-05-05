@@ -35,14 +35,8 @@ class _PerfilState extends State<Perfil> {
   void initState() {
     super.initState();
     _cargarUsuario();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (!mounted) return;
-      _comprobarInicializacionTutorial();
-    });
+    _cargarTutorial();
   }
-
 
   // ===========================================================================
   // CARGA DE DATOS
@@ -56,6 +50,16 @@ class _PerfilState extends State<Perfil> {
     setState(() {
       _usuario = usuario;
     });
+  }
+
+  Future<void> _cargarTutorial() async {
+    if (await SharedPreferencesService.cargarTutorial()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (!mounted) return;
+        _comprobarInicializacionTutorial();
+      });
+    }
   }
 
   bool _targetEstaListo(GlobalKey key) {
@@ -77,15 +81,15 @@ class _PerfilState extends State<Perfil> {
   }
 
   void _comprobarInicializacionTutorial() {
-  if (!mounted) return;
-  if (Tutorial.numPantalla != 4) return;
-  if (Tutorial.tutorialInicializado) return;
-  if (!_targetEstaListo(keyCabecera) || !_targetEstaListo(keySecciones)) return;
+    if (!mounted) return;
+    if (Tutorial.numPantalla != 4) return;
+    if (Tutorial.tutorialInicializado) return;
+    if (!_targetEstaListo(keyCabecera) || !_targetEstaListo(keySecciones))
+      return;
 
-  Tutorial.tutorialInicializado = true;
-  _configurarTutorial();
+    Tutorial.tutorialInicializado = true;
+    _configurarTutorial();
   }
-
 
   // ===========================================================================
   // INTERFAZ
@@ -96,15 +100,17 @@ class _PerfilState extends State<Perfil> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Text(
         titulo,
-        style: TextStyle(
-          color: _cs.primary,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: _cs.primary, fontWeight: FontWeight.bold),
       ),
     );
   }
 
-  Widget _buildItem(IconData icono, String titulo, {Widget? trailing, VoidCallback? onTap}) {
+  Widget _buildItem(
+    IconData icono,
+    String titulo, {
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
     return ListTile(
       leading: Icon(icono),
       title: Text(
@@ -168,11 +174,7 @@ class _PerfilState extends State<Perfil> {
         CircleAvatar(
           backgroundColor: _cs.surface.withValues(alpha: 0.9),
           radius: 32,
-          child: Icon(
-            Icons.person,
-            color: _cs.primary,
-            size: 34,
-          ),
+          child: Icon(Icons.person, color: _cs.primary, size: 34),
         ),
         const SizedBox(height: 8),
         Text(
@@ -197,7 +199,9 @@ class _PerfilState extends State<Perfil> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
         color: _cs.primary,
-        child: _usuario == null ? _buildCabeceraNoLogueado() : _buildCabeceraLogueado(),
+        child: _usuario == null
+            ? _buildCabeceraNoLogueado()
+            : _buildCabeceraLogueado(),
       ),
     );
   }
@@ -220,12 +224,27 @@ class _PerfilState extends State<Perfil> {
     return Column(
       children: [
         if (isRegistrado) ...[
-          _buildItem(Icons.account_circle, 'Cuenta', onTap: () => context.push(AppRoutes.cuenta)),
-          _buildItem(Icons.bookmark_border, 'Eventos guardados', onTap: () => context.push(AppRoutes.eventosGuardados),),
+          _buildItem(
+            Icons.account_circle,
+            'Cuenta',
+            onTap: () => context.push(AppRoutes.cuenta),
+          ),
+          _buildItem(
+            Icons.bookmark_border,
+            'Eventos guardados',
+            onTap: () => context.push(AppRoutes.eventosGuardados),
+          ),
           //_buildItem(Icons.notifications, 'Preferencias de notificaciones'),
         ],
-
         _buildModoOscuro(),
+        _buildItem(
+          Icons.help_outline,
+          'Volver a hacer el tutorial',
+          onTap: (){
+            SharedPreferencesService.resetearTutorial();
+            context.go('/eventos');
+          },
+        ),
       ],
     );
   }
@@ -233,8 +252,16 @@ class _PerfilState extends State<Perfil> {
   Widget _buildLegal() {
     return Column(
       children: [
-        _buildItem(Icons.file_copy, 'Términos y servicios', onTap: () => context.push(AppRoutes.terminos)),
-        _buildItem(Icons.privacy_tip, 'Política de privacidad', onTap: () => context.push(AppRoutes.privacidad)),
+        _buildItem(
+          Icons.file_copy,
+          'Términos y servicios',
+          onTap: () => context.push(AppRoutes.terminos),
+        ),
+        _buildItem(
+          Icons.privacy_tip,
+          'Política de privacidad',
+          onTap: () => context.push(AppRoutes.privacidad),
+        ),
       ],
     );
   }
@@ -259,9 +286,9 @@ class _PerfilState extends State<Perfil> {
       Tutorial.crearPaso(
         context: context,
         key: keyCabecera,
-        titulo: 'Régistrarse o iniciar sesión',
+        titulo: 'Registrarse o iniciar sesión',
         descripcion:
-        'En esta sección puedes registrarte para crear una cuenta o iniciar sesión si ya tienes una. Al hacerlo, podrás acceder a funciones personalizadas como guardar eventos favoritos.',
+            'En esta sección puedes registrarte para crear una cuenta o iniciar sesión si ya tienes una. Al hacerlo, podrás acceder a funciones personalizadas como guardar eventos favoritos.',
         icon: Icons.calendar_month,
         siguiente: true,
         onNext: () => Tutorial.tutorial.next(),
@@ -270,43 +297,45 @@ class _PerfilState extends State<Perfil> {
     );
     Tutorial.pasosTutorial.add(
       Tutorial.crearPaso(
-          context: context,
-          key: keySecciones,
-          titulo: 'Preferencias e información legal',
-          descripcion: 'Aquí puedes configurar tus preferencias, como el modo oscuro, y acceder a la información legal de la aplicación, incluyendo los términos de servicio y la política de privacidad.',
-          icon: Icons.list_alt,
-          siguiente: false,
-          onNext: () async {
-            Tutorial.tutorialInicializado = false;
-            Tutorial.tutorial.finish();
-            Tutorial.numPantalla = 5;
-            await Future.delayed(const Duration(milliseconds: 300));
-            if (!mounted) return;
-            context.go('/eventos');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.check,
-                      size: 20,
-                      color: Colors.white,
+        context: context,
+        key: keySecciones,
+        titulo: 'Preferencias e información legal',
+        descripcion: 'Aquí puedes configurar tus preferencias, como el modo oscuro, eventos guardados, o la política de privacidad entre otros.',
+        icon: Icons.list_alt,
+        siguiente: false,
+        onNext: () async {
+          Tutorial.tutorialInicializado = false;
+          Tutorial.tutorial.finish();
+
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (!mounted) return;
+          SharedPreferencesService.finalizarTurorial();
+          context.go('/eventos');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check, size: 20, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '¡Has completado el tutorial!',
+                      style: const TextStyle(color: Colors.white),
                     ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text('¡Has completado el tutorial!', style: const TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                ),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-                margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ],
               ),
-            );
-          },
-          forma: ShapeLightFocus.RRect,
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        },
+        forma: ShapeLightFocus.RRect,
       ),
     );
   }
@@ -339,10 +368,7 @@ class _PerfilState extends State<Perfil> {
                         horizontal: 24.0,
                         vertical: 16.0,
                       ),
-                      child: Divider(
-                        color: _cs.primary,
-                        thickness: 2,
-                      ),
+                      child: Divider(color: _cs.primary, thickness: 2),
                     ),
                     _buildSeccionTitulo('INFORMACIÓN LEGAL'),
                     _buildLegal(),

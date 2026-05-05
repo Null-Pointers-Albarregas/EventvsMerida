@@ -1,3 +1,4 @@
+import 'package:eventvsmerida/services/shared_preferences_service.dart';
 import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -112,11 +113,13 @@ class _CalendarioState extends State<Calendario> {
       _mensajeError = null;
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 400));
-      if (!mounted) return;
-      _comprobarInicializacionTutorial();
-    });
+    if(await SharedPreferencesService.cargarTutorial()){
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (!mounted) return;
+        _comprobarInicializacionTutorial();
+      });
+    }
 
     final respuesta = await ApiService.obtenerEventos();
 
@@ -659,17 +662,17 @@ class _CalendarioState extends State<Calendario> {
       pasosTutorial: Tutorial.pasosTutorial,
       color: Theme.of(context).colorScheme.primary,
     );
-    Tutorial.tutorial.show(context: context);
+    Tutorial.mostrarTutorial(context);
   }
 
   void cargarPasosTutorial() {
+    Tutorial.navPasoActivo.value = false;
     Tutorial.pasosTutorial.add(
       Tutorial.crearPaso(
         context: context,
         key: keyCalendario,
-        titulo: 'Calendario de eventos',
-        descripcion:
-            'Aquí puedes ver los eventos organizados por fecha. Los días con eventos disponibles se marcarán en el calendario.',
+        titulo: 'Calendario',
+        descripcion: 'Aquí puedes ver los días del mes. Los días con eventos disponibles se marcarán con un punto en el calendario.',
         icon: Icons.calendar_month,
         siguiente: true,
         onNext: () => Tutorial.tutorial.next(),
@@ -681,8 +684,7 @@ class _CalendarioState extends State<Calendario> {
         context: context,
         key: keyListadoEventos,
         titulo: 'Eventos del día seleccionado',
-        descripcion:
-            'En esta sección se muestra un listado de los eventos correspondientes al día que selecciones en el calendario. Puedes tocar cualquier evento para ver más detalles.',
+        descripcion: 'En esta sección se muestra un listado de los eventos correspondientes al día que selecciones en el calendario. Al pulsar sobre cualquier evento puedes ver todos sus detalles.',
         icon: Icons.list_alt,
         siguiente: true,
         onNext: () => Tutorial.tutorial.next(),
@@ -693,24 +695,21 @@ class _CalendarioState extends State<Calendario> {
     Tutorial.pasosTutorial.add(
       Tutorial.crearPaso(
         context: context,
-        key: keyListadoEventos,
+        key: Tutorial.keyNavPerfil,
         titulo: 'Perfil',
         descripcion: 'Vamos a por el perfil!',
         icon: Icons.person,
         siguiente: true,
         onNext: () async {
-          print('ENTRA EN EL onNext DEL ULTIMO PASO');
-
+          Tutorial.navPasoActivo.value = false;
           Tutorial.numPantalla = 4;
           Tutorial.tutorialInicializado = false;
-
           Tutorial.tutorial.finish();
 
           await Future.delayed(const Duration(milliseconds: 300));
           if (!mounted) return;
           context.go('/perfil');
         },
-        forma: ShapeLightFocus.RRect,
         alineamientoTarjeta: ContentAlign.top,
       ),
     );

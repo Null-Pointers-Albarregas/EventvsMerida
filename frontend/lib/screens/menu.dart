@@ -125,24 +125,47 @@ class _MenuState extends State<Menu> {
               valueListenable: Tutorial.navPasoActivo,
               child: const Icon(Icons.map),
               builder: (context, activo, child) {
-                return SizedBox(
+                return Container(
+                  key: Tutorial.keyNavMapa,
                   width: 48,
                   height: 48,
-                  child: KeyedSubtree(
-                    key: activo ? Tutorial.keyNavMapa : null,
-                    child: Center(child: child),
-                  ),
+                  alignment: Alignment.center,
+                  child: child,
                 );
               },
             ),
             label: 'Mapa',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
+          BottomNavigationBarItem(
+            icon: ValueListenableBuilder<bool>(
+              valueListenable: Tutorial.navPasoActivo,
+              child: const Icon(Icons.calendar_month),
+              builder: (context, activo, child) {
+                return Container(
+                  key: Tutorial.keyNavCalendario,
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  child: child,
+                );
+              },
+            ),
             label: 'Calendario',
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.person_2_rounded),
+            icon: ValueListenableBuilder<bool>(
+              valueListenable: Tutorial.navPasoActivo,
+              child: const Icon(Icons.person_2_rounded),
+              builder: (context, activo, child) {
+                return Container(
+                  key: Tutorial.keyNavPerfil,
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  child: child,
+                );
+              },
+            ),
             label: _usuario?.nombre ?? 'Perfil',
           ),
         ],
