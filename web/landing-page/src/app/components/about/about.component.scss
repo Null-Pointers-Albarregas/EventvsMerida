@@ -1,0 +1,135 @@
+.about {
+  background: var(--dark-2);
+  padding: 8rem 5vw;
+}
+
+.about-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6rem;
+  align-items: center;
+}
+
+.about-text {
+  h2 {
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    margin: 1.5rem 0;
+    line-height: 1;
+  }
+
+  p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin-top: 1.2rem;
+    max-width: 480px;
+  }
+}
+
+.about-stats {
+  margin-top: 3rem;
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.stat-num {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 3rem;
+  line-height: 1;
+  color: var(--gold);
+  text-shadow: 0 0 20px var(--accent-glow);
+}
+
+.stat-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stat-divider {
+  width: 1px;
+  height: 40px;
+  background: rgba(245, 166, 35, 0.2);
+}
+
+/* ── CARDS ── */
+.about-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.visual-card {
+  background: var(--surface);
+  border: 1px solid rgba(245, 166, 35, 0.1);
+  border-radius: 4px;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s;
+
+  &:hover {
+    border-color: rgba(245, 166, 35, 0.35);
+    transform: translateY(-4px);
+  }
+
+  &.card-offset {
+    margin-left: 2rem;
+  }
+}
+
+.card-accent {
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--gold);
+  box-shadow: 0 0 12px var(--accent-glow);
+
+  &.accent-blue {
+    background: var(--blue-light);
+    box-shadow: 0 0 12px var(--blue-glow);
+  }
+}
+
+.card-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.visual-card h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.visual-card p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.about-divider {
+  position: absolute;
+  bottom: 0; left: 5vw; right: 5vw;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245,166,35,0.2), transparent);
+}
+
+@media (max-width: 900px) {
+  .about-inner { grid-template-columns: 1fr; gap: 3rem; }
+  .card-offset { margin-left: 0 !important; }
+}
