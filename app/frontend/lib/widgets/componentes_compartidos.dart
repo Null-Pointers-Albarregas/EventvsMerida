@@ -347,7 +347,10 @@ class _ModalEventoState extends State<ModalEvento> {
                             Navigator.of(context).pop();
                             context.go(AppRoutes.registro);
                           },
-                          child: const Text('Registrarse'),
+                          child: Text(
+                            'Registrarse',
+                            style: TextStyle(color: _cs.surface),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -358,9 +361,10 @@ class _ModalEventoState extends State<ModalEvento> {
                             Navigator.of(context).pop();
                             context.go(AppRoutes.login);
                           },
-                          child: const Text(
+                          child: Text(
                             'Iniciar sesión',
                             overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: _cs.surface),
                           ),
                         ),
                       ),
@@ -658,14 +662,21 @@ class Tutorial {
       targets: pasosTutorial,
       colorShadow: color,
       textSkip: "SALTAR TUTORIAL",
-      paddingFocus: 10,
+      paddingFocus: 15,
       opacityShadow: 0.5,
       imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-      onSkip: (){
+      onSkip: () {
         SharedPreferencesService.finalizarTurorial();
         return true;
-      }
+      },
     );
+  }
+
+  static void resetearTutorial() {
+    tutorialInicializado = false;
+    pasosTutorial.clear();
+    navPasoActivo.value = false;
+    numPantalla = 1;
   }
 
   static TargetFocus crearPaso({
@@ -688,14 +699,16 @@ class Tutorial {
       contents: [
         TargetContent(
           align: alineamientoTarjeta,
-          child: _tutorialCard(
-            context: context,
-            icon: icon,
-            title: titulo,
-            message: descripcion,
-            showNext: siguiente,
-            buttonText: siguiente ? 'Siguiente' : 'Terminar tutorial',
-            onNext: onNext,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _tutorialCard(
+              context: context,
+              icon: icon,
+              title: titulo,
+              message: descripcion,
+              buttonText: siguiente ? 'Siguiente' : 'Finalizar tutorial',
+              onNext: onNext,
+            ),
           ),
         ),
       ],
@@ -707,7 +720,6 @@ class Tutorial {
     required IconData icon,
     required String title,
     required String message,
-    bool showNext = false,
     String buttonText = 'Siguiente',
     VoidCallback? onNext,
   }) {
@@ -715,9 +727,9 @@ class Tutorial {
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 300),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4)),
@@ -734,10 +746,10 @@ class Tutorial {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: cs.onPrimary,
                   ),
                 ),
               ),
@@ -746,27 +758,15 @@ class Tutorial {
           const SizedBox(height: 10),
           Text(
             message,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
-              height: 1.4,
-            ),
+            style: TextStyle(fontSize: 14, color: cs.onPrimary, height: 1.4),
           ),
-          if (showNext) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  onNext?.call();
-                },
-                child: Text(buttonText),
-              ),
-            ),
-          ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(onPressed: onNext, child: Text(buttonText)),
+          ),
         ],
       ),
     );
   }
 }
-

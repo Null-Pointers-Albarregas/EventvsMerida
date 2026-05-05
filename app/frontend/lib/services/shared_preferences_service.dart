@@ -100,6 +100,6 @@ class SharedPreferencesService {
 
   static Future<void> resetearTutorial() async {
     final prefs = await _prefs;
-    await prefs.remove(_tutorialKey);
+    await prefs.setBool(_tutorialKey, true);
   }
 }
