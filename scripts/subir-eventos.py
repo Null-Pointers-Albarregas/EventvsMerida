@@ -179,7 +179,7 @@ def main(argv: Optional[list] = None) -> int:
 
     parser = argparse.ArgumentParser(description="Sube eventos saneados a la API EventvsMérida")
     parser.add_argument("input", help="JSON de eventos saneados (output de saneador-caracteres.py)")
-    parser.add_argument("--api-url", default="https://eventvsmerida.onrender.com/api/eventos/add", help="URL API para publicar eventos")
+    parser.add_argument("--api-url", default="https://eventvsmerida-x2t1.onrender.com/api/eventos/add", help="URL API para publicar eventos")
     parser.add_argument("--email", default=os.getenv("EVENTVSMERIDA_EMAIL"), help="Email admin (o env EVENTVSMERIDA_EMAIL)")
     parser.add_argument("--password", default=os.getenv("EVENTVSMERIDA_PASSWORD"), help="Password admin (o env EVENTVSMERIDA_PASSWORD)")
     args = parser.parse_args(argv)
