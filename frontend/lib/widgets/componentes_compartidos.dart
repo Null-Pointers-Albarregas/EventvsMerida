@@ -662,7 +662,7 @@ class Tutorial {
       targets: pasosTutorial,
       colorShadow: color,
       textSkip: "SALTAR TUTORIAL",
-      paddingFocus: 10,
+      paddingFocus: 15,
       opacityShadow: 0.5,
       imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
       onSkip: () {
@@ -699,13 +699,16 @@ class Tutorial {
       contents: [
         TargetContent(
           align: alineamientoTarjeta,
-          child: _tutorialCard(
-            context: context,
-            icon: icon,
-            title: titulo,
-            message: descripcion,
-            buttonText: siguiente ? 'Siguiente' : 'Finalizar tutorial',
-            onNext: onNext,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _tutorialCard(
+              context: context,
+              icon: icon,
+              title: titulo,
+              message: descripcion,
+              buttonText: siguiente ? 'Siguiente' : 'Finalizar tutorial',
+              onNext: onNext,
+            ),
           ),
         ),
       ],
@@ -724,7 +727,7 @@ class Tutorial {
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 300),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(12),

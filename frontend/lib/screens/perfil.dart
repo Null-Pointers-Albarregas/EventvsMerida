@@ -26,7 +26,9 @@ class _PerfilState extends State<Perfil> {
 
   GlobalKey keyCabecera = GlobalKey();
   GlobalKey keySecciones = GlobalKey();
-
+  GlobalKey keyPreferencias = GlobalKey();
+  GlobalKey keyinfoLegal = GlobalKey();
+  bool cargarTutorial = false;
 
   // ===========================================================================
   // CICLO DE VIDA
@@ -54,7 +56,15 @@ class _PerfilState extends State<Perfil> {
   }
 
   Future<void> _cargarTutorial() async {
-    if (await SharedPreferencesService.cargarTutorial()) {
+    final tutorialActivo = await SharedPreferencesService.cargarTutorial();
+
+    if (!mounted) return;
+
+    setState(() {
+      cargarTutorial = tutorialActivo;
+    });
+
+    if (tutorialActivo) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await Future.delayed(const Duration(milliseconds: 300));
         if (!mounted) return;
@@ -224,6 +234,7 @@ class _PerfilState extends State<Perfil> {
     final isRegistrado = _usuario != null;
 
     return Column(
+      key: keyPreferencias,
       children: [
         if (isRegistrado) ...[
           _buildItem(
@@ -239,21 +250,23 @@ class _PerfilState extends State<Perfil> {
           //_buildItem(Icons.notifications, 'Preferencias de notificaciones'),
         ],
         _buildModoOscuro(),
-        _buildItem(
-          Icons.help_outline,
-          'Volver a hacer el tutorial',
-          onTap: () async{
-            await SharedPreferencesService.resetearTutorial();
-            Tutorial.resetearTutorial();
-            context.go('/eventos');
-          },
-        ),
+        if (!cargarTutorial)
+          _buildItem(
+            Icons.help_outline,
+            'Volver a hacer el tutorial',
+            onTap: () async {
+              await SharedPreferencesService.resetearTutorial();
+              Tutorial.resetearTutorial();
+              context.go('/eventos');
+            },
+          ),
       ],
     );
   }
 
   Widget _buildLegal() {
     return Column(
+      key: keyinfoLegal,
       children: [
         _buildItem(
           Icons.file_copy,
@@ -284,64 +297,94 @@ class _PerfilState extends State<Perfil> {
     Tutorial.tutorial.show(context: context);
   }
 
-  void cargarPasosTutorial() {
-    Tutorial.pasosTutorial.add(
-      Tutorial.crearPaso(
-        context: context,
-        key: keyCabecera,
-        titulo: 'Registrarse o iniciar sesión',
-        descripcion:
-            'En esta sección puedes registrarte para crear una cuenta o iniciar sesión si ya tienes una. Al hacerlo, podrás acceder a funciones personalizadas como guardar eventos favoritos.',
-        icon: Icons.calendar_month,
-        siguiente: true,
-        onNext: () => Tutorial.tutorial.next(),
-        forma: ShapeLightFocus.RRect,
-      ),
-    );
-    Tutorial.pasosTutorial.add(
-      Tutorial.crearPaso(
-        context: context,
-        key: keySecciones,
-        titulo: 'Preferencias e información legal',
-        descripcion: 'Aquí puedes configurar tus preferencias, como el modo oscuro, eventos guardados, o la política de privacidad entre otros.',
-        icon: Icons.list_alt,
-        siguiente: false,
-        onNext: () async {
-          Tutorial.tutorialInicializado = false;
-          Tutorial.tutorial.finish();
+  Future<void> finalizarTutorial() async {
+    Tutorial.tutorialInicializado = false;
+    Tutorial.tutorial.finish();
 
-          await Future.delayed(const Duration(milliseconds: 300));
-          if (!mounted) return;
-          Tutorial.numPantalla = 5;
-          await SharedPreferencesService.finalizarTurorial();
-          context.go('/eventos');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.check, size: 20, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      '¡Has completado el tutorial!',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+    Tutorial.numPantalla = 5;
+    await SharedPreferencesService.finalizarTurorial();
+    context.go('/eventos');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check, size: 20, color: Colors.white),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                '¡Has completado el tutorial!',
+                style: const TextStyle(color: Colors.white),
               ),
             ),
-          );
-        },
-        forma: ShapeLightFocus.RRect,
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
+  }
+
+  void cargarPasosTutorial() {
+    if (_usuario == null) {
+      Tutorial.pasosTutorial.add(
+        Tutorial.crearPaso(
+          context: context,
+          key: keyCabecera,
+          titulo: 'Registrarse o iniciar sesión',
+          descripcion:
+              'En esta sección puedes registrarte para crear una cuenta o iniciar sesión si ya tienes una. Al hacerlo, podrás acceder a funciones personalizadas como guardar eventos favoritos.',
+          icon: Icons.calendar_month,
+          siguiente: true,
+          onNext: () => Tutorial.tutorial.next(),
+          forma: ShapeLightFocus.RRect,
+        ),
+      );
+      Tutorial.pasosTutorial.add(
+        Tutorial.crearPaso(
+          context: context,
+          key: keySecciones,
+          titulo: 'Preferencias e información legal',
+          descripcion:
+              'Aquí puedes configurar tus preferencias, eventos guardados, o la política de privacidad entre otros.',
+          icon: Icons.list_alt,
+          siguiente: false,
+          onNext: () => finalizarTutorial(),
+          forma: ShapeLightFocus.RRect,
+        ),
+      );
+    } else {
+      Tutorial.pasosTutorial.add(
+        Tutorial.crearPaso(
+          context: context,
+          key: keyPreferencias,
+          titulo: 'Preferencias',
+          descripcion:
+              'En esta sección puedes configurar tus preferencias, como tus datos personales o los eventos guardados.',
+          icon: Icons.calendar_month,
+          siguiente: true,
+          onNext: () => Tutorial.tutorial.next(),
+          forma: ShapeLightFocus.RRect,
+        ),
+      );
+      Tutorial.pasosTutorial.add(
+        Tutorial.crearPaso(
+          context: context,
+          key: keyinfoLegal,
+          titulo: 'Información legal',
+          descripcion:
+              'Aquí puedes consultar los términos y condiciones así como la política de privacidad.',
+          icon: Icons.calendar_month,
+          siguiente: false,
+          onNext: () => finalizarTutorial(),
+          forma: ShapeLightFocus.RRect,
+        ),
+      );
+    }
   }
 
   // ===========================================================================
