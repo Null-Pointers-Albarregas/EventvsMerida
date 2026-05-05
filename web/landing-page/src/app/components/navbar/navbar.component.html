@@ -1,0 +1,13 @@
+<nav class="navbar" [class.scrolled]="scrolled()">
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <img src="assets/logo.jpeg" alt="Eventvs Mérida" class="logo-img" />
+    </div>
+    <ul class="nav-links">
+      <li><button (click)="scrollTo('about')">Sobre la App</button></li>
+      <li><button (click)="scrollTo('features')">Funcionalides</button></li>
+      <li><button (click)="scrollTo('team')">Equipo</button></li>
+      <li><button (click)="scrollTo('download')" class="nav-cta">Descargar</button></li>
+    </ul>
+  </div>
+</nav>
