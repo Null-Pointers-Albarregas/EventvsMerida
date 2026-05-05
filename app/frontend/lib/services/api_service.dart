@@ -10,7 +10,7 @@ import '../models/usuario.dart';
 import '../models/categoria.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://eventvsmerida.onrender.com/api';
+  static const String baseUrl = 'https://eventvsmerida-x2t1.onrender.com/api';
   static const Duration _tiempoLimite = Duration(seconds: 10);
   static const Map<String, String> _cabecerasJson = {'Content-Type': 'application/json',};
   static const String _mensajeSinConexion = 'No hay conexión. Intenta de nuevo más tarde.';
