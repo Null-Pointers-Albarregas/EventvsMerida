@@ -19,7 +19,7 @@ window.addEventListener("DOMContentLoaded", async (event) => {
 });
 
 async function login(datos) {
-    const URL = "https://eventvsmerida.onrender.com/api/auth/login?admin=true";
+    const URL = "https://eventvsmerida-x2t1.onrender.com/api/auth/login?admin=true";
 
     try {
         const respuesta = await fetch(URL, {
