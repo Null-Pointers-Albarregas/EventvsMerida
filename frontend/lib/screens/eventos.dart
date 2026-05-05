@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:eventvsmerida/models/evento.dart';
+import 'package:eventvsmerida/services/shared_preferences_service.dart';
 import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../models/api_response.dart';
 import '../models/usuario.dart';
@@ -24,7 +27,12 @@ class _EventosState extends State<Eventos> {
   // VARIABLES
   // ===========================================================================
 
+  GlobalKey keyTarjetaEvento = GlobalKey();
+  GlobalKey keyBtnBuscar = GlobalKey();
+  GlobalKey keyBtnFiltro = GlobalKey();
+
   String _textoBusqueda = '';
+
   //late Future<ApiResponse<List<Evento>>> _eventos;
   late Future<ApiResponse<List<Evento>>> _eventosEncontrados;
   Future<ApiResponse<List<Evento>>>? _eventosFuture;
@@ -74,7 +82,7 @@ class _EventosState extends State<Eventos> {
 
   Future<void> _cargarDatosUsuarioYGuardados() async {
     final (usuario, guardados) =
-    await EventosGuardadosService.cargarUsuarioYEventosGuardados();
+        await EventosGuardadosService.cargarUsuarioYEventosGuardados();
 
     if (!mounted) return;
 
@@ -88,7 +96,10 @@ class _EventosState extends State<Eventos> {
   // FUNCIONES AUXILIARES
   // ===========================================================================
 
-  void _buscarEventos(String text, void Function(void Function()) setStateModal) {
+  void _buscarEventos(
+    String text,
+    void Function(void Function()) setStateModal,
+  ) {
     if (_debounce?.isActive ?? false) {
       _debounce?.cancel();
     }
@@ -144,7 +155,11 @@ class _EventosState extends State<Eventos> {
   }
 
   void _onScroll() {
-    if (!_scrollController.hasClients || _isLoadingEventos || !_hasMoreEventos || _usandoFiltros) return;
+    if (!_scrollController.hasClients ||
+        _isLoadingEventos ||
+        !_hasMoreEventos ||
+        _usandoFiltros)
+      return;
     if (_scrollController.position.extentAfter < 200) {
       _fetchEventosPage();
     }
@@ -184,13 +199,35 @@ class _EventosState extends State<Eventos> {
         _page++;
         _hasMoreEventos = !last;
       });
+
+      if(await SharedPreferencesService.cargarTutorial()) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (!mounted) return;
+          _comprobarInicializacionTutorial();
+        });
+      }
     } catch (e) {
       setState(() => _hasMoreEventos = false);
     } finally {
       setState(() => _isLoadingEventos = false);
     }
 
-    print('Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos');
+    print(
+      'Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos',
+    );
+  }
+
+  void _comprobarInicializacionTutorial() {
+    if (!mounted || _eventosList.isEmpty) return;
+
+    // Solo empezar aquí si toca comenzar en Eventos
+    if (Tutorial.numPantalla != 1) return;
+
+    if (Tutorial.tutorialInicializado) return;
+
+    Tutorial.tutorialInicializado = true;
+    _configurarTutorial();
   }
 
   // ===========================================================================
@@ -292,7 +329,10 @@ class _EventosState extends State<Eventos> {
             ),
             Dialog(
               backgroundColor: Colors.transparent,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 48),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 48,
+              ),
               child: StatefulBuilder(
                 builder: (contextModal, setStateModal) {
                   return Container(
@@ -318,7 +358,10 @@ class _EventosState extends State<Eventos> {
                             ),
                             IconButton(
                               icon: Icon(Icons.close, color: _cs.primary),
-                              onPressed: () => Navigator.of(context, rootNavigator: true).maybePop(),
+                              onPressed: () => Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).maybePop(),
                             ),
                           ],
                         ),
@@ -326,36 +369,55 @@ class _EventosState extends State<Eventos> {
                         FutureBuilder<ApiResponse<List<Categoria>>>(
                           future: _categorias,
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
                               return const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 24),
-                                child: Center(child: CircularProgressIndicator()),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
                               );
                             }
                             if (snapshot.hasError) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 24),
-                                child: Text('Error: ${snapshot.error}', textAlign: TextAlign.center),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 24,
+                                ),
+                                child: Text(
+                                  'Error: ${snapshot.error}',
+                                  textAlign: TextAlign.center,
+                                ),
                               );
                             }
                             final resp = snapshot.data;
                             if (resp == null || !resp.exito) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 24),
-                                child: Text(resp?.mensaje ?? 'No se pudieron cargar las categorías', textAlign: TextAlign.center),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 24,
+                                ),
+                                child: Text(
+                                  resp?.mensaje ??
+                                      'No se pudieron cargar las categorías',
+                                  textAlign: TextAlign.center,
+                                ),
                               );
                             }
                             final lista = resp.datos ?? const [];
 
                             return ConstrainedBox(
-                              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+                              constraints: BoxConstraints(
+                                maxHeight:
+                                    MediaQuery.of(context).size.height * 0.5,
+                              ),
                               child: ListView.separated(
                                 shrinkWrap: true,
                                 itemCount: lista.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 6),
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 6),
                                 itemBuilder: (context, index) {
                                   final cat = lista[index];
-                                  final seleccionado = _categoriasSeleccionadas.contains(cat.id);
+                                  final seleccionado = _categoriasSeleccionadas
+                                      .contains(cat.id);
                                   return Material(
                                     color: Colors.transparent,
                                     child: InkWell(
@@ -363,18 +425,31 @@ class _EventosState extends State<Eventos> {
                                       onTap: () {
                                         setStateModal(() {
                                           if (seleccionado) {
-                                            _categoriasSeleccionadas.remove(cat.id);
+                                            _categoriasSeleccionadas.remove(
+                                              cat.id,
+                                            );
                                           } else {
-                                            _categoriasSeleccionadas.add(cat.id);
+                                            _categoriasSeleccionadas.add(
+                                              cat.id,
+                                            );
                                           }
                                         });
                                       },
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 6,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: _cs.surface,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: seleccionado ? _cs.primary : _cs.onSurface.withAlpha(24)),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          border: Border.all(
+                                            color: seleccionado
+                                                ? _cs.primary
+                                                : _cs.onSurface.withAlpha(24),
+                                          ),
                                         ),
                                         child: Row(
                                           children: [
@@ -382,11 +457,17 @@ class _EventosState extends State<Eventos> {
                                               width: 36,
                                               height: 36,
                                               decoration: BoxDecoration(
-                                                color: _cs.primary.withAlpha(40),
+                                                color: _cs.primary.withAlpha(
+                                                  40,
+                                                ),
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Center(
-                                                child: Icon(Icons.label, size: 18, color: _cs.primary),
+                                                child: Icon(
+                                                  Icons.label,
+                                                  size: 18,
+                                                  color: _cs.primary,
+                                                ),
                                               ),
                                             ),
                                             const SizedBox(width: 12),
@@ -404,9 +485,11 @@ class _EventosState extends State<Eventos> {
                                               onChanged: (v) {
                                                 setStateModal(() {
                                                   if (v == true) {
-                                                    _categoriasSeleccionadas.add(cat.id);
+                                                    _categoriasSeleccionadas
+                                                        .add(cat.id);
                                                   } else {
-                                                    _categoriasSeleccionadas.remove(cat.id);
+                                                    _categoriasSeleccionadas
+                                                        .remove(cat.id);
                                                   }
                                                 });
                                               },
@@ -428,7 +511,10 @@ class _EventosState extends State<Eventos> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.of(context, rootNavigator: true).maybePop();
+                              Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).maybePop();
                               setState(() {
                                 if (_categoriasSeleccionadas.isEmpty) {
                                   _usandoFiltros = false;
@@ -436,7 +522,10 @@ class _EventosState extends State<Eventos> {
                                   _resetAndFetchEventos();
                                 } else {
                                   _usandoFiltros = true;
-                                  _eventosFuture = ApiService.obtenerEventosFiltradosPorCategorias(_categoriasSeleccionadas.toList());
+                                  _eventosFuture =
+                                      ApiService.obtenerEventosFiltradosPorCategorias(
+                                        _categoriasSeleccionadas.toList(),
+                                      );
                                 }
                               });
                             },
@@ -444,7 +533,9 @@ class _EventosState extends State<Eventos> {
                               backgroundColor: _cs.primary,
                               foregroundColor: _cs.surface,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                             child: const Text('Aplicar filtros'),
                           ),
@@ -465,9 +556,16 @@ class _EventosState extends State<Eventos> {
   // INTERFAZ
   // ===========================================================================
 
-  Widget _buildAppBarAction({required IconData icon, required String tooltip, VoidCallback? onPressed, int badgeCount = 0,}) {
+  Widget _buildAppBarAction({
+    required IconData icon,
+    required String tooltip,
+    VoidCallback? onPressed,
+    int badgeCount = 0,
+    key,
+  }) {
     if (badgeCount <= 0) {
       return IconButton(
+        key: key,
         onPressed: onPressed,
         icon: Icon(icon, color: _cs.primary),
         tooltip: tooltip,
@@ -521,7 +619,10 @@ class _EventosState extends State<Eventos> {
     );
   }
 
-  Widget _buildEstadoCentro({required IconData icono, required String mensaje,}) {
+  Widget _buildEstadoCentro({
+    required IconData icono,
+    required String mensaje,
+  }) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -537,8 +638,9 @@ class _EventosState extends State<Eventos> {
     );
   }
 
-  Widget _buildEventoCard(Evento evento) {
+  Widget _buildEventoCard(Evento evento, {Key? key}) {
     return Card(
+      key: key,
       elevation: 6,
       shadowColor: _cs.onSurface,
       margin: const EdgeInsets.all(16),
@@ -728,18 +830,105 @@ class _EventosState extends State<Eventos> {
       itemBuilder: (context, index) {
         if (index < _eventosList.length) {
           final evento = _eventosList[index];
-          return _buildEventoCard(evento);
-        } else {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator()),
+          return _buildEventoCard(
+            evento,
+            key: index == 0 ? keyTarjetaEvento : null,
           );
         }
+
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Center(child: CircularProgressIndicator()),
+        );
       },
     );
   }
 
-  Widget _buildEventosFiltradosBusquedaBody(Future<ApiResponse<List<Evento>>> listadoEventos, String tipo) {
+  // ===========================================================================
+  // TUTORIAL
+  // ===========================================================================
+
+  void _configurarTutorial() {
+    Tutorial.pasosTutorial.clear();
+    cargarPasosTutorial();
+    Tutorial.tutorial = Tutorial.crearTutorial(
+      context: context,
+      pasosTutorial: Tutorial.pasosTutorial,
+      color: Theme.of(context).colorScheme.primary,
+    );
+    Tutorial.mostrarTutorial(context);
+  }
+
+  void cargarPasosTutorial() {
+    Tutorial.navPasoActivo.value = false;
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        context: context,
+        key: keyTarjetaEvento,
+        titulo: 'Eventos disponibles',
+        descripcion:
+            'Aquí puedes ver todos los eventos disponibles. Toca en cualquiera para verlo en detalle.',
+        icon: Icons.event,
+        siguiente: true,
+        onNext: () => Tutorial.tutorial.next(),
+        forma: ShapeLightFocus.RRect,
+      ),
+    );
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        context: context,
+        key: keyBtnBuscar,
+        titulo: 'Buscar eventos',
+        descripcion:
+            'Desde aquí puedes buscar eventos por nombre, ubicación o categoría.',
+        icon: Icons.search,
+        siguiente: true,
+        onNext: () => Tutorial.tutorial.next(),
+      ),
+    );
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        context: context,
+        key: keyBtnFiltro,
+        titulo: 'Filtrar eventos',
+        descripcion:
+            'Desde aquí puedes filtrar los eventos por categoría para encontrar más rápido segun tus gustos.',
+        icon: Icons.filter_alt,
+        siguiente: true,
+        onNext: () {
+          Tutorial.navPasoActivo.value = true;
+          Tutorial.tutorial.next();
+        },
+      ),
+    );
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        alineamientoTarjeta: ContentAlign.top,
+        context: context,
+        key: Tutorial.keyNavMapa,
+        titulo: 'Mapa',
+        descripcion:
+            'A continuación, pasemos al mapa. Pulsa el botón de continuar para ir al mapa.',
+        icon: Icons.map,
+        siguiente: true,
+        onNext: () async {
+          Tutorial.navPasoActivo.value = false;
+          Tutorial.numPantalla = 2;
+          Tutorial.tutorialInicializado = false;
+          Tutorial.tutorial.finish();
+
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (!mounted) return;
+          context.go('/mapa');
+        },
+      ),
+    );
+  }
+
+  Widget _buildEventosFiltradosBusquedaBody(
+    Future<ApiResponse<List<Evento>>> listadoEventos,
+    String tipo,
+  ) {
     return Center(
       child: FutureBuilder<ApiResponse<List<Evento>>>(
         future: listadoEventos,
@@ -759,7 +948,7 @@ class _EventosState extends State<Eventos> {
             return _buildEstadoCentro(
               icono: Icons.error_outline,
               mensaje:
-              respuesta?.mensaje ?? 'No se han podido cargar los eventos',
+                  respuesta?.mensaje ?? 'No se han podido cargar los eventos',
             );
           }
 
@@ -844,7 +1033,10 @@ class _EventosState extends State<Eventos> {
                               child: IgnorePointer(
                                 ignoring: true,
                                 child: BackdropFilter(
-                                  filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 6,
+                                    sigmaY: 6,
+                                  ),
                                   child: Container(color: Colors.transparent),
                                 ),
                               ),
@@ -871,12 +1063,14 @@ class _EventosState extends State<Eventos> {
                       setState(() {});
                     });
                   },
+                  key: keyBtnBuscar,
                 ),
                 _buildAppBarAction(
                   icon: Icons.filter_alt_rounded,
                   tooltip: 'Filtrar',
                   onPressed: _abrirModalFiltros,
                   badgeCount: _categoriasSeleccionadas.length,
+                  key: keyBtnFiltro,
                 ),
               ],
             ),
@@ -885,8 +1079,8 @@ class _EventosState extends State<Eventos> {
       ),
       body: _usandoFiltros
           ? (_eventosFuture == null
-          ? const Center(child: CircularProgressIndicator())
-          : _buildEventosFiltradosBusquedaBody(_eventosFuture!, ''))
+                ? const Center(child: CircularProgressIndicator())
+                : _buildEventosFiltradosBusquedaBody(_eventosFuture!, ''))
           : _buildEventosPaginatedBody(),
     );
   }

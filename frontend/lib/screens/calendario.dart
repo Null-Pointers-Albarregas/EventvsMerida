@@ -1,7 +1,10 @@
+import 'package:eventvsmerida/services/shared_preferences_service.dart';
 import 'package:eventvsmerida/widgets/componentes_compartidos.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../models/evento.dart';
 import '../models/usuario.dart';
@@ -51,6 +54,9 @@ class _CalendarioState extends State<Calendario> {
 
   ColorScheme get _cs => Theme.of(context).colorScheme;
 
+  GlobalKey keyCalendario = GlobalKey();
+  GlobalKey keyListadoEventos = GlobalKey();
+
   // ===========================================================================
   // CICLO DE VIDA
   // ===========================================================================
@@ -69,10 +75,20 @@ class _CalendarioState extends State<Calendario> {
 
     _years = List.generate(
       _ultimoMesPermitido.year - _primerMesPermitido.year + 1,
-          (index) => _primerMesPermitido.year + index,
+      (index) => _primerMesPermitido.year + index,
     );
     _cargarUsuarioYGuardados();
     _cargarEventos();
+  }
+
+  bool _targetEstaListo(GlobalKey key) {
+    final ctx = key.currentContext;
+    if (ctx == null) return false;
+
+    final renderObject = ctx.findRenderObject();
+    return renderObject is RenderBox &&
+        renderObject.attached &&
+        renderObject.hasSize;
   }
 
   // ===========================================================================
@@ -81,7 +97,7 @@ class _CalendarioState extends State<Calendario> {
 
   Future<void> _cargarUsuarioYGuardados() async {
     final (usuario, guardados) =
-    await EventosGuardadosService.cargarUsuarioYEventosGuardados();
+        await EventosGuardadosService.cargarUsuarioYEventosGuardados();
 
     if (!mounted) return;
 
@@ -96,6 +112,14 @@ class _CalendarioState extends State<Calendario> {
       _cargandoEventos = true;
       _mensajeError = null;
     });
+
+    if(await SharedPreferencesService.cargarTutorial()){
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (!mounted) return;
+        _comprobarInicializacionTutorial();
+      });
+    }
 
     final respuesta = await ApiService.obtenerEventos();
 
@@ -191,7 +215,8 @@ class _CalendarioState extends State<Calendario> {
     final iniciaHoy = _esMismoDia(evento.fechaInicio, diaSeleccionado);
 
     if (finalizaHoy) return evento.fechaFin.hour * 60 + evento.fechaFin.minute;
-    if (iniciaHoy) return evento.fechaInicio.hour * 60 + evento.fechaInicio.minute;
+    if (iniciaHoy)
+      return evento.fechaInicio.hour * 60 + evento.fechaInicio.minute;
 
     return evento.fechaInicio.hour * 60 + evento.fechaInicio.minute;
   }
@@ -201,7 +226,8 @@ class _CalendarioState extends State<Calendario> {
     final fechaNormalizada = _normalizarFecha(fechaSeleccionada);
     final hoy = _normalizarFecha(DateTime.now());
 
-    final esMesVisible = fechaNormalizada.month == _focusedDay.month &&
+    final esMesVisible =
+        fechaNormalizada.month == _focusedDay.month &&
         fechaNormalizada.year == _focusedDay.year;
 
     if (!esMesVisible || fechaNormalizada.isBefore(hoy)) {
@@ -285,16 +311,10 @@ class _CalendarioState extends State<Calendario> {
       mesFin = _ultimoMesPermitido.month;
     }
 
-    return List.generate(
-      mesFin - mesInicio + 1,
-          (index) {
-        final mes = mesInicio + index;
-        return DropdownMenuItem<int>(
-          value: mes,
-          child: Text(_months[mes - 1]),
-        );
-      },
-    );
+    return List.generate(mesFin - mesInicio + 1, (index) {
+      final mes = mesInicio + index;
+      return DropdownMenuItem<int>(value: mes, child: Text(_months[mes - 1]));
+    });
   }
 
   void _actualizarFechaVisible(DateTime nuevaFecha) {
@@ -322,6 +342,18 @@ class _CalendarioState extends State<Calendario> {
     });
   }
 
+  void _comprobarInicializacionTutorial() {
+    if (!mounted) return;
+    if (Tutorial.numPantalla != 3) return;
+    if (Tutorial.tutorialInicializado) return;
+    if (!_targetEstaListo(keyCalendario) &&
+        !_targetEstaListo(keyListadoEventos))
+      return;
+
+    Tutorial.tutorialInicializado = true;
+    _configurarTutorial();
+  }
+
   // ===========================================================================
   // MODALES
   // ===========================================================================
@@ -344,39 +376,39 @@ class _CalendarioState extends State<Calendario> {
       ),
     );
   }
+
   // ===========================================================================
   // MENSAJES
   // ===========================================================================
 
   void _mostrarMensaje(String mensaje) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensaje)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensaje)));
   }
 
   // ===========================================================================
   // INTERFAZ
   // ===========================================================================
 
-  Widget _buildDropdown<T>({required T value, required List<DropdownMenuItem<T>> items, required ValueChanged<T?> onChanged,}) {
+  Widget _buildDropdown<T>({
+    required T value,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _cs.primary.withValues(alpha: 128),
-        ),
+        border: Border.all(color: _cs.primary.withValues(alpha: 128)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
           items: items,
           onChanged: onChanged,
-          style: TextStyle(
-            color: _cs.onSurface,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: _cs.onSurface, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -391,9 +423,7 @@ class _CalendarioState extends State<Calendario> {
           items: _buildMonthItems(),
           onChanged: (val) {
             if (val == null) return;
-            _actualizarFechaVisible(
-              DateTime(_focusedDay.year, val, 1),
-            );
+            _actualizarFechaVisible(DateTime(_focusedDay.year, val, 1));
           },
         ),
         const SizedBox(width: 15),
@@ -402,16 +432,14 @@ class _CalendarioState extends State<Calendario> {
           items: _years
               .map(
                 (anio) => DropdownMenuItem<int>(
-              value: anio,
-              child: Text(anio.toString()),
-            ),
-          )
+                  value: anio,
+                  child: Text(anio.toString()),
+                ),
+              )
               .toList(),
           onChanged: (val) {
             if (val == null) return;
-            _actualizarFechaVisible(
-              DateTime(val, _focusedDay.month, 1),
-            );
+            _actualizarFechaVisible(DateTime(val, _focusedDay.month, 1));
           },
         ),
       ],
@@ -422,6 +450,7 @@ class _CalendarioState extends State<Calendario> {
     return TableCalendar(
       locale: 'es',
       firstDay: _primerMesPermitido,
+      key: keyCalendario,
       lastDay: _ultimoMesPermitido,
       focusedDay: _focusedDay,
       headerVisible: false,
@@ -431,7 +460,8 @@ class _CalendarioState extends State<Calendario> {
         final fechaNormalizada = _normalizarFecha(day);
         final hoy = _normalizarFecha(DateTime.now());
 
-        final esMesVisible = fechaNormalizada.month == _focusedDay.month &&
+        final esMesVisible =
+            fechaNormalizada.month == _focusedDay.month &&
             fechaNormalizada.year == _focusedDay.year;
 
         if (!esMesVisible) {
@@ -470,14 +500,10 @@ class _CalendarioState extends State<Calendario> {
         outsideDaysVisible: true,
 
         // Días normales del mes visible
-        defaultTextStyle: TextStyle(
-          color: _cs.onSurface,
-        ),
+        defaultTextStyle: TextStyle(color: _cs.onSurface),
 
         // Fines de semana del mes visible
-        weekendTextStyle: TextStyle(
-          color: _cs.onSurface,
-        ),
+        weekendTextStyle: TextStyle(color: _cs.onSurface),
 
         // Días de otros meses
         outsideTextStyle: TextStyle(
@@ -513,9 +539,7 @@ class _CalendarioState extends State<Calendario> {
       decoration: BoxDecoration(
         color: _cs.primary.withValues(alpha: 20),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _cs.primary.withValues(alpha: 64),
-        ),
+        border: Border.all(color: _cs.primary.withValues(alpha: 64)),
       ),
       child: Text(
         texto,
@@ -540,19 +564,14 @@ class _CalendarioState extends State<Calendario> {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: ListTile(
         onTap: () => _abrirModalEvento(evento),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 8,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         minLeadingWidth: 96,
         leading: _buildEventoBadge(etiquetaTiempo),
         title: Text(
           evento.titulo,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -566,37 +585,28 @@ class _CalendarioState extends State<Calendario> {
               ),
             ],
             const SizedBox(height: 2),
-            Text(
-              textoFecha,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            Text(textoFecha, maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEstadoCentro({required IconData icono, required String mensaje, Widget? accion,}) {
+  Widget _buildEstadoCentro({
+    required IconData icono,
+    required String mensaje,
+    Widget? accion,
+  }) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icono,
-              size: 42,
-            ),
+            Icon(icono, size: 42),
             const SizedBox(height: 12),
-            Text(
-              mensaje,
-              textAlign: TextAlign.center,
-            ),
-            if (accion != null) ...[
-              const SizedBox(height: 12),
-              accion,
-            ],
+            Text(mensaje, textAlign: TextAlign.center),
+            if (accion != null) ...[const SizedBox(height: 12), accion],
           ],
         ),
       ),
@@ -605,9 +615,7 @@ class _CalendarioState extends State<Calendario> {
 
   Widget _buildEventoLista() {
     if (_cargandoEventos) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_mensajeError != null) {
@@ -631,6 +639,7 @@ class _CalendarioState extends State<Calendario> {
     }
 
     return ListView.separated(
+      key: keyListadoEventos,
       itemCount: lista.length,
       padding: const EdgeInsets.only(bottom: 12),
       itemBuilder: (context, index) {
@@ -638,6 +647,71 @@ class _CalendarioState extends State<Calendario> {
         return _buildEventoCard(evento);
       },
       separatorBuilder: (context, index) => const SizedBox(height: 0),
+    );
+  }
+
+  // ===========================================================================
+  // TUTORIAL
+  // ===========================================================================
+
+  void _configurarTutorial() {
+    Tutorial.pasosTutorial.clear();
+    cargarPasosTutorial();
+    Tutorial.tutorial = Tutorial.crearTutorial(
+      context: context,
+      pasosTutorial: Tutorial.pasosTutorial,
+      color: Theme.of(context).colorScheme.primary,
+    );
+    Tutorial.mostrarTutorial(context);
+  }
+
+  void cargarPasosTutorial() {
+    Tutorial.navPasoActivo.value = false;
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        context: context,
+        key: keyCalendario,
+        titulo: 'Calendario',
+        descripcion: 'Aquí puedes ver los días del mes. Los días con eventos disponibles se marcarán con un punto en el calendario.',
+        icon: Icons.calendar_month,
+        siguiente: true,
+        onNext: () => Tutorial.tutorial.next(),
+        forma: ShapeLightFocus.RRect,
+      ),
+    );
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        context: context,
+        key: keyListadoEventos,
+        titulo: 'Eventos del día seleccionado',
+        descripcion: 'En esta sección se muestra un listado de los eventos correspondientes al día que selecciones en el calendario. Al pulsar sobre cualquier evento puedes ver todos sus detalles.',
+        icon: Icons.list_alt,
+        siguiente: true,
+        onNext: () => Tutorial.tutorial.next(),
+        forma: ShapeLightFocus.RRect,
+        alineamientoTarjeta: ContentAlign.top,
+      ),
+    );
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        context: context,
+        key: Tutorial.keyNavPerfil,
+        titulo: 'Perfil',
+        descripcion: 'Vamos a por el perfil!',
+        icon: Icons.person,
+        siguiente: true,
+        onNext: () async {
+          Tutorial.navPasoActivo.value = false;
+          Tutorial.numPantalla = 4;
+          Tutorial.tutorialInicializado = false;
+          Tutorial.tutorial.finish();
+
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (!mounted) return;
+          context.go('/perfil');
+        },
+        alineamientoTarjeta: ContentAlign.top,
+      ),
     );
   }
 
@@ -663,9 +737,7 @@ class _CalendarioState extends State<Calendario> {
           const Divider(),
 
           // LISTA DE EVENTOS
-          Expanded(
-            child: _buildEventoLista(),
-          ),
+          Expanded(child: _buildEventoLista()),
         ],
       ),
     );

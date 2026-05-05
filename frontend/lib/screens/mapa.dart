@@ -1,6 +1,9 @@
+import 'package:eventvsmerida/services/shared_preferences_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../models/evento.dart';
 import '../models/usuario.dart';
@@ -29,6 +32,7 @@ class _MapaState extends State<Mapa> {
   // Variables para gestionar el guardado y el usuario (igual que en eventos.dart)
   Usuario? _usuario;
   List<Evento> _eventosGuardados = [];
+  GlobalKey keyPinLocalizacion = GlobalKey();
 
   // ===========================================================================
   // CICLO DE VIDA
@@ -39,6 +43,17 @@ class _MapaState extends State<Mapa> {
     _cargarUsuarioYGuardados(); // Cargamos la sesión primero
     _cargarEventosParaMapa();
   }
+
+  bool _targetEstaListo(GlobalKey key) {
+    final ctx = key.currentContext;
+    if (ctx == null) return false;
+
+    final renderObject = ctx.findRenderObject();
+    return renderObject is RenderBox &&
+        renderObject.attached &&
+        renderObject.hasSize;
+  }
+
   // ===========================================================================
   // CARGA DE DATOS
   // ===========================================================================
@@ -91,10 +106,30 @@ class _MapaState extends State<Mapa> {
         _eventosAgrupados = agrupados;
         _cargando = false;
       });
+
+      if(await SharedPreferencesService.cargarTutorial()) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await Future.delayed(const Duration(milliseconds: 400));
+          if (!mounted) return;
+          _comprobarInicializacionTutorial();
+        });
+      }
     } else {
       setState(() => _cargando = false);
       _mostrarMensaje(respuesta.mensaje);
     }
+  }
+
+  void _comprobarInicializacionTutorial() {
+    if (!mounted) return;
+    if (Tutorial.numPantalla != 2) return;
+    if (Tutorial.tutorialInicializado) return;
+    if (_cargando) return;
+    if (_eventosAgrupados.isEmpty) return;
+    if (!_targetEstaListo(keyPinLocalizacion)) return;
+
+    Tutorial.tutorialInicializado = true;
+    _configurarTutorial();
   }
   // ===========================================================================
   // FUNCIONES AUXILIARES
@@ -137,7 +172,6 @@ class _MapaState extends State<Mapa> {
       options: const MapOptions(
         initialCenter: _merida,
         initialZoom: _zoomInicial,
-
       ),
       children: [
         TileLayer(
@@ -146,17 +180,19 @@ class _MapaState extends State<Mapa> {
         ),
         MarkerLayer(
           markers: _eventosAgrupados.values.map((listaEventosEnEsteLugar) {
-            // Cogemos el primer evento solo para saber dónde poner el pin
             final primerEvento = listaEventosEnEsteLugar.first;
+            final esPrimerPin = listaEventosEnEsteLugar == _eventosAgrupados.values.first;
+
             return Marker(
               point: LatLng(primerEvento.latitud!, primerEvento.longitud!),
               width: 55,
               height: 65,
               alignment: Alignment.topCenter,
               child: GestureDetector(
-              onTap: () => _abrirModalEvento(listaEventosEnEsteLugar),
+                key: esPrimerPin ? keyPinLocalizacion : null,
+                onTap: () => _abrirModalEvento(listaEventosEnEsteLugar),
                 child: PinConFoto(
-                 imagePath: 'assets/images/logo-eventvs-merida.png',
+                  imagePath: 'assets/images/logo-eventvs-merida.png',
                   cantidadEventos: listaEventosEnEsteLugar.length,
                 ),
               ),
@@ -167,6 +203,56 @@ class _MapaState extends State<Mapa> {
     );
   }
 
+  // ===========================================================================
+  // TUTORIAL
+  // ===========================================================================
+
+  void _configurarTutorial() {
+    Tutorial.navPasoActivo.value = false;
+    Tutorial.pasosTutorial.clear();
+    cargarPasosTutorial();
+    Tutorial.tutorial = Tutorial.crearTutorial(
+      context: context,
+      pasosTutorial: Tutorial.pasosTutorial,
+      color: Theme.of(context).colorScheme.primary,
+    );
+    Tutorial.mostrarTutorial(context);
+  }
+
+  void cargarPasosTutorial() {
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+          context: context,
+          key: keyPinLocalizacion,
+          titulo: 'Localización ',
+          descripcion: 'En estos pines puedes visualizar y ubicar los eventos en el mapa de Mérida. Si pulsas en uno de ellos, podrás ver nuevamente en detalle este.',
+          icon: Icons.event,
+          siguiente: true,
+          onNext: () => Tutorial.tutorial.next(),
+      ),
+    );
+    Tutorial.pasosTutorial.add(
+      Tutorial.crearPaso(
+        context: context,
+        key: Tutorial.keyNavCalendario,
+        titulo: 'Calendario',
+        descripcion: 'Ahora pasemos al calendario para ver sus funcionalidades.',
+        icon: Icons.calendar_month,
+        siguiente: true,
+        onNext: () async {
+          Tutorial.navPasoActivo.value = false;
+          Tutorial.numPantalla = 3;
+          Tutorial.tutorialInicializado = false;
+          Tutorial.tutorial.finish();
+
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (!mounted) return;
+          context.go('/calendario');
+        },
+        alineamientoTarjeta: ContentAlign.top,
+      ),
+    );
+  }
 
   // ===========================================================================
   // BUILD
