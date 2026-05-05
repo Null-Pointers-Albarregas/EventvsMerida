@@ -14,7 +14,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
 
-  const URL_BASE = "https://eventvsmerida.onrender.com/api/";
+  const URL_BASE = "https://eventvsmerida-x2t1.onrender.com/api/";
   cargarDashboard(URL_BASE);
 });
 
