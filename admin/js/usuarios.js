@@ -39,7 +39,13 @@ window.addEventListener("DOMContentLoaded", async () => {
             password: contrasenia,
             idRol: 1,
           };
-          crearUsuario(URL_BASE, usuario);
+          const formData = new FormData();
+          formData.append("usuario", JSON.stringify(usuario));
+          const fotoFile = document.getElementById("fotoUsuario").files[0];
+          if (fotoFile) {
+            formData.append("foto", fotoFile);
+          }
+          crearUsuario(URL_BASE, formData);
         }
 
         form.classList.add("was-validated");
@@ -72,7 +78,13 @@ window.addEventListener("DOMContentLoaded", async () => {
           password: contraseniaModificada ? contrasenia : null,
           idRol: 1,
         };
-        editarUsuario(URL_BASE, formEditar.dataset.id, usuario);
+        const formData = new FormData();
+        formData.append("usuario", JSON.stringify(usuario));
+        const fotoFile = document.getElementById("formFileEditar")?.files?.[0];
+        if (fotoFile) {
+          formData.append("foto", fotoFile);
+        }
+        editarUsuario(URL_BASE, formEditar.dataset.id, formData);
       }
       formEditar.classList.add("was-validated");
     },
@@ -136,6 +148,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       if (form) {
         form.classList.remove("was-validated");
         form.reset();
+        document.getElementById("fotoUsuario").value = "";
       }
     });
   }
@@ -146,6 +159,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       const form = document.getElementById("formEditarUsuario");
       if (form) {
         form.classList.remove("was-validated");
+        contraseniaModificada = false;
       }
     });
   }
@@ -235,6 +249,19 @@ async function cargarUsuarios(URL_BASE) {
       divGrupo.className = "btn-group";
       divGrupo.setAttribute("role", "group");
 
+      // Botón ver
+      const btnVer = document.createElement("button");
+      btnVer.className = "btn btn-sm btn-primary";
+      btnVer.innerHTML = '<i class="fa-solid fa-eye"></i>';
+      btnVer.setAttribute("data-bs-toggle", "modal");
+      btnVer.setAttribute("data-bs-target", "#modalVerUsuario");
+      btnVer.addEventListener("click", async function () {
+        const detalle = await obtenerUsuarioPorId(URL_BASE, usuario.id);
+        if (detalle) {
+          verUsuario(detalle);
+        }
+      });
+
       // Botón editar
       const btnEditar = document.createElement("button");
       btnEditar.className = "btn btn-sm btn-warning";
@@ -243,15 +270,27 @@ async function cargarUsuarios(URL_BASE) {
       btnEditar.setAttribute("data-nombre", usuario.nombre);
       btnEditar.setAttribute("data-bs-toggle", "modal");
       btnEditar.setAttribute("data-bs-target", "#modalEditarUsuario");
-      btnEditar.addEventListener("click", function () {
-        document.getElementById("formEditarUsuario").dataset.id = usuario.id;
-        document.getElementById("nombreEditar").value = usuario.nombre;
-        document.getElementById("apellidosEditar").value = usuario.apellidos;
+      btnEditar.addEventListener("click", async function () {
+        const detalle = await obtenerUsuarioPorId(URL_BASE, usuario.id);
+        const data = detalle || usuario;
+        document.getElementById("formEditarUsuario").dataset.id = data.id;
+        document.getElementById("nombreEditar").value = data.nombre;
+        document.getElementById("apellidosEditar").value = data.apellidos;
         document.getElementById("fechaNacimientoEditar").value =
-          usuario.fechaNacimiento;
-        document.getElementById("correoEditar").value = usuario.email;
-        document.getElementById("telefonoEditar").value = usuario.telefono;
-        document.getElementById("nombreUsuario").innerText = usuario.nombre;
+          data.fechaNacimiento;
+        document.getElementById("correoEditar").value = data.email;
+        document.getElementById("telefonoEditar").value = data.telefono;
+        document.getElementById("nombreUsuario").innerText = data.nombre;
+        const imagenUsuario = document.getElementById("imagenUsuario");
+        const sinFotoUsuario = document.getElementById("sinFotoUsuario");
+        if (data.fotoUrl) {
+          imagenUsuario.src = data.fotoUrl;
+          imagenUsuario.style.display = "block";
+          sinFotoUsuario.style.display = "none";
+        } else {
+          imagenUsuario.style.display = "none";
+          sinFotoUsuario.style.display = "block";
+        }
       });
 
       // Botón eliminar
@@ -264,6 +303,7 @@ async function cargarUsuarios(URL_BASE) {
         eliminarUsuario(URL_BASE, this.dataset.id, this.dataset.nombre);
       });
 
+      divGrupo.appendChild(btnVer);
       divGrupo.appendChild(btnEditar);
       divGrupo.appendChild(btnEliminar);
 
@@ -286,11 +326,8 @@ async function crearUsuario(URL_BASE, datosFormulario) {
   try {
     const options = {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       credentials: "include",
-      body: JSON.stringify(datosFormulario),
+      body: datosFormulario,
     };
     const resp = await fetch(URL_BASE + "usuarios/add", options);
     const respuesta = await resp.json();
@@ -305,7 +342,7 @@ async function crearUsuario(URL_BASE, datosFormulario) {
       mostrarAlerta("error", "Error al crear el usuario: " + respuesta.error);
     }
   } catch (error) {
-    console.error("Error al subir el evento:", error);
+    console.error("Error al crear el usuario:", error);
   } finally {
     cargarUsuarios(URL_BASE);
   }
@@ -315,11 +352,8 @@ async function editarUsuario(URL_BASE, id, datosFormulario) {
   try {
     const options = {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
       credentials: "include",
-      body: JSON.stringify(datosFormulario),
+      body: datosFormulario,
     };
     const resp = await fetch(URL_BASE + "usuarios/update/" + id, options);
     const respuesta = await resp.json();
@@ -334,7 +368,7 @@ async function editarUsuario(URL_BASE, id, datosFormulario) {
       mostrarAlerta("error", "Error al editar el usuario: " + respuesta.error);
     }
   } catch (error) {
-    console.error("Error al editar el evento:", error);
+    console.error("Error al editar el usuario:", error);
   } finally {
     cargarUsuarios(URL_BASE);
   }
@@ -374,10 +408,54 @@ async function eliminarUsuario(URL_BASE, id, nombre) {
   });
 }
 
+function verUsuario(usuario) {
+  let contenido = `
+    <h4 class="text-center">${usuario.nombre} ${usuario.apellidos}<br></h4>
+  `;
+  
+  if (usuario.fotoUrl) {
+    contenido += `<img src="${usuario.fotoUrl}" alt="${usuario.nombre}" class="img-fluid img-thumbnail img-usuario-modal mt-3 mb-2"><br>`;
+  } else {
+    contenido += `<div class="text-center text-muted mb-3">No hay foto de perfil</div>`;
+  }
+  
+  contenido += `
+    <p class="mb-1"><strong>Nombre:</strong> ${usuario.nombre}</p>
+    <p class="mb-1"><strong>Apellidos:</strong> ${usuario.apellidos}</p>
+    <p class="mb-1"><strong>Email:</strong> ${usuario.email}</p>
+    <p class="mb-1"><strong>Teléfono:</strong> ${usuario.telefono}</p>
+    <p class="mb-1"><strong>Fecha de nacimiento:</strong> ${formatearFecha(usuario.fechaNacimiento)}</p>
+  `;
+  
+  document.getElementById("contenidoModalUsuario").innerHTML = contenido;
+}
+
 function formatearFecha(fechaISO) {
   const fecha = new Date(fechaISO);
   const dia = fecha.getDate().toString().padStart(2, "0");
   const mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
   const anio = fecha.getFullYear();
   return `${dia}/${mes}/${anio}`;
+}
+
+async function obtenerUsuarioPorId(URL_BASE, id) {
+  try {
+    const resp = await fetch(URL_BASE + "usuarios/" + id, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error("No se pudo obtener el usuario");
+    }
+
+    return await resp.json();
+  } catch (error) {
+    console.error("Error al obtener el usuario:", error);
+    mostrarAlerta("error", "No se pudo cargar el usuario");
+    return null;
+  }
 }
