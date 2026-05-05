@@ -235,11 +235,27 @@ public class SupabaseStorage {
         }
 
         String signed = String.valueOf(response.get("signedURL"));
+
         if (signed.startsWith("http")) {
+            URI uri = URI.create(signed);
+            String path = uri.getPath();
+            String query = uri.getQuery();
+            if (path != null && path.startsWith("/object/")) {
+                String fixed = supabaseUrl + "/storage/v1" + path;
+                return query == null ? fixed : fixed + "?" + query;
+            }
             return signed;
         }
 
-        return supabaseUrl + signed;
+        if (signed.startsWith("/storage/v1")) {
+            return supabaseUrl + signed;
+        }
+
+        if (signed.startsWith("/object/")) {
+            return supabaseUrl + "/storage/v1" + signed;
+        }
+
+        return supabaseUrl + "/storage/v1/" + signed.replaceFirst("^/", "");
     }
 
     /**

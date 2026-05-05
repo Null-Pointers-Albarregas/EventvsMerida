@@ -184,16 +184,16 @@ public class UsuarioService {
 
         String oldPath = usuarioExistente.getFotoPath();
         if (imagen != null && !imagen.isEmpty()) {
-            String newPath = storageUploader.subirImagenUsuario(imagen, usuarioExistente.getEmail());
-            usuarioExistente.setFotoPath(newPath);
-
-            if (oldPath != null && !oldPath.isBlank() && !oldPath.equals(newPath)) {
+            if (oldPath != null && !oldPath.isBlank()) {
                 try {
                     storageUploader.borrarImagenUsuario(oldPath);
                 } catch (Exception ex) {
                     log.warn("No se pudo borrar la imagen anterior: {}", ex.getMessage());
                 }
             }
+
+            String newPath = storageUploader.subirImagenUsuario(imagen, usuarioExistente.getEmail());
+            usuarioExistente.setFotoPath(newPath);
         } else if (usuarioRequest.fotoPath() != null && !usuarioRequest.fotoPath().isBlank()) {
             usuarioExistente.setFotoPath(usuarioRequest.fotoPath());
         }

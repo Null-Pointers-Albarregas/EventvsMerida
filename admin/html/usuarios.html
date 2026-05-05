@@ -182,6 +182,11 @@
                         La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un
                         símbolo. </div>
                     </div>
+                    <div class="mb-3">
+                      <label for="fotoUsuario" class="form-label">Foto de perfil</label>
+                      <input class="form-control" type="file" id="fotoUsuario" />
+                      <div class="invalid-feedback">Selecciona una imagen para el perfil</div>
+                    </div>
                   </form>
                 </div>
                 <div class="modal-footer">
@@ -192,6 +197,21 @@
                     Agregar usuario
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Ver Usuario -->
+          <div class="modal fade" id="modalVerUsuario" tabindex="-1" aria-labelledby="modalVerUsuarioLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="modalVerUsuarioLabel">Detalle del usuario</h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="contenidoModalUsuario"></div>
               </div>
             </div>
           </div>
@@ -255,6 +275,14 @@
                         data-bs-toggle="modal">
                         Editar contraseña
                       </button>
+                    </div>
+                    <div class="mb-3">
+                      <label for="formFileEditar" class="form-label">Foto de perfil</label>
+                      <input class="form-control" type="file" id="formFileEditar" />
+                    </div>
+                    <div class="mb-3">
+                      <img src="" class="img-thumbnail img-usuario-modal" id="imagenUsuario" style="display: none;" />
+                      <div class="text-center text-muted" id="sinFotoUsuario" style="display: none;">No hay foto de perfil</div>
                     </div>
                   </form>
                 </div>
