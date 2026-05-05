@@ -1,0 +1,110 @@
+.features {
+  background: var(--dark);
+  padding: 8rem 5vw;
+  position: relative;
+}
+
+.features-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 30%, rgba(245, 166, 35, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 10% 70%, rgba(43, 108, 176, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.features-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.features-header {
+  text-align: center;
+  margin-bottom: 5rem;
+
+  .label, .glow-line {
+    display: inline-block;
+  }
+
+  .glow-line { display: block; margin: 0.75rem auto 0; }
+
+  h2 {
+    font-size: clamp(2.8rem, 5vw, 4.5rem);
+    margin: 1.5rem 0 1rem;
+  }
+
+  p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.feature-card {
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 4px;
+  padding: 2.5rem 2rem;
+  position: relative;
+  transition: border-color 0.35s, transform 0.35s, box-shadow 0.35s;
+  cursor: default;
+  overflow: hidden;
+
+  &:hover {
+    border-color: rgba(245, 166, 35, 0.25);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3), 0 0 0 1px rgba(245,166,35,0.1);
+
+    .feature-line {
+      width: 100%;
+    }
+  }
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1.25rem;
+  display: block;
+}
+
+.feature-card h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+  color: var(--text);
+}
+
+.feature-card p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.feature-line {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 2px;
+  width: 0;
+  background: linear-gradient(90deg, var(--gold), var(--blue-light));
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 900px) {
+  .features-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 580px) {
+  .features-grid { grid-template-columns: 1fr; }
+}

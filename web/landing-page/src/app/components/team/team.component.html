@@ -1,0 +1,40 @@
+<section id="team" class="team">
+  <div class="team-inner">
+    <div class="team-header">
+      <div appReveal>
+        <span class="label">Quiénes somos</span>
+        <div class="glow-line" style="margin-top: 0.75rem;"></div>
+      </div>
+      <h2 appReveal [revealDelay]="1">El equipo<br><span class="gradient-text">Null Pointers</span></h2>
+      <p appReveal [revealDelay]="2">
+        Desarrollado por tres estudiantes de Mérida con ganas de mejorar
+        el acceso a la cultura de su ciudad.
+      </p>
+    </div>
+
+    <div class="team-grid">
+      @for (member of members; track member.name; let i = $index) {
+        <div class="member-card" 
+             appReveal 
+             [revealDelay]="i + 1">
+          <div class="member-avatar" [style.--color]="member.color">
+            <span>{{ member.initials }}</span>
+            <div class="avatar-ring"></div>
+          </div>
+          <div class="member-info">
+            <h3>{{ member.name }}</h3>
+            <span class="member-role">{{ member.role }}</span>
+          </div>
+          <div class="member-glow" [style.background]="member.color + '0D'"></div>
+        </div>
+      }
+    </div>
+
+    <div class="team-footer" appReveal [revealDelay]="2">
+      <div class="team-badge">
+        <span>🏫</span>
+        <span>IES Albarregas · Mérida</span>
+      </div>
+    </div>
+  </div>
+</section>

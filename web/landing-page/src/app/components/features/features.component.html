@@ -1,0 +1,33 @@
+<section id="features" class="features">
+  <div class="features-bg"></div>
+
+  <div class="features-inner">
+    <div class="features-header">
+      <div appReveal>
+        <span class="label">¿Qué puedes hacer?</span>
+        <div class="glow-line" style="margin-top: 0.75rem;"></div>
+      </div>
+      <h2 appReveal [revealDelay]="1">
+        Todo lo que<br><span class="gradient-text">necesitas saber</span>
+      </h2>
+      <p appReveal [revealDelay]="2">
+        Eventvs Mérida centraliza, organiza y presenta los eventos culturales
+        de la ciudad de la forma más sencilla posible.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      @for (feature of features; track feature.title; let i = $index) {
+        <div class="feature-card" 
+             appReveal 
+             [revealDelay]="(i % 3) + 1"
+             [revealDirection]="'scale'">
+          <div class="feature-icon">{{ feature.icon }}</div>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.desc }}</p>
+          <div class="feature-line"></div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
