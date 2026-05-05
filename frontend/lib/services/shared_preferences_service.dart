@@ -10,6 +10,7 @@ class SharedPreferencesService {
 
   static const String _usuarioKey = 'usuario_data';
   static const String _autoLoginKey = 'autologin_data';
+  static const String _tutorialKey = 'tutorial_data';
 
   // Sesion en memoria para la ejecucion actual de la app.
   static Usuario? usuarioSesionActual;
@@ -81,5 +82,24 @@ class SharedPreferencesService {
       await prefs.remove(_autoLoginKey);
       return null;
     }
+  }
+
+    // ===========================
+    // Comprobaciones carga tutorial
+    // ===========================
+
+  static Future<bool> cargarTutorial() async {
+    final prefs = await _prefs;
+    return prefs.getBool(_tutorialKey) ?? true;
+  }
+
+  static Future<void> finalizarTurorial() async {
+    final prefs = await _prefs;
+    await prefs.setBool(_tutorialKey, false);
+  }
+
+  static Future<void> resetearTutorial() async {
+    final prefs = await _prefs;
+    await prefs.remove(_tutorialKey);
   }
 }
