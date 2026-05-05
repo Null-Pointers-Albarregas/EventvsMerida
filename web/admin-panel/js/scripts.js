@@ -58,7 +58,7 @@ function mostrarAlerta(tipo, mensaje) {
 })();
 
 async function cerrarSesion() {
-  const URL = "https://eventvsmerida.onrender.com/api/auth/logout";
+  const URL = "https://eventvsmerida-x2t1.onrender.com/api/auth/logout";
 
   try {
     const respuesta = await fetch(URL, {
@@ -86,7 +86,7 @@ function obtenerNombreUsuario() {
 }
 
 async function logeado() {
-  const URL = "https://eventvsmerida.onrender.com/api/auth/session";
+  const URL = "https://eventvsmerida-x2t1.onrender.com/api/auth/session";
 
   try {
     const respuesta = await fetch(URL, {
