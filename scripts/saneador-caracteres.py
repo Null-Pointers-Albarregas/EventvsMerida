@@ -1,7 +1,7 @@
 """
 Limpia el JSON de eventos y normaliza texto y fechas.
 Uso:
-    python saneador-caracteres.py input.json output.json 
+    python saneador-caracteres.py eventos-bruto.json eventos-saneados.json 
 """
 
 import json
