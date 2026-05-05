@@ -27,6 +27,7 @@ class _PerfilState extends State<Perfil> {
   GlobalKey keyCabecera = GlobalKey();
   GlobalKey keySecciones = GlobalKey();
 
+
   // ===========================================================================
   // CICLO DE VIDA
   // ===========================================================================
@@ -167,6 +168,7 @@ class _PerfilState extends State<Perfil> {
 
   Widget _buildCabeceraLogueado() {
     return Column(
+      key: keyCabecera,
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -240,8 +242,9 @@ class _PerfilState extends State<Perfil> {
         _buildItem(
           Icons.help_outline,
           'Volver a hacer el tutorial',
-          onTap: (){
-            SharedPreferencesService.resetearTutorial();
+          onTap: () async{
+            await SharedPreferencesService.resetearTutorial();
+            Tutorial.resetearTutorial();
             context.go('/eventos');
           },
         ),
@@ -309,7 +312,8 @@ class _PerfilState extends State<Perfil> {
 
           await Future.delayed(const Duration(milliseconds: 300));
           if (!mounted) return;
-          SharedPreferencesService.finalizarTurorial();
+          Tutorial.numPantalla = 5;
+          await SharedPreferencesService.finalizarTurorial();
           context.go('/eventos');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

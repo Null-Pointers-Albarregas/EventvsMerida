@@ -76,6 +76,18 @@ class _EventosState extends State<Eventos> {
     super.dispose();
   }
 
+  // @override
+  // Future<void> didChangeDependencies() async {
+  //   if (await SharedPreferencesService.cargarTutorial()) {
+  //     WidgetsBinding.instance.addPostFrameCallback((_) async {
+  //       await Future.delayed(const Duration(milliseconds: 300));
+  //       if (!mounted) return;
+  //       _comprobarInicializacionTutorial();
+  //     });
+  //   }
+  // super.didChangeDependencies();
+  // }
+
   // ===========================================================================
   // CARGA DE DATOS
   // ===========================================================================
@@ -177,8 +189,6 @@ class _EventosState extends State<Eventos> {
     if (_isLoadingEventos || !_hasMoreEventos) return;
     setState(() => _isLoadingEventos = true);
 
-    print('Antes de cargar página $_page de eventos...');
-
     try {
       final mapaResp = await ApiService.obtenerEventosPaginados(
         page: _page,
@@ -200,22 +210,20 @@ class _EventosState extends State<Eventos> {
         _hasMoreEventos = !last;
       });
 
-      if(await SharedPreferencesService.cargarTutorial()) {
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          await Future.delayed(const Duration(milliseconds: 300));
-          if (!mounted) return;
-          _comprobarInicializacionTutorial();
-        });
+      if(_page == 1){
+        if (await SharedPreferencesService.cargarTutorial()) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            await Future.delayed(const Duration(milliseconds: 300));
+            if (!mounted) return;
+            _comprobarInicializacionTutorial();
+          });
+        }
       }
     } catch (e) {
       setState(() => _hasMoreEventos = false);
     } finally {
       setState(() => _isLoadingEventos = false);
     }
-
-    print(
-      'Después de cargar página $_page de eventos. ¿Hay más? $_hasMoreEventos',
-    );
   }
 
   void _comprobarInicializacionTutorial() {
@@ -227,6 +235,7 @@ class _EventosState extends State<Eventos> {
     if (Tutorial.tutorialInicializado) return;
 
     Tutorial.tutorialInicializado = true;
+    print('he comprobado inicialización del tutorial en eventos, ahora lo configuro y muestro');
     _configurarTutorial();
   }
 
