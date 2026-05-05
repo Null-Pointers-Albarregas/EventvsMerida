@@ -6,6 +6,7 @@ Uso:
 
 Requisitos:
     pip install requests beautifulsoup4 rich
+    pip install python-dotenv
 
 Nota:
     Para geocoding el script usa la clase `MapsGeocoder` en scripts/mapsgeocoder.py (Playwright).
@@ -14,13 +15,14 @@ Nota:
 import argparse
 import json
 import logging
+import os
 import random
 import re
 import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from datetime import datetime
 
 import requests
@@ -30,6 +32,11 @@ from rich.panel import Panel
 from rich.progress import Progress
 from rich.table import Table
 from rich.text import Text
+
+try:
+    from dotenv import load_dotenv
+except Exception:  # pragma: no cover - optional dependency for local .env use
+    load_dotenv = None
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -128,6 +135,32 @@ def load_json_auto(path: Path | str) -> Any:
     raise RuntimeError("No se pudo decodificar el archivo con las codificaciones probadas.")
 
 
+def build_auth_url(api_url: str) -> str:
+    parsed = urlparse(api_url)
+    base = f"{parsed.scheme}://{parsed.netloc}"
+    return urljoin(base, "/api/auth")
+
+
+def login_admin(session: requests.Session, auth_url: str, email: str, password: str) -> bool:
+    payload = {"email": email, "password": password}
+    resp = session.post(
+        f"{auth_url}/login",
+        params={"admin": "true"},
+        json=payload,
+        timeout=10,
+    )
+    if resp.status_code != 200:
+        console.print(f"[red]✗ Login fallido[/red] [dim](HTTP {resp.status_code})[/dim]")
+        return False
+
+    sess = session.get(f"{auth_url}/session", timeout=10)
+    if sess.status_code != 200:
+        console.print(f"[red]✗ Sesion no valida[/red] [dim](HTTP {sess.status_code})[/dim]")
+        return False
+
+    return True
+
+
 def main(argv: Optional[list] = None) -> int:
     """Flujo principal: lee eventos saneados, geocodifica y los publica en la API.
 
@@ -137,9 +170,18 @@ def main(argv: Optional[list] = None) -> int:
     Returns:
         Código de salida (0 = OK).
     """
+    if load_dotenv is None:
+        console.print("[red]✗ Falta dependencia: python-dotenv[/red]")
+        console.print("    Instala con: pip install python-dotenv")
+        return 2
+
+    load_dotenv()
+
     parser = argparse.ArgumentParser(description="Sube eventos saneados a la API EventvsMérida")
     parser.add_argument("input", help="JSON de eventos saneados (output de saneador-caracteres.py)")
     parser.add_argument("--api-url", default="https://eventvsmerida.onrender.com/api/eventos/add", help="URL API para publicar eventos")
+    parser.add_argument("--email", default=os.getenv("EVENTVSMERIDA_EMAIL"), help="Email admin (o env EVENTVSMERIDA_EMAIL)")
+    parser.add_argument("--password", default=os.getenv("EVENTVSMERIDA_PASSWORD"), help="Password admin (o env EVENTVSMERIDA_PASSWORD)")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -178,11 +220,17 @@ def main(argv: Optional[list] = None) -> int:
 
     with requests.Session() as session:
         session.headers.update({"User-Agent": "Mozilla/5.0"})
+        auth_url = build_auth_url(args.api_url)
+        if not args.email or not args.password:
+            console.print("[red]✗ Faltan credenciales de admin (email/password).[/red]")
+            return 2
+        if not login_admin(session, auth_url, args.email, args.password):
+            return 2
         with Progress() as progress:
             task = progress.add_task("[cyan]Localizando", total=total_eventos)
             for evento in data.get("events", []):
                 titulo = evento.get("summary", "") or ""
-                progress.update(task, description=f"Título: {titulo[:60]}")
+                progress.update(task, description="Localizando")
                 id_categoria = 0
                 id_usuario = random.randint(1, 5)
 
@@ -193,18 +241,30 @@ def main(argv: Optional[list] = None) -> int:
                 if localizacion and geocoder:
                     coords = None
                     try:
-                        coords = geocoder.geocode(localizacion, max_wait=4.0, poll_interval=0.18)
+                        coords = geocoder.geocode(localizacion, max_wait=6.0, poll_interval=0.25)
+                        if not coords:
+                            coords = geocoder.geocode(localizacion, max_wait=8.0, poll_interval=0.35)
                     except Exception as e:
                         coords = None
                         logger.warning("Error geocoding %s: %s", localizacion, e)
 
                     if coords:
                         latitud, longitud = coords
-                        console.print(f"[green]📍 Coordenadas:[/green] {latitud}, {longitud}")
+
+                    if coords:
+                        linea = (
+                            f"    Título: {titulo[:60]} | [green]📍 Coordenadas:[/green] {latitud}, {longitud}"
+                        )
                     else:
-                        console.print(f"[yellow]⚠️ No se pudo geocodificar (Google Maps):[/yellow] {localizacion}")
+                        linea = (
+                            f"    Título: {titulo[:60]} | "
+                            f"[yellow]⚠️ No se pudo geocodificar (Google Maps):[/yellow] {localizacion}"
+                        )
+                    progress.console.print(linea)
 
                     time.sleep(0.15)
+                else:
+                    progress.console.print(f"    Título: {titulo[:60]}")
 
                 raw_cats = evento.get("raw", {}).get("CATEGORIES")
                 if isinstance(raw_cats, dict):
@@ -231,6 +291,8 @@ def main(argv: Optional[list] = None) -> int:
                         "idCategoria": id_categoria,
                     }
                 )
+                print(eventos_saneados[-1])
+                print()
                 progress.update(task, advance=1)
 
         if geocoder:
@@ -252,11 +314,24 @@ def main(argv: Optional[list] = None) -> int:
                     titulo_corto = (evento.get("titulo") or "")[:50]
                     console.print(f"[blue][{timestamp}][/blue] [bold]📌 {titulo_corto}[/bold]")
 
-                    resp = session.post(args.api_url, json=evento, timeout=10)
+                    evento_payload = json.dumps(evento, ensure_ascii=False)
+                    print(evento_payload)
+                    resp = session.post(
+                        args.api_url,
+                        data={"evento": evento_payload},
+                        files={"imagen": ("", b"", "application/octet-stream")},
+                        timeout=10,
+                    )
                     resp.raise_for_status()
 
-                    console.print(f"        [green]✓ Publicado[/green] [dim](HTTP {resp.status_code})[/dim]")
-                    num_eventos_almacenados += 1
+                    if resp.status_code != 201:
+                        console.print(
+                            f"        [red]✗ Respuesta no válida[/red] [dim](HTTP {resp.status_code})[/dim]"
+                        )
+                        num_eventos_fallo += 1
+                    else:
+                        console.print(f"        [green]✓ Publicado[/green] [dim](HTTP {resp.status_code})[/dim]")
+                        num_eventos_almacenados += 1
 
                 except requests.exceptions.HTTPError:
                     console.print(f"        [red]✗ Error HTTP[/red] [dim](HTTP {resp.status_code})[/dim]")
