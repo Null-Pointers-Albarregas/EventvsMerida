@@ -14,7 +14,7 @@
 [![Último commit](https://img.shields.io/github/last-commit/Null-Pointers-Albarregas/EventvsMerida)](https://github.com/Null-Pointers-Albarregas/EventvsMerida/commits/main)
 [![Plataforma](https://img.shields.io/badge/Plataforma-Móvil-red)](https://github.com/Null-Pointers-Albarregas/EventvsMerida)
 
-[🌐 Landing page](https://eventvs-merida-landing.vercel.app) · [🎨 Prototipo Figma](https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1)
+[🌐 Landing page](https://eventvsmerida-landing.vercel.app) · [🎨 Prototipo Figma](https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1)
 
 </div>
 
