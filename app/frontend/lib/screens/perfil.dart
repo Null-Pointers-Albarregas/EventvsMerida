@@ -185,8 +185,23 @@ class _PerfilState extends State<Perfil> {
       children: [
         CircleAvatar(
           backgroundColor: _cs.surface.withValues(alpha: 0.9),
-          radius: 32,
-          child: Icon(Icons.person, color: _cs.primary, size: 34),
+          radius: 45,
+          child: _usuario?.fotoUrl != null && _usuario!.fotoUrl!.isNotEmpty
+              ? ClipOval(
+            child: FadeInImage.assetNetwork(
+              placeholder: 'assets/images/icono.gif',
+              image: _usuario!.fotoUrl!,
+              width: 90,
+              height: 90,
+              fit: BoxFit.cover,
+              placeholderFit: BoxFit.contain,
+            ),
+          )
+              : Icon(
+            Icons.person,
+            color: _cs.primary,
+            size: 34,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
