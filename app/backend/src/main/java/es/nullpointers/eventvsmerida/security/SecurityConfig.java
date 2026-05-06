@@ -76,17 +76,13 @@ public class SecurityConfig {
 
                 // Usuarios: solo los GETs -> solo Administrador
                 .requestMatchers(HttpMethod.GET,
+                    "/api/usuarios/*",
                     "/api/usuarios/registered",
                     "/api/usuarios/organizers",
                     "/api/usuarios/count/registered",
                     "/api/usuarios/count/organizers",
                     "/api/usuarios/all"
                 ).hasAuthority("Administrador")
-
-                // Usuarios: GET con id -> Administrador y Registrado
-                .requestMatchers(HttpMethod.GET,
-                    "/api/usuarios/*"
-                .hasAnyAuthority("Administrador", "Registrado")
 
                 // Roles y swagger: solo Administrador
                 .requestMatchers(
