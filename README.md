@@ -1,67 +1,129 @@
-<h2 align="center">Eventvs Mérida</h2>
-
 <div align="center">
-  <img src="https://raw.githubusercontent.com/aperezm1/EventvsMerida/refs/heads/main/logo-eventvs-merida.jpeg" alt="Logo de Eventvs Mérida" width="150">
+
+<img src="https://raw.githubusercontent.com/aperezm1/EventvsMerida/refs/heads/main/logo-eventvs-merida.jpeg" alt="Logo de Eventvs Mérida" width="180"/>
+
+# Eventvs Mérida
+
+**Aplicación móvil que centraliza toda la información cultural y de ocio de Mérida en un único espacio digital.**
+
+[![Licencia: GPL v3](https://img.shields.io/badge/Licencia-GPLv3-blue.svg)](https://github.com/Null-Pointers-Albarregas/EventvsMerida/blob/main/LICENSE)
+[![Estado del proyecto](https://img.shields.io/badge/Estado-En%20desarrollo-yellow)](https://github.com/Null-Pointers-Albarregas/EventvsMerida)
+[![Backend: Spring Boot](https://img.shields.io/badge/Backend-Spring%20Boot-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Interfaz: Flutter](https://img.shields.io/badge/Interfaz-Flutter-02569B?logo=flutter)](https://flutter.dev)
+[![Último commit](https://img.shields.io/github/last-commit/Null-Pointers-Albarregas/EventvsMerida)](https://github.com/Null-Pointers-Albarregas/EventvsMerida/commits/main)
+[![Plataforma](https://img.shields.io/badge/Plataforma-Móvil-red)](https://github.com/Null-Pointers-Albarregas/EventvsMerida)
+
+[🌐 Landing page](https://eventvs-merida-landing.vercel.app) · [🎨 Prototipo Figma](https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1)
+
 </div>
 
-<p align="center">
-  Aplicación móvil que centraliza toda la información cultural y de ocio de Mérida en un solo espacio digital.
-</p>
+---
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Licencia-GPLv3-blue.svg" alt="Licencia: GPL v3" />
-  <img src="https://img.shields.io/badge/Estado-En%20desarrollo-yellow" alt="Estado del proyecto" />
-<img src="https://img.shields.io/badge/Backend-Spring%20Boot-6DB33F?logo=springboot&logoColor=white">
-  <img src="https://img.shields.io/badge/Interfaz-Flutter-02569B?logo=flutter" alt="Interfaz con Flutter" />
-  <img src="https://img.shields.io/github/last-commit/aperezm1/EventvsMerida" alt="Último commit" />
-  <img src="https://img.shields.io/badge/Plataforma-Móvil-red" alt="Plataforma móvil" />
-</p>
+## 📖 Descripción
 
-<div align="center">
-<h2 align="center">Enlaces</h2>
-<a href="https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1">Figma</a>
-</div>
+**Eventvs Mérida** es una aplicación móvil pensada para residentes y visitantes de Mérida (Extremadura) que quieran mantenerse al día con la agenda cultural y de ocio de la ciudad. Concentra eventos, actividades y recursos de entretenimiento en una sola plataforma accesible y fácil de usar.
 
-<h2 align="center">Desarrolladores</h2>
+---
 
-<div align="center">
+## ✨ Características principales
+
+- 📅 Consulta de eventos culturales y de ocio en Mérida
+- 🗺️ Información geolocalizada de actividades
+<!-- - 🔔 Notificaciones sobre próximos eventos -->
+- 📱 Interfaz nativa multiplataforma (Android e iOS) con Flutter
+- ⚙️ API REST robusta desarrollada con Spring Boot
+
+---
+
+## 🗂️ Estructura del repositorio
+
+```
+EventvsMerida/
+├── app/          # Aplicación móvil (Flutter / Dart)
+├── web/          # Landing page y componentes web
+├── scripts/      # Scripts auxiliares y automatización
+├── docs/         # Documentación técnica del proyecto
+└── README.md
+```
+
+---
+
+## 🛠️ Tecnologías
+
+| Capa | Tecnología |
+|------|-----------|
+| Frontend móvil | Flutter (Dart) |
+| Backend | Java · Spring Boot |
+| Web | HTML · CSS · JavaScript |
+| Scripts | Python |
+| Diseño | Figma |
+
+---
+```
+
+> Consulta la carpeta `docs/` para instrucciones de configuración detalladas.
+
+---
+
+## 🔗 Enlaces de interés
+
+| Recurso | Enlace |
+|---------|--------|
+| Landing page | [Ver Landing](https://eventvs-merida-landing.vercel.app) |
+| Prototipo Figma | [Ver diseño](https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1) |
+
+---
+
+## 👥 Equipo de desarrollo
 
 <table>
   <tr>
-    <td align="center" style="padding: 10px;">
-      <img src="https://avatars.githubusercontent.com/u/190772658?v=4" width="100px" alt=""/><br />
-      <b>Eva Retamar</b><br />
-      <a href="https://github.com/evaremu">GitHub</a>
+    <td align="center">
+      <a href="https://github.com/evaremu">
+        <img src="https://avatars.githubusercontent.com/u/190772658?v=4" width="80" style="border-radius:50%"/><br/>
+        <sub><b>Eva Retamar</b></sub>
+      </a>
     </td>
-    <td align="center" style="padding: 10px;">
-      <img src="https://avatars.githubusercontent.com/u/212538335?v=4" width="100px" alt=""/><br />
-      <b>Adrián Pérez</b><br />
-      <a href="https://github.com/aperezm1">GitHub</a>
+    <td align="center">
+      <a href="https://github.com/aperezm1">
+        <img src="https://avatars.githubusercontent.com/u/212538335?v=4" width="80" style="border-radius:50%"/><br/>
+        <sub><b>Adrián Pérez</b></sub>
+      </a>
     </td>
-    <td align="center" style="padding: 10px;">
-      <img src="https://avatars.githubusercontent.com/u/190772324?v=4" width="100px" alt=""/><br />
-      <b>David Muñoz</b><br />
-      <a href="https://github.com/dmunozc04-albarregas">GitHub</a>
+    <td align="center">
+      <a href="https://github.com/dmunozc04-albarregas">
+        <img src="https://avatars.githubusercontent.com/u/190772324?v=4" width="80" style="border-radius:50%"/><br/>
+        <sub><b>David Muñoz</b></sub>
+      </a>
     </td>
   </tr>
 </table>
 
-</div>
+---
+
+## 📄 Licencia
+
+Este proyecto se distribuye bajo la licencia **GNU General Public License v3.0 (GPL v3)**. Consulta el fichero [LICENSE](https://github.com/Null-Pointers-Albarregas/EventvsMerida/blob/main/LICENSE) para más detalles.
+
+<details>
+<summary>Resumen de permisos y condiciones</summary>
+
+| | Condición |
+|--|-----------|
+| ✅ | Uso comercial permitido |
+| ✅ | Modificación permitida |
+| ✅ | Distribución permitida |
+| ✅ | Uso privado permitido |
+| ✅ | Uso de patentes permitido |
+| ⚠️ | Debes divulgar el código fuente |
+| ⚠️ | Debes mantener la licencia y los avisos de copyright |
+| ❌ | Sin responsabilidad |
+| ❌ | Sin garantía |
+
+</details>
+
+---
 
 <div align="center">
-<h2>Licencia</h2>
-
-Este proyecto está bajo la licencia <b>GNU General Public License v3 (GPL v3)</b> - acceda el fichero [LICENSE](https://github.com/aperezm1/EventvsMerida/blob/main/LICENSE) para más detalles.
-
-📄 Resumen de la licencia GPL v3:
-
-✅ Uso comercial permitido  
-✅ Modificación permitida  
-✅ Distribución permitida  
-✅ Uso privado permitido  
-✅ Uso de patentes permitido  
-⚠️ Debes divulgar el código fuente  
-⚠️ Debes mantener la licencia y los avisos de copyright  
-❌ Sin responsabilidad  
-❌ Sin garantía  
+  <sub>Hecho con ❤️ en Mérida, Extremadura · <a href="https://github.com/Null-Pointers-Albarregas">Null Pointers Albarregas</a></sub>
 </div>
