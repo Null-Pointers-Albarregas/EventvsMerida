@@ -2,103 +2,180 @@
   background: var(--dark);
   padding: 8rem 5vw;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
 }
 
+/* Fondo decorativo general */
 .features-bg {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 40% at 80% 30%, rgba(245, 166, 35, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 10% 70%, rgba(43, 108, 176, 0.08) 0%, transparent 60%);
+    radial-gradient(
+      ellipse 55% 40% at 50% 20%,
+      rgba(245, 166, 35, 0.08) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 45% 45% at 20% 75%,
+      rgba(43, 108, 176, 0.1) 0%,
+      transparent 65%
+    ),
+    radial-gradient(
+      ellipse 45% 45% at 85% 45%,
+      rgba(43, 108, 176, 0.08) 0%,
+      transparent 65%
+    );
   pointer-events: none;
-}
-
-.features-img-left {
-  position: absolute;
-  left: clamp(-220px, -12vw, -70px);
-  top: 65%;
-  transform: translateY(-50%) translateX(-100px);
   z-index: 0;
-  opacity: 0;
-  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
-
-  &.visible {
-    opacity: 1;
-    transform: translateY(-50%) translateX(0);
-  }
 }
 
+/* Overlay suave, no tapa demasiado las fotos */
+.features::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(6, 10, 16, 0.15) 0%,
+      transparent 25%,
+      transparent 75%,
+      rgba(6, 10, 16, 0.25) 100%
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Imágenes decorativas laterales */
+.features-img-left,
 .features-img-right {
   position: absolute;
-  right: clamp(-220px, -12vw, -70px);
-  top: 32%;
-  transform: translateY(-50%) translateX(100px);
-  z-index: 0;
+  z-index: 1;
+  pointer-events: none;
   opacity: 0;
-  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Foto izquierda: postal inferior lateral */
+.features-img-left {
+  left: -95px;
+  bottom: 6rem;
+  top: auto;
+  transform: translateX(-120px) rotate(-7deg);
 
   &.visible {
-    opacity: 1;
-    transform: translateY(-50%) translateX(0);
+    opacity: 0.75;
+    transform: translateX(0) rotate(-7deg);
   }
 }
 
+/* Foto derecha: postal superior lateral */
+.features-img-right {
+  right: -85px;
+  top: 7rem;
+  transform: translateX(120px) rotate(7deg);
+
+  &.visible {
+    opacity: 0.72;
+    transform: translateX(0) rotate(7deg);
+  }
+}
+
+/* Contenedor común de las fotos */
 .feature-image {
   position: relative;
   overflow: hidden;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+  background: #05080d;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    transform: scale(1.12);
+    transform: scale(1.04);
   }
 
   &::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08), transparent 60%);
+    background:
+      linear-gradient(
+        180deg,
+        rgba(6, 10, 16, 0.05) 0%,
+        rgba(6, 10, 16, 0.25) 100%
+      );
     z-index: 1;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    z-index: 2;
     pointer-events: none;
   }
 }
 
+/* Imagen teatro izquierda */
 .feature-image-teatro {
-  width: 380px;
-  height: 480px;
-  border-radius: 32px 10px 28px 8px;
-  transform: rotate(-12deg);
-  clip-path: polygon(0 18px, 18px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+  width: clamp(230px, 18vw, 340px);
+  height: clamp(320px, 26vw, 460px);
+  border-radius: 26px 8px 24px 8px;
+  clip-path: polygon(
+    0 18px,
+    18px 0,
+    100% 0,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    0 100%
+  );
 }
 
+/* Imagen plaza derecha */
 .feature-image-plaza {
-  width: 380px;
-  height: 480px;
-  border-radius: 8px 32px 10px 28px;
-  transform: rotate(12deg);
-  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 14px);
+  width: clamp(220px, 17vw, 320px);
+  height: clamp(300px, 24vw, 430px);
+  border-radius: 8px 26px 8px 24px;
+  clip-path: polygon(
+    12px 0,
+    100% 0,
+    100% calc(100% - 18px),
+    calc(100% - 18px) 100%,
+    0 100%,
+    0 14px
+  );
 }
 
+/* Contenido principal */
 .features-inner {
   max-width: 1200px;
   margin: 0 auto;
   position: relative;
-  z-index: 1;
+  z-index: 3;
 }
 
+/* Cabecera */
 .features-header {
   text-align: center;
   margin-bottom: 5rem;
 
-  .label, .glow-line {
+  .label,
+  .glow-line {
     display: inline-block;
   }
 
-  .glow-line { display: block; margin: 0.75rem auto 0; }
+  .glow-line {
+    display: block;
+    margin: 0.75rem auto 0;
+  }
 
   h2 {
     font-size: clamp(2.8rem, 5vw, 4.5rem);
@@ -110,29 +187,41 @@
     font-size: 1.05rem;
     max-width: 520px;
     margin: 0 auto;
+    line-height: 1.7;
   }
 }
 
+/* Tarjetas centradas automáticamente */
 .features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1.5rem;
 }
 
+/* Tarjetas */
 .feature-card {
+  flex: 0 1 calc((100% - 3rem) / 3);
+  min-height: 220px;
+
   background: var(--surface);
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 4px;
   padding: 2.5rem 2rem;
   position: relative;
-  transition: border-color 0.35s, transform 0.35s, box-shadow 0.35s;
+  transition:
+    border-color 0.35s,
+    transform 0.35s,
+    box-shadow 0.35s;
   cursor: default;
   overflow: hidden;
 
   &:hover {
     border-color: rgba(245, 166, 35, 0.25);
     transform: translateY(-6px);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.3), 0 0 0 1px rgba(245,166,35,0.1);
+    box-shadow:
+      0 20px 50px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(245, 166, 35, 0.1);
 
     .feature-line {
       width: 100%;
@@ -164,45 +253,104 @@
 
 .feature-line {
   position: absolute;
-  bottom: 0; left: 0;
+  bottom: 0;
+  left: 0;
   height: 2px;
   width: 0;
   background: linear-gradient(90deg, var(--gold), var(--blue-light));
   transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (max-width: 1600px) {
-}
-
+/* Pantallas medianas */
 @media (max-width: 1400px) {
-  .feature-image-teatro,
-  .feature-image-plaza {
-    width: 320px;
-    height: 420px;
+  .features-img-left {
+    left: -130px;
+    bottom: 5rem;
   }
-}
 
-@media (max-width: 1200px) {
-  .feature-image-teatro,
+  .features-img-right {
+    right: -125px;
+    top: 6.5rem;
+  }
+
+  .feature-image-teatro {
+    width: 290px;
+    height: 400px;
+  }
+
   .feature-image-plaza {
-    width: 280px;
+    width: 275px;
     height: 380px;
   }
 }
 
+@media (max-width: 1200px) {
+  .features-img-left {
+    left: -170px;
+    bottom: 4rem;
+  }
+
+  .features-img-right {
+    right: -170px;
+    top: 6rem;
+  }
+
+  .feature-image-teatro {
+    width: 270px;
+    height: 370px;
+  }
+
+  .feature-image-plaza {
+    width: 255px;
+    height: 350px;
+  }
+}
+
+/* Tablet */
 @media (max-width: 1000px) {
+  .features {
+    padding: 6rem 5vw;
+  }
+
   .features-img-left,
   .features-img-right {
     display: none;
   }
 
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .features-header {
+    margin-bottom: 3.5rem;
+  }
+
+  .feature-card {
+    flex-basis: calc((100% - 1.5rem) / 2);
   }
 }
 
+/* Móvil */
 @media (max-width: 600px) {
+  .features {
+    padding: 5rem 1.25rem;
+  }
+
+  .features-header {
+    margin-bottom: 3rem;
+
+    h2 {
+      font-size: clamp(2.4rem, 13vw, 3.2rem);
+    }
+
+    p {
+      font-size: 0.95rem;
+    }
+  }
+
   .features-grid {
-    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .feature-card {
+    flex-basis: 100%;
+    min-height: auto;
+    padding: 2rem 1.5rem;
   }
 }

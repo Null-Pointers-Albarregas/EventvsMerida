@@ -30,7 +30,7 @@ export class FeaturesComponent {
     {
       icon: '📅',
       title: 'Agenda completa',
-      desc: 'Vista de calendario con todos los eventos filtrados por categoría y fecha.'
+      desc: 'Vista de calendario con todos los eventos filtrados por días.'
     },
     {
       icon: '🌍',
@@ -40,12 +40,12 @@ export class FeaturesComponent {
     {
       icon: '🎫',
       title: 'Información detallada',
-      desc: 'Horarios, ubicación, precios y descripción completa de cada evento.'
+      desc: 'Horarios, ubicación, imagen y descripción completa de cada evento.'
     },
     {
       icon: '🔍',
       title: 'Búsqueda y filtros',
-      desc: 'Encuentra exactamente lo que buscas por tipo, fecha, lugar o precio.'
+      desc: 'Encuentra exactamente lo que buscas por categoría, título o ubicación.'
     }
   ];
 }
