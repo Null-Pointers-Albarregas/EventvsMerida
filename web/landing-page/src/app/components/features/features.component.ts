@@ -22,11 +22,11 @@ export class FeaturesComponent {
       title: 'Mapa interactivo',
       desc: 'Localiza eventos cercanos en tiempo real con geolocalización integrada.'
     },
-    {
+    /*{
       icon: '🔔',
       title: 'Notificaciones',
       desc: 'Recibe alertas personalizadas cuando se publiquen eventos de tu interés.'
-    },
+    }*/
     {
       icon: '📅',
       title: 'Agenda completa',
