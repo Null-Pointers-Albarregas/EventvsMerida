@@ -2,6 +2,7 @@
   background: var(--dark);
   padding: 8rem 5vw;
   position: relative;
+  overflow: visible;
 }
 
 .features-bg {
@@ -11,6 +12,75 @@
     radial-gradient(ellipse 60% 40% at 80% 30%, rgba(245, 166, 35, 0.06) 0%, transparent 60%),
     radial-gradient(ellipse 50% 50% at 10% 70%, rgba(43, 108, 176, 0.08) 0%, transparent 60%);
   pointer-events: none;
+}
+
+.features-img-left {
+  position: absolute;
+  left: clamp(-220px, -12vw, -70px);
+  top: 65%;
+  transform: translateY(-50%) translateX(-100px);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+.features-img-right {
+  position: absolute;
+  right: clamp(-220px, -12vw, -70px);
+  top: 32%;
+  transform: translateY(-50%) translateX(100px);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+.feature-image {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scale(1.12);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08), transparent 60%);
+    z-index: 1;
+    pointer-events: none;
+  }
+}
+
+.feature-image-teatro {
+  width: 380px;
+  height: 480px;
+  border-radius: 32px 10px 28px 8px;
+  transform: rotate(-12deg);
+  clip-path: polygon(0 18px, 18px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+}
+
+.feature-image-plaza {
+  width: 380px;
+  height: 480px;
+  border-radius: 8px 32px 10px 28px;
+  transform: rotate(12deg);
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 14px);
 }
 
 .features-inner {
@@ -101,10 +171,38 @@
   transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (max-width: 900px) {
-  .features-grid { grid-template-columns: 1fr 1fr; }
+@media (max-width: 1600px) {
 }
 
-@media (max-width: 580px) {
-  .features-grid { grid-template-columns: 1fr; }
+@media (max-width: 1400px) {
+  .feature-image-teatro,
+  .feature-image-plaza {
+    width: 320px;
+    height: 420px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .feature-image-teatro,
+  .feature-image-plaza {
+    width: 280px;
+    height: 380px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .features-img-left,
+  .features-img-right {
+    display: none;
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
 }
