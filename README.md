@@ -59,11 +59,6 @@ EventvsMerida/
 | Diseño | Figma |
 
 ---
-```
-
-> Consulta la carpeta `docs/` para instrucciones de configuración detalladas.
-
----
 
 ## 🔗 Enlaces de interés
 
