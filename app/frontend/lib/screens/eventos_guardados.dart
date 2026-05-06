@@ -205,16 +205,6 @@ class _EventosGuardadosState extends State<EventosGuardados> {
                 ),
               ],
             ),
-
-            const SizedBox(height: 12),
-
-            CircleAvatar(
-              backgroundColor: _cs.surface.withValues(alpha: 0.9),
-              radius: 45,
-              child: Icon(Icons.person, color: _cs.primary, size: 45),
-            ),
-
-            const SizedBox(height: 8),
           ],
         ),
       ),

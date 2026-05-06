@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 
 import '../models/api_response.dart';
 import '../models/evento.dart';
@@ -12,24 +15,60 @@ import '../models/categoria.dart';
 class ApiService {
   static const String baseUrl = 'https://eventvsmerida-x2t1.onrender.com/api';
   static const Duration _tiempoLimite = Duration(seconds: 10);
-  static const Map<String, String> _cabecerasJson = {'Content-Type': 'application/json',};
-  static const String _mensajeSinConexion = 'No hay conexión. Intenta de nuevo más tarde.';
+  static const Map<String, String> _cabecerasJson = {
+    'Content-Type': 'application/json',
+  };
+  static const String _mensajeSinConexion =
+      'No hay conexión. Intenta de nuevo más tarde.';
 
   // ============================================================================
   // USUARIOS
   // ============================================================================
 
   /// POST /api/usuarios/add
-  static Future<ApiResponse<Usuario>> registrarUsuario(Map<String, dynamic> datosUsuario,) async {
-    final respuesta = await _post('/usuarios/add', datosUsuario);
+  static Future<ApiResponse<Usuario>> registrarUsuario(
+    Map<String, dynamic> datosUsuario,
+    XFile? imagen,
+  ) async {
+    try {
+      final uri = Uri.parse('$baseUrl/usuarios/add');
+      final request = http.MultipartRequest('POST', uri);
 
-    if (respuesta == null) {
-      return ApiResponse<Usuario>.sinConexion(mensaje: _mensajeSinConexion,);
-    }
+      request.fields['usuario'] = jsonEncode(datosUsuario);
 
-    if (respuesta.statusCode == 201) {
-      try {
-        final mapa = jsonDecode(respuesta.body) as Map<String, dynamic>;
+      // Solo enviamos la imagen si existe
+      if (imagen != null) {
+        final extension = p.extension(imagen.path).toLowerCase();
+
+        late MediaType mediaType;
+
+        if (extension == '.png') {
+          mediaType = MediaType('image', 'png');
+        } else if (extension == '.jpg' || extension == '.jpeg') {
+          mediaType = MediaType('image', 'jpeg');
+        } else {
+          return ApiResponse<Usuario>.error(
+            mensaje: 'Formato de imagen no soportado. Usa PNG, JPG o JPEG.',
+            codigoEstado: 400,
+          );
+        }
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'foto',
+            imagen.path,
+            contentType: mediaType,
+            filename: p.basename(imagen.path),
+          ),
+        );
+      }
+
+      final streamedResponse = await request.send().timeout(_tiempoLimite);
+
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 201) {
+        final mapa = jsonDecode(response.body) as Map<String, dynamic>;
         final usuario = Usuario.fromJson(mapa);
 
         return ApiResponse<Usuario>.exito(
@@ -37,25 +76,33 @@ class ApiService {
           mensaje: 'Registro exitoso',
           codigoEstado: 201,
         );
-      } catch (_) {
-        return ApiResponse<Usuario>.error(
-          mensaje: 'No se pudo leer la respuesta del servidor',
-          codigoEstado: 201,
-        );
       }
-    }
 
-    return _manejarError<Usuario>(respuesta);
+      return _manejarError<Usuario>(response);
+    } on TimeoutException {
+      return ApiResponse<Usuario>.sinConexion(mensaje: _mensajeSinConexion);
+    } on SocketException {
+      return ApiResponse<Usuario>.sinConexion(mensaje: _mensajeSinConexion);
+    } catch (e) {
+      return ApiResponse<Usuario>.error(
+        mensaje: 'Error inesperado: $e',
+        codigoEstado: 500,
+      );
+    }
   }
 
   /// POST /api/usuarios/login
-  static Future<ApiResponse<Usuario>> iniciarSesion(String email, String password) async {
-    final respuesta = await _post('/auth/login', {'email': email, 'password': password,});
+  static Future<ApiResponse<Usuario>> iniciarSesion(
+    String email,
+    String password,
+  ) async {
+    final respuesta = await _post('/auth/login', {
+      'email': email,
+      'password': password,
+    });
 
     if (respuesta == null) {
-      return ApiResponse<Usuario>.sinConexion(
-        mensaje: _mensajeSinConexion,
-      );
+      return ApiResponse<Usuario>.sinConexion(mensaje: _mensajeSinConexion);
     }
 
     switch (respuesta.statusCode) {
@@ -95,6 +142,85 @@ class ApiService {
           mensaje: 'Error desconocido (${respuesta.statusCode}).',
           codigoEstado: respuesta.statusCode,
         );
+    }
+  }
+
+  /// PUT /api/usuarios/update/{id}
+  static Future<ApiResponse<Usuario>> editarUsuario({
+    required int idUsuario,
+    Map<String, dynamic>? datosUsuario,
+    XFile? imagen,
+  }) async {
+    try {
+      final uri = Uri.parse('$baseUrl/usuarios/update/$idUsuario');
+      final request = http.MultipartRequest('PUT', uri);
+
+      // Enviar datos solo si vienen
+      request.fields['usuario'] = {}.toString();
+
+      // Enviar imagen solo si viene
+      if (imagen != null) {
+        final extension = p.extension(imagen.path).toLowerCase();
+
+        late MediaType mediaType;
+
+        if (extension == '.png') {
+          mediaType = MediaType('image', 'png');
+        } else if (extension == '.jpg' || extension == '.jpeg') {
+          mediaType = MediaType('image', 'jpeg');
+        } else {
+          return ApiResponse<Usuario>.error(
+            mensaje: 'Formato de imagen no soportado. Usa PNG, JPG o JPEG.',
+            codigoEstado: 400,
+          );
+        }
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'foto',
+            imagen.path,
+            contentType: mediaType,
+            filename: p.basename(imagen.path),
+          ),
+        );
+      }
+
+      // Si no se envía nada
+      if ((datosUsuario == null || datosUsuario.isEmpty) && imagen == null) {
+        return ApiResponse<Usuario>.error(
+          mensaje: 'No hay datos ni imagen para actualizar.',
+          codigoEstado: 400,
+        );
+      }
+
+      final streamedResponse = await request.send().timeout(_tiempoLimite);
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final mapa = jsonDecode(response.body) as Map<String, dynamic>;
+        final usuario = Usuario.fromJson(mapa);
+
+        return ApiResponse<Usuario>.exito(
+          datos: usuario,
+          mensaje: 'Usuario actualizado correctamente',
+          codigoEstado: 200,
+        );
+      }
+
+      return _manejarError<Usuario>(response);
+    } on TimeoutException {
+      return ApiResponse<Usuario>.sinConexion(
+        mensaje: _mensajeSinConexion,
+      );
+    } on SocketException {
+      return ApiResponse<Usuario>.sinConexion(
+        mensaje: _mensajeSinConexion,
+      );
+    } catch (e) {
+      return ApiResponse<Usuario>.error(
+        mensaje: 'Error inesperado: $e',
+        codigoEstado: 500,
+      );
     }
   }
 
@@ -145,9 +271,9 @@ class ApiService {
       );
     }
 
-    final uri = Uri.parse('$baseUrl/eventos/search').replace(
-      queryParameters: {'q': query, 'limit': '10'},
-    );
+    final uri = Uri.parse(
+      '$baseUrl/eventos/search',
+    ).replace(queryParameters: {'q': query, 'limit': '10'});
     final respuesta = await _getUri(uri);
 
     if (respuesta!.statusCode == 200) {
@@ -174,7 +300,9 @@ class ApiService {
   }
 
   /// GET /api/eventos/filter-by-categories?categorias=1&categorias=2...
-  static Future<ApiResponse<List<Evento>>> obtenerEventosFiltradosPorCategorias(List<int> categorias) async {
+  static Future<ApiResponse<List<Evento>>> obtenerEventosFiltradosPorCategorias(
+    List<int> categorias,
+  ) async {
     final queryString = categorias.map((c) => 'categorias=$c').join('&');
     final uri = Uri.parse('$baseUrl/eventos/filter-by-categories?$queryString');
 
@@ -210,7 +338,11 @@ class ApiService {
   }
 
   /// GET /api/eventos/paginated?page=0&size=20&sort=fechaInicio,asc&fechaFinDesde=2024-01-01T00:00:00Z
-  static Future<Map<String, dynamic>?> obtenerEventosPaginados({int page = 0, int size = 15, DateTime? fechaFinDesde,}) async {
+  static Future<Map<String, dynamic>?> obtenerEventosPaginados({
+    int page = 0,
+    int size = 15,
+    DateTime? fechaFinDesde,
+  }) async {
     final queryParameters = <String, String>{
       'page': page.toString(),
       'size': size.toString(),
@@ -223,11 +355,14 @@ class ApiService {
       final offsetAbs = offset.abs();
       final offHours = offsetAbs.inHours.toString().padLeft(2, '0');
       final offMinutes = (offsetAbs.inMinutes % 60).toString().padLeft(2, '0');
-      final fechaFormateada = '${fechaLocal.year.toString().padLeft(4, '0')}-${fechaLocal.month.toString().padLeft(2, '0')}-${fechaLocal.day.toString().padLeft(2, '0')}T${fechaLocal.hour.toString().padLeft(2, '0')}:${fechaLocal.minute.toString().padLeft(2, '0')}:${fechaLocal.second.toString().padLeft(2, '0')}$sign$offHours:$offMinutes';
+      final fechaFormateada =
+          '${fechaLocal.year.toString().padLeft(4, '0')}-${fechaLocal.month.toString().padLeft(2, '0')}-${fechaLocal.day.toString().padLeft(2, '0')}T${fechaLocal.hour.toString().padLeft(2, '0')}:${fechaLocal.minute.toString().padLeft(2, '0')}:${fechaLocal.second.toString().padLeft(2, '0')}$sign$offHours:$offMinutes';
       queryParameters['fechaFinDesde'] = fechaFormateada;
     }
 
-    final uri = Uri.parse('$baseUrl/eventos/paginated').replace(queryParameters: queryParameters);
+    final uri = Uri.parse(
+      '$baseUrl/eventos/paginated',
+    ).replace(queryParameters: queryParameters);
 
     final respuesta = await _getUri(uri);
     if (respuesta == null) return null;
@@ -241,7 +376,9 @@ class ApiService {
 
     final mapa = jsonDecode(respuesta.body) as Map<String, dynamic>;
     final listaRaw = (mapa['content'] as List<dynamic>?) ?? [];
-    final eventos = listaRaw.map((e) => Evento.fromJson(e as Map<String, dynamic>)).toList();
+    final eventos = listaRaw
+        .map((e) => Evento.fromJson(e as Map<String, dynamic>))
+        .toList();
 
     return {
       'items': eventos,
@@ -257,10 +394,12 @@ class ApiService {
   // ============================================================================
 
   /// GET /api/usuario-eventos/guardados?emailUsuario=
-  static Future<ApiResponse<List<Evento>>> obtenerEventosGuardados(String emailUsuario,) async {
-    final uri = Uri.parse('$baseUrl/usuario-eventos/guardados').replace(
-      queryParameters: {'emailUsuario': emailUsuario},
-    );
+  static Future<ApiResponse<List<Evento>>> obtenerEventosGuardados(
+    String emailUsuario,
+  ) async {
+    final uri = Uri.parse(
+      '$baseUrl/usuario-eventos/guardados',
+    ).replace(queryParameters: {'emailUsuario': emailUsuario});
 
     final respuesta = await _getUri(uri);
 
@@ -294,7 +433,12 @@ class ApiService {
   }
 
   /// POST /api/usuario-eventos/guardar
-  static Future<ApiResponse<void>> guardarEventoUsuario(String emailUsuario, String tituloEvento, DateTime fechaInicio, DateTime fechaFin) async {
+  static Future<ApiResponse<void>> guardarEventoUsuario(
+    String emailUsuario,
+    String tituloEvento,
+    DateTime fechaInicio,
+    DateTime fechaFin,
+  ) async {
     final respuesta = await _post('/usuario-eventos/guardar', {
       'emailUsuario': emailUsuario,
       'tituloEvento': tituloEvento,
@@ -303,9 +447,7 @@ class ApiService {
     });
 
     if (respuesta == null) {
-      return ApiResponse<void>.sinConexion(
-        mensaje: _mensajeSinConexion,
-      );
+      return ApiResponse<void>.sinConexion(mensaje: _mensajeSinConexion);
     }
 
     if (respuesta.statusCode == 201) {
@@ -320,7 +462,12 @@ class ApiService {
   }
 
   /// DELETE /api/usuario-eventos/eliminar
-  static Future<ApiResponse<void>> eliminarEventoUsuario(String emailUsuario, String tituloEvento, DateTime fechaInicio, DateTime fechaFin) async {
+  static Future<ApiResponse<void>> eliminarEventoUsuario(
+    String emailUsuario,
+    String tituloEvento,
+    DateTime fechaInicio,
+    DateTime fechaFin,
+  ) async {
     final respuesta = await _delete('/usuario-eventos/eliminar', {
       'emailUsuario': emailUsuario,
       'tituloEvento': tituloEvento,
@@ -329,9 +476,7 @@ class ApiService {
     });
 
     if (respuesta == null) {
-      return ApiResponse<void>.sinConexion(
-        mensaje: _mensajeSinConexion,
-      );
+      return ApiResponse<void>.sinConexion(mensaje: _mensajeSinConexion);
     }
 
     if (respuesta.statusCode == 204) {
@@ -414,7 +559,9 @@ class ApiService {
     });
   }
 
-  static Future<http.Response?> _solicitud(Future<http.Response> Function() accion,) async {
+  static Future<http.Response?> _solicitud(
+    Future<http.Response> Function() accion,
+  ) async {
     try {
       return await accion().timeout(_tiempoLimite);
     } on TimeoutException {
@@ -436,7 +583,9 @@ class ApiService {
     switch (respuesta.statusCode) {
       case 400:
         return ApiResponse<T>.error(
-          mensaje: mensaje.isEmpty ? 'Datos inválidos. Revisa los campos.' : mensaje,
+          mensaje: mensaje.isEmpty
+              ? 'Datos inválidos. Revisa los campos.'
+              : mensaje,
           codigoEstado: 400,
         );
 
@@ -448,7 +597,9 @@ class ApiService {
 
       case 403:
         return ApiResponse<T>.error(
-          mensaje: mensaje.isEmpty ? 'No tienes permisos para realizar esta acción.' : mensaje,
+          mensaje: mensaje.isEmpty
+              ? 'No tienes permisos para realizar esta acción.'
+              : mensaje,
           codigoEstado: 403,
         );
 
@@ -460,7 +611,9 @@ class ApiService {
 
       case 409:
         return ApiResponse<T>.error(
-          mensaje: mensaje.isEmpty ? 'Ya existe un conflicto con los datos enviados.' : mensaje,
+          mensaje: mensaje.isEmpty
+              ? 'Ya existe un conflicto con los datos enviados.'
+              : mensaje,
           codigoEstado: 409,
         );
 
@@ -472,7 +625,9 @@ class ApiService {
 
       default:
         return ApiResponse<T>.error(
-          mensaje: mensaje.isEmpty ? 'Error desconocido (${respuesta.statusCode}).' : mensaje,
+          mensaje: mensaje.isEmpty
+              ? 'Error desconocido (${respuesta.statusCode}).'
+              : mensaje,
           codigoEstado: respuesta.statusCode,
         );
     }
@@ -485,7 +640,10 @@ class ApiService {
       final decodificado = jsonDecode(cuerpo);
 
       if (decodificado is Map<String, dynamic>) {
-        final mensaje = decodificado['mensaje'] ?? decodificado['message'] ?? decodificado['error'];
+        final mensaje =
+            decodificado['mensaje'] ??
+            decodificado['message'] ??
+            decodificado['error'];
         return mensaje?.toString() ?? '';
       }
     } catch (_) {

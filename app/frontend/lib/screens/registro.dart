@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../core/router/app_routes.dart';
 import '../services/api_service.dart';
 import '../services/shared_preferences_service.dart';
 import '../utils/utils.dart';
+import '../widgets/componentes_compartidos.dart';
 
 class Registro extends StatefulWidget {
   const Registro({super.key});
@@ -30,6 +34,8 @@ class _RegistroState extends State<Registro> {
   final TextEditingController _diaController = TextEditingController();
   final TextEditingController _mesController = TextEditingController();
   final TextEditingController _anioController = TextEditingController();
+
+  XFile? _imagen;
 
   bool _aceptaTerminos = false;
   bool _ocultarPassword = true;
@@ -167,6 +173,7 @@ class _RegistroState extends State<Registro> {
       'telefono': _telefonoController.text.trim(),
       'password': _passwordController.text,
       'idRol': 1,
+      'fotoPath': null,
     };
   }
 
@@ -192,7 +199,7 @@ class _RegistroState extends State<Registro> {
     }
 
     final body = _crearBodyRegistro(fechaNacimiento);
-    final respuesta = await ApiService.registrarUsuario(body);
+    final respuesta = await ApiService.registrarUsuario(body, _imagen);
 
     if (!mounted) return;
 
@@ -468,6 +475,63 @@ class _RegistroState extends State<Registro> {
     );
   }
 
+  Widget _buildSelectorImagen () {
+    return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            InkWell(
+              onTap: (){
+                setState(() async {
+                  _imagen = await elegirImagen(context);
+                });
+              },
+              borderRadius: BorderRadius.circular(18),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                decoration: BoxDecoration(
+                  color:_cs.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: _cs.primary.withValues(alpha: 0.25),
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.add_a_photo_rounded,
+                      size: 28,
+                      color: _cs.primary,
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      'Seleccionar foto de perfil',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: _cs.onPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            if (_imagen != null)
+              Image.file(
+                File(_imagen!.path),
+                width: 200,
+                height: 200,
+                fit: BoxFit.cover,
+              ),
+          ],
+        ),
+      );
+  }
+
   Widget _buildBotonRegistro() {
     return SizedBox(
       width: double.infinity,
@@ -549,6 +613,8 @@ class _RegistroState extends State<Registro> {
           const SizedBox(height: 10),
           _buildFilaFecha(),
           const SizedBox(height: 10),
+          _buildSelectorImagen(),
+          const SizedBox(height: 15),
           _buildTerminos(),
           const SizedBox(height: 15),
           _buildBotonRegistro(),

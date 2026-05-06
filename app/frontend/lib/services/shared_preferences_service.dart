@@ -20,6 +20,11 @@ class SharedPreferencesService {
     return SharedPreferences.getInstance();
   }
 
+  static Future<bool> getAutoLogin() async {
+    final prefs = await _prefs;
+    return prefs.getBool(_autoLoginKey)!;
+  }
+
   // ===========================
   // API principal de sesion
   // ===========================
