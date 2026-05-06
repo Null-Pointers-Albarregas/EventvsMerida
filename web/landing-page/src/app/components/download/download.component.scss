@@ -153,36 +153,50 @@
 /* ── LOGO ── */
 .download-logo {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: fit-content;
+  justify-self: center;
+  opacity: 0;
+  animation: logoReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
+}
 
-  img {
-    width: clamp(200px, 25vw, 340px);
-    height: auto;
+.logo-ring {
+  position: absolute;
+  inset: -25px;
+  border-radius: 50%;
+  border: 1px solid rgba(245, 166, 35, 0.2);
+  animation: ringPulse 3s ease-in-out infinite;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
     border-radius: 50%;
-    object-fit: contain;
-    background: rgba(8,12,18,0.4);
-    padding: 1.5rem;
-    filter: drop-shadow(0 0 60px rgba(245,166,35,0.25))
-            drop-shadow(0 30px 80px rgba(0,0,0,0.5));
-    position: relative;
-    z-index: 1;
+    border: 1px solid rgba(43, 108, 176, 0.15);
+    animation: ringPulse 3s ease-in-out infinite 1s;
   }
 }
 
-.logo-halo {
-  position: absolute;
-  width: 110%;
-  height: 110%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%);
-  animation: haloPulse 4s ease-in-out infinite;
+@keyframes ringPulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.05); opacity: 1; }
 }
 
-@keyframes haloPulse {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.1); opacity: 1; }
+@keyframes logoReveal {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.download-logo-img {
+  width: clamp(180px, 22vw, 320px);
+  height: auto;
+  border-radius: 50%;
+  object-fit: contain;
+  background: rgba(8, 12, 18, 0.5);
+  padding: 1.5rem;
+  filter: drop-shadow(0 0 40px rgba(245, 166, 35, 0.3))
+          drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
+  position: relative;
+  z-index: 1;
 }
 
 /* ── FOOTER ── */

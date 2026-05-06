@@ -49,7 +49,6 @@ public class SecurityConfig {
      *
      * Reglas aplicadas (resumen):
      * - POST/PUT/DELETE sobre /api/eventos/** => Administrador u Organizador
-     * - GET /api/categorias/{id} y /api/categorias/all => Administrador u Organizador
      * - POST/PUT/DELETE de categorías (add/update/delete) => solo Administrador
      * - GET específicos de usuarios => solo Administrador
      * - /api/roles/** y Swagger => solo Administrador
@@ -77,13 +76,17 @@ public class SecurityConfig {
 
                 // Usuarios: solo los GETs -> solo Administrador
                 .requestMatchers(HttpMethod.GET,
-                    "/api/usuarios/*",
                     "/api/usuarios/registered",
                     "/api/usuarios/organizers",
                     "/api/usuarios/count/registered",
                     "/api/usuarios/count/organizers",
                     "/api/usuarios/all"
                 ).hasAuthority("Administrador")
+
+                // Usuarios: GET con id -> Administrador y Registrado
+                .requestMatchers(HttpMethod.GET,
+                    "/api/usuarios/*"
+                .hasAnyAuthority("Administrador", "Registrado")
 
                 // Roles y swagger: solo Administrador
                 .requestMatchers(

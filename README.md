@@ -8,6 +8,7 @@
 
 [![Licencia: GPL v3](https://img.shields.io/badge/Licencia-GPLv3-blue.svg)](https://github.com/Null-Pointers-Albarregas/EventvsMerida/blob/main/LICENSE)
 [![Estado del proyecto](https://img.shields.io/badge/Estado-En%20desarrollo-yellow)](https://github.com/Null-Pointers-Albarregas/EventvsMerida)
+[![Base de datos: Supabase](https://img.shields.io/badge/Base%20de%20datos-Supabase-181818?logo=supabase&logoColor=white)](https://supabase.com)
 [![Backend: Spring Boot](https://img.shields.io/badge/Backend-Spring%20Boot-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Interfaz: Flutter](https://img.shields.io/badge/Interfaz-Flutter-02569B?logo=flutter)](https://flutter.dev)
 [![Último commit](https://img.shields.io/github/last-commit/Null-Pointers-Albarregas/EventvsMerida)](https://github.com/Null-Pointers-Albarregas/EventvsMerida/commits/main)
@@ -54,8 +55,8 @@ EventvsMerida/
 | Capa | Tecnología |
 |:----:|:----------:|
 | Frontend móvil | Flutter (Dart) |
+| Base de datos | Supabase |
 | Backend | Java · Spring Boot |
-| Base de datos | Supabase
 | Web | HTML · CSS · JavaScript · Angular |
 | Scripts | Python |
 | Diseño | Figma |

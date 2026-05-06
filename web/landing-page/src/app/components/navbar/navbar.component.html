@@ -1,13 +1,23 @@
 <nav class="navbar" [class.scrolled]="scrolled()">
   <div class="nav-inner">
-    <div class="nav-logo">
+    <button class="nav-logo" (click)="scrollToTop()">
       <img src="assets/logo.jpeg" alt="Eventvs Mérida" class="logo-img" />
-    </div>
+    </button>
     <ul class="nav-links">
       <li><button (click)="scrollTo('about')">Sobre la App</button></li>
       <li><button (click)="scrollTo('features')">Funcionalides</button></li>
       <li><button (click)="scrollTo('team')">Equipo</button></li>
       <li><button (click)="scrollTo('download')" class="nav-cta">Descargar</button></li>
     </ul>
+    <button class="hamburger" (click)="toggleMenu()" [class.open]="menuOpen()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" [class.open]="menuOpen()">
+    <button (click)="scrollToAndClose('about')">Sobre la App</button>
+    <button (click)="scrollToAndClose('features')">Funcionalides</button>
+    <button (click)="scrollToAndClose('team')">Equipo</button>
   </div>
 </nav>
