@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'dart:ui';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -768,5 +769,56 @@ class Tutorial {
         ],
       ),
     );
+  }
+}
+
+Future<XFile?> elegirImagen(BuildContext context) async {
+  ImagePicker picker = ImagePicker();
+  final fuente = await showModalBottomSheet<ImageSource>(
+    context: context,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    shape: RoundedRectangleBorder(
+      borderRadius: const BorderRadius.vertical(
+        top: Radius.circular(24),
+      ),
+      side: BorderSide(
+        color: Theme.of(context).colorScheme.primary,
+        width: 2,
+      ),
+    ),
+    builder: (context) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galería'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Cámara'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+
+  if (fuente == null) return null;
+
+  try {
+    final XFile? imagen = await picker.pickImage(
+      source: fuente,
+      imageQuality: 80,
+    );
+
+    if (imagen == null) return null;
+
+    return imagen;
+  } catch (e) {
+    debugPrint('Error al elegir imagen: $e');
   }
 }

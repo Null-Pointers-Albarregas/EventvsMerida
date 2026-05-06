@@ -1,9 +1,12 @@
+import 'package:eventvsmerida/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../core/router/app_routes.dart';
 import '../models/usuario.dart';
 import '../services/shared_preferences_service.dart';
+import '../widgets/componentes_compartidos.dart';
 
 class Cuenta extends StatefulWidget {
   const Cuenta({super.key});
@@ -20,6 +23,8 @@ class _CuentaState extends State<Cuenta> {
   Usuario? _usuario;
 
   ColorScheme get _cs => Theme.of(context).colorScheme;
+
+  XFile? _imagen;
 
   // ===========================================================================
   // CICLO DE VIDA
@@ -56,11 +61,54 @@ class _CuentaState extends State<Cuenta> {
     return '$dia/$mes/$anio';
   }
 
+  Future<void> _editarImagenPerfil() async {
+    final imagenSeleccionada = await elegirImagen(context);
+
+    if (imagenSeleccionada == null) return;
+    if (_usuario == null) return;
+
+    final respuesta = await ApiService.editarUsuario(
+      idUsuario: _usuario!.id,
+      imagen: imagenSeleccionada,
+    );
+
+    if (!mounted) return;
+
+    if (respuesta.exito && respuesta.datos != null) {
+      setState(() {
+        _usuario = respuesta.datos;
+      });
+
+      await SharedPreferencesService.iniciarSesion(
+        usuario: respuesta.datos!,
+        autoLogin: await SharedPreferencesService.getAutoLogin(),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Imagen actualizada correctamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(respuesta.mensaje),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
   // ===========================================================================
   // INTERFAZ
   // ===========================================================================
 
-  Widget _infoTile({required String label, required String value, required IconData icon}) {
+  Widget _infoTile({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: _cs.secondary.withValues(alpha: 0.15),
@@ -170,16 +218,44 @@ class _CuentaState extends State<Cuenta> {
 
             const SizedBox(height: 12),
 
-            CircleAvatar(
-              backgroundColor: _cs.surface.withValues(alpha: 230),
-              radius: 45,
-              child: Icon(
-                Icons.person,
-                color: _cs.primary,
-                size: 45,
+            GestureDetector(
+              onTap: _editarImagenPerfil,
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    backgroundColor: _cs.surface.withValues(alpha: 0.9),
+                    radius: 45,
+                    child: _usuario?.fotoUrl != null && _usuario!.fotoUrl!.isNotEmpty
+                        ? ClipOval(
+                      child: FadeInImage.assetNetwork(
+                        placeholder: 'assets/images/icono.gif',
+                        image: _usuario!.fotoUrl!,
+                        width: 90,
+                        height: 90,
+                        fit: BoxFit.cover,
+                        placeholderFit: BoxFit.contain,
+                      ),
+                    )
+                        : Icon(
+                      Icons.person,
+                      color: _cs.primary,
+                      size: 34,
+                    ),
+                  ),
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: _cs.surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: _cs.surface, width: 2),
+                    ),
+                    child: Icon(Icons.edit, color: _cs.primary, size: 14),
+                  ),
+                ],
               ),
             ),
-
             const SizedBox(height: 8),
           ],
         ),

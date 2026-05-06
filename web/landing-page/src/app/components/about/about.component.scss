@@ -1,14 +1,17 @@
 .about {
   background: var(--dark-2);
-  padding: 8rem 5vw;
+  padding: 8rem 0;
 }
 
 .about-inner {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding-left: 0;
+  padding-right: 5vw;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6rem;
+  grid-template-columns: minmax(420px, 0.95fr) minmax(380px, 1.05fr) minmax(300px, 0.95fr);
+  gap: 2.5rem;
   align-items: center;
 }
 
@@ -63,10 +66,51 @@
 }
 
 /* ── CARDS ── */
+.about-media {
+  margin-left: 0;
+  justify-self: start;
+  align-self: stretch;
+}
+
+.about-media-frame {
+  position: relative;
+  width: min(100%, 380px);
+  min-height: 720px;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+  clip-path: polygon(0 0, 74% 0, 100% 100%, 0 100%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(11, 16, 27, 0.06), rgba(11, 16, 27, 0.26));
+    z-index: 2;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    min-height: 720px;
+    object-fit: cover;
+    display: block;
+    transform: scale(1.05);
+  }
+}
+
 .about-visual {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.about-cards {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  padding-top: 2rem;
 }
 
 .visual-card {
@@ -124,12 +168,26 @@
 
 .about-divider {
   position: absolute;
-  bottom: 0; left: 5vw; right: 5vw;
+  bottom: 0; left: 0; right: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(245,166,35,0.2), transparent);
 }
 
 @media (max-width: 900px) {
   .about-inner { grid-template-columns: 1fr; gap: 3rem; }
+  .about-media { display: none; }
+  .about-media-frame {
+    width: 100%;
+    min-height: 420px;
+    clip-path: polygon(0 0, 88% 0, 100% 100%, 0 100%);
+  }
+
+  .about-media-frame img {
+    min-height: 420px;
+  }
+
+  .about { padding-left: 5vw; padding-right: 5vw; }
+  .about-inner { padding-right: 0; }
+  .about-cards { padding-top: 0; }
   .card-offset { margin-left: 0 !important; }
 }

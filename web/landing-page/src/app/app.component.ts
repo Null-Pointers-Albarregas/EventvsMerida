@@ -17,15 +17,6 @@ import { DownloadComponent } from './components/download/download.component';
     TeamComponent,
     DownloadComponent
   ],
-  template: `
-    <app-navbar />
-    <main>
-      <app-hero />
-      <app-about />
-      <app-features />
-      <app-team />
-      <app-download />
-    </main>
-  `
+  templateUrl: './app.component.html',
 })
 export class AppComponent {}

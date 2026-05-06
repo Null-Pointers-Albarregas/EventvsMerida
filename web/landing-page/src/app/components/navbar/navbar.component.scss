@@ -24,11 +24,25 @@
 }
 
 .nav-logo {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.25s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
   .logo-img {
     height: 42px;
     width: auto;
     object-fit: contain;
     filter: drop-shadow(0 0 8px rgba(245, 166, 35, 0.4));
+    display: block;
   }
 }
 
@@ -72,6 +86,102 @@
   }
 }
 
+.hamburger {
+  display: none;
+  position: relative;
+  width: 32px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+
+  span {
+    position: absolute;
+    left: 50%;
+    width: 24px;
+    width: 24px;
+    height: 3px;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+
+    &:nth-child(1) {
+      top: 2px;
+    }
+
+    &:nth-child(2) {
+      top: 10.5px;
+    }
+
+    &:nth-child(3) {
+      top: 19px;
+    }
+  }
+
+  &.open {
+    span:nth-child(1) {
+      top: 10.5px;
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    span:nth-child(2) {
+      opacity: 0;
+    }
+
+    span:nth-child(3) {
+      top: 10.5px;
+      transform: translateX(-50%) rotate(-45deg);
+    }
+  }
+}
+
+.mobile-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(8, 12, 18, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(245, 166, 35, 0.15);
+  flex-direction: column;
+  gap: 0;
+  padding: 1rem 0;
+  z-index: 1000;
+
+  &.open {
+    display: flex;
+  }
+
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 1rem 2rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(232, 237, 245, 0.75);
+    transition: color 0.25s, background 0.25s;
+    text-align: left;
+    width: 100%;
+
+    &:hover {
+      background: rgba(245, 166, 35, 0.1);
+      color: var(--gold);
+    }
+  }
+}
+
 @media (max-width: 640px) {
+  .hamburger {
+    display: block;
+  }
+
   .nav-links li:not(:last-child) { display: none; }
 }

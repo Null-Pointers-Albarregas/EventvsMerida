@@ -70,7 +70,7 @@ public class UsuarioMapper {
 
         String fotoUrl = null;
         if (usuario.getFotoPath() != null && !usuario.getFotoPath().isBlank()) {
-            fotoUrl = storage.generarUrlFirmada(usuario.getFotoPath(), 3600);
+            fotoUrl = storage.generarUrlFirmada(usuario.getFotoPath(), 31536000); // URL válida por 1 año
         }
 
         return new UsuarioResponse(id, nombre, apellidos, fechaNacimiento, email, telefono, rol, fotoUrl);
