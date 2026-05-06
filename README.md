@@ -13,7 +13,7 @@
 [![Último commit](https://img.shields.io/github/last-commit/Null-Pointers-Albarregas/EventvsMerida)](https://github.com/Null-Pointers-Albarregas/EventvsMerida/commits/main)
 [![Plataforma](https://img.shields.io/badge/Plataforma-Móvil-red)](https://github.com/Null-Pointers-Albarregas/EventvsMerida)
 
-[🌐 Landing page](https://eventvs-merida-landing.vercel.app) · [🎨 Prototipo Figma](https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1)
+[🌐 Landing page](https://eventvs-merida-landing.vercel.app) · [🎨 Prototipo Figma](https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1) · [📋 Issues](https://github.com/Null-Pointers-Albarregas/EventvsMerida/issues)
 
 </div>
 
@@ -29,7 +29,7 @@
 
 - 📅 Consulta de eventos culturales y de ocio en Mérida
 - 🗺️ Información geolocalizada de actividades
-<!-- - 🔔 Notificaciones sobre próximos eventos -->
+- 🔔 Notificaciones sobre próximos eventos
 - 📱 Interfaz nativa multiplataforma (Android e iOS) con Flutter
 - ⚙️ API REST robusta desarrollada con Spring Boot
 
@@ -50,27 +50,65 @@ EventvsMerida/
 
 ## 🛠️ Tecnologías
 
+<div align="center">
+
 | Capa | Tecnología |
-|------|-----------|
+|:----:|:----------:|
 | Frontend móvil | Flutter (Dart) |
 | Backend | Java · Spring Boot |
 | Web | HTML · CSS · JavaScript |
 | Scripts | Python |
 | Diseño | Figma |
 
+</div>
+
+---
+
+## 🚀 Primeros pasos
+
+### Requisitos previos
+
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) ≥ 3.x
+- [Java JDK](https://adoptium.net/) ≥ 17
+- [Maven](https://maven.apache.org/) o Gradle
+
+### Instalación
+
+```bash
+# 1. Clona el repositorio
+git clone https://github.com/Null-Pointers-Albarregas/EventvsMerida.git
+cd EventvsMerida
+
+# 2. Inicia el backend
+cd app/backend
+./mvnw spring-boot:run
+
+# 3. Ejecuta la aplicación móvil
+cd ../mobile
+flutter pub get
+flutter run
+```
+
+> Consulta la carpeta `docs/` para instrucciones de configuración detalladas.
+
 ---
 
 ## 🔗 Enlaces de interés
 
+<div align="center">
+
 | Recurso | Enlace |
-|---------|--------|
-| Landing page | [Ver Landing](https://eventvs-merida-landing.vercel.app) |
+|:-------:|:------:|
+| Landing page | [eventvs-merida-landing.vercel.app](https://eventvs-merida-landing.vercel.app) |
 | Prototipo Figma | [Ver diseño](https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1) |
+
+</div>
 
 ---
 
 ## 👥 Equipo de desarrollo
 
+<div align="center">
 <table>
   <tr>
     <td align="center">
@@ -93,6 +131,7 @@ EventvsMerida/
     </td>
   </tr>
 </table>
+</div>
 
 ---
 
@@ -103,8 +142,10 @@ Este proyecto se distribuye bajo la licencia **GNU General Public License v3.0 (
 <details>
 <summary>Resumen de permisos y condiciones</summary>
 
+<div align="center">
+
 | | Condición |
-|--|-----------|
+|:-:|:----------|
 | ✅ | Uso comercial permitido |
 | ✅ | Modificación permitida |
 | ✅ | Distribución permitida |
@@ -114,6 +155,8 @@ Este proyecto se distribuye bajo la licencia **GNU General Public License v3.0 (
 | ⚠️ | Debes mantener la licencia y los avisos de copyright |
 | ❌ | Sin responsabilidad |
 | ❌ | Sin garantía |
+
+</div>
 
 </details>
 
