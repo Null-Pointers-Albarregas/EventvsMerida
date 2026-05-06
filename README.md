@@ -29,10 +29,9 @@
 
 - 📅 Consulta de eventos culturales y de ocio en Mérida
 - 🗺️ Información geolocalizada de actividades
-- 🔔 Notificaciones sobre próximos eventos
 - 📱 Interfaz nativa multiplataforma (Android e iOS) con Flutter
 - ⚙️ API REST robusta desarrollada con Spring Boot
-
+<!--- 🔔 Notificaciones sobre próximos eventos-->
 ---
 
 ## 🗂️ Estructura del repositorio
