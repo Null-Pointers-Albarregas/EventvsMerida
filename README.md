@@ -13,7 +13,7 @@
 [![Último commit](https://img.shields.io/github/last-commit/Null-Pointers-Albarregas/EventvsMerida)](https://github.com/Null-Pointers-Albarregas/EventvsMerida/commits/main)
 [![Plataforma](https://img.shields.io/badge/Plataforma-Móvil-red)](https://github.com/Null-Pointers-Albarregas/EventvsMerida)
 
-[🌐 Landing page](https://eventvs-merida-landing.vercel.app) · [🎨 Prototipo Figma](https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1) · [📋 Issues](https://github.com/Null-Pointers-Albarregas/EventvsMerida/issues)
+[🌐 Landing page](https://eventvs-merida-landing.vercel.app) · [🎨 Prototipo Figma](https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1)
 
 </div>
 
@@ -29,8 +29,8 @@
 
 - 📅 Consulta de eventos culturales y de ocio en Mérida
 - 🗺️ Información geolocalizada de actividades
-- 📱 Interfaz nativa multiplataforma (Android e iOS) con Flutter
-- ⚙️ API REST robusta desarrollada con Spring Boot
+- 📱 Interfaz nativa multiplataforma (Android e iOS)
+- ⚙️ API REST robusta propia
 <!--- 🔔 Notificaciones sobre próximos eventos-->
 ---
 
@@ -39,7 +39,7 @@
 ```
 EventvsMerida/
 ├── app/          # Aplicación móvil (Flutter / Dart)
-├── web/          # Landing page y componentes web
+├── web/          # Landing page y panel de administración
 ├── scripts/      # Scripts auxiliares y automatización
 ├── docs/         # Documentación técnica del proyecto
 └── README.md
@@ -55,51 +55,10 @@ EventvsMerida/
 |:----:|:----------:|
 | Frontend móvil | Flutter (Dart) |
 | Backend | Java · Spring Boot |
-| Web | HTML · CSS · JavaScript |
+| Base de datos | Supabase
+| Web | HTML · CSS · JavaScript · Angular |
 | Scripts | Python |
 | Diseño | Figma |
-
-</div>
-
----
-
-## 🚀 Primeros pasos
-
-### Requisitos previos
-
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) ≥ 3.x
-- [Java JDK](https://adoptium.net/) ≥ 17
-- [Maven](https://maven.apache.org/) o Gradle
-
-### Instalación
-
-```bash
-# 1. Clona el repositorio
-git clone https://github.com/Null-Pointers-Albarregas/EventvsMerida.git
-cd EventvsMerida
-
-# 2. Inicia el backend
-cd app/backend
-./mvnw spring-boot:run
-
-# 3. Ejecuta la aplicación móvil
-cd ../mobile
-flutter pub get
-flutter run
-```
-
-> Consulta la carpeta `docs/` para instrucciones de configuración detalladas.
-
----
-
-## 🔗 Enlaces de interés
-
-<div align="center">
-
-| Recurso | Enlace |
-|:-------:|:------:|
-| Landing page | [eventvs-merida-landing.vercel.app](https://eventvs-merida-landing.vercel.app) |
-| Prototipo Figma | [Ver diseño](https://www.figma.com/design/7KZIZqLMFp8ICrSPDZ2oKz/Prototipo----Eventvs-M%C3%A9rida?node-id=0-1&t=dXFZVgvSh53g5oPN-1) |
 
 </div>
 
